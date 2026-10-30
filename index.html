@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedBunny (.redb) - Programming Language Manual</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bunny: {
+                            50: '#fff1f2',
+                            500: '#ff4757',
+                            600: '#e84118',
+                            accent: '#ff6b81',
+                            glow: '#ff7f50',
+                            llvm: '#38bdf8'
+                        },
+                        dark: {
+                            bg: '#0b0e14',
+                            sidebar: '#111622',
+                            card: '#171d2c',
+                            border: '#232d42',
+                            hover: '#1e2638'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #0b0e14;
+            color: #cbd5e1;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Documentation typography styling */
+        .doc-content h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.025em;
+            margin-bottom: 1rem;
+            scroll-margin-top: 5rem;
+        }
+        .doc-content h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #232d42;
+            scroll-margin-top: 5rem;
+        }
+        .doc-content h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-top: 1.75rem;
+            margin-bottom: 0.75rem;
+            scroll-margin-top: 5rem;
+        }
+        .doc-content p {
+            line-height: 1.75;
+            margin-bottom: 1.25rem;
+            color: #94a3b8;
+        }
+        .doc-content ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 1.25rem;
+            color: #94a3b8;
+        }
+        .doc-content li {
+            margin-bottom: 0.375rem;
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0e14;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232d42;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff4757;
+        }
+
+        /* Active Nav Link Marker */
+        .sidebar-link.active {
+            color: #ff6b81;
+            background-color: rgba(255, 71, 87, 0.12);
+            border-right: 2px solid #ff4757;
+            font-weight: 600;
+        }
+
+        /* Syntax Highlighter Classes */
+        .kw { color: #ff4757; font-weight: 600; }   /* Keywords (@include, main, if, for, in, to, return) */
+        .fn { color: #38bdf8; font-weight: 500; }   /* Built-in functions (writeln, writeformat) */
+        .str { color: #2ed573; }                    /* Strings */
+        .num { color: #ffa502; }                    /* Numbers */
+        .cmt { color: #747d8c; font-style: italic; } /* Comments */
+        .type { color: #eccc68; font-weight: 500; } /* Types (int, float, str, bool) */
+        .arg { color: #ff7f50; font-weight: 600; }  /* Special args (arg1, arg2) */
+    </style>
+</head>
+<body class="bg-dark-bg text-gray-300 antialiased selection:bg-bunny-500 selection:text-white min-h-screen flex flex-col">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-bunny-500 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center space-x-2 text-xs font-mono">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toast-message">Copied to clipboard!</span>
+    </div>
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="sticky top-0 z-40 w-full bg-dark-bg/90 backdrop-blur-md border-b border-dark-border h-16 flex items-center justify-between px-4 sm:px-8">
+        <div class="flex items-center space-x-4">
+            <!-- Mobile Sidebar Toggle -->
+            <button onclick="toggleMobileSidebar()" class="lg:hidden text-gray-400 hover:text-white p-2">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+            
+            <a href="#" class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-bunny-600 to-bunny-accent flex items-center justify-center text-white shadow-lg shadow-bunny-500/20">
+                    <i class="fa-solid fa-rabbit text-base"></i>
+                </div>
+                <span class="font-bold text-lg text-white font-mono tracking-tight">
+                    Red<span class="text-bunny-accent">Bunny</span>
+                    <span class="ml-2 text-xs font-normal text-bunny-accent bg-bunny-500/10 px-2 py-0.5 rounded border border-bunny-500/20">.redb v0.1.0</span>
+                </span>
+            </a>
+        </div>
+
+        <!-- Search Bar & Links -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex items-center bg-dark-card border border-dark-border rounded-lg px-3 py-1.5 text-xs text-gray-400 w-64 focus-within:border-bunny-500/50 transition-colors">
+                <i class="fa-solid fa-magnifying-glass mr-2 text-gray-500"></i>
+                <input type="text" id="doc-search" onkeyup="filterSearch()" placeholder="Search RedBunny manual..." class="bg-transparent border-none outline-none w-full text-white placeholder-gray-500 focus:ring-0">
+            </div>
+
+            <a href="https://github.com/mohamedboukerche22/redbunny" target="_blank" class="flex items-center space-x-2 text-xs font-mono bg-dark-card hover:bg-dark-hover border border-dark-border px-3 py-1.5 rounded-lg text-gray-300 hover:text-white transition-all shadow-sm">
+                <i class="fa-brands fa-github text-sm text-bunny-accent"></i>
+                <span class="hidden sm:inline">github.com/mohamedboukerche22</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="flex-1 flex max-w-7xl w-full mx-auto">
+
+        <!-- LEFT SIDEBAR NAVIGATION -->
+        <aside id="mobile-sidebar" class="fixed lg:sticky top-16 z-30 w-64 h-[calc(100vh-4rem)] bg-dark-sidebar lg:bg-transparent border-r border-dark-border overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out p-4 text-xs font-medium space-y-6">
+            
+            <!-- Category 1 -->
+            <div>
+                <div class="text-gray-500 font-mono font-semibold uppercase tracking-wider mb-2 px-2 text-[10px]">1. Getting Started</div>
+                <ul class="space-y-1">
+                    <li><a href="#overview" class="sidebar-link active block px-3 py-2 rounded-md hover:bg-dark-card text-gray-300 transition-colors">Overview</a></li>
+                    <li><a href="#installation" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Installation (Linux/macOS/Win)</a></li>
+                    <li><a href="#hello-world" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Hello World</a></li>
+                </ul>
+            </div>
+
+            <!-- Category 2 -->
+            <div>
+                <div class="text-gray-500 font-mono font-semibold uppercase tracking-wider mb-2 px-2 text-[10px]">2. Language Grammar</div>
+                <ul class="space-y-1">
+                    <li><a href="#comments" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Comments & Semicolons</a></li>
+                    <li><a href="#structure" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Program Structure & main()</a></li>
+                    <li><a href="#variables" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Variables & Type System</a></li>
+                    <li><a href="#operators" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Operators & Precedence</a></li>
+                    <li><a href="#output" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Output Functions</a></li>
+                    <li><a href="#control-flow" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Control Flow (if, for, while)</a></li>
+                    <li><a href="#functions" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Functions & Hoisting</a></li>
+                    <li><a href="#includes" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Includes (@include)</a></li>
+                </ul>
+            </div>
+
+            <!-- Category 3 -->
+            <div>
+                <div class="text-gray-500 font-mono font-semibold uppercase tracking-wider mb-2 px-2 text-[10px]">3. Tooling & Sandbox</div>
+                <ul class="space-y-1">
+                    <li><a href="#playground" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors"><i class="fa-solid fa-terminal text-[10px] mr-1 text-bunny-accent"></i> Code Runner & LLVM IR</a></li>
+                    <li><a href="#cli" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">CLI Options & Env Vars</a></li>
+                </ul>
+            </div>
+
+            <!-- Category 4 -->
+            <div>
+                <div class="text-gray-500 font-mono font-semibold uppercase tracking-wider mb-2 px-2 text-[10px]">4. Architecture & Limits</div>
+                <ul class="space-y-1">
+                    <li><a href="#repo-layout" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Repository Layout</a></li>
+                    <li><a href="#runtime-abi" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Runtime C ABI</a></li>
+                    <li><a href="#limitations" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Current Limitations</a></li>
+                </ul>
+            </div>
+
+        </aside>
+
+        <!-- CENTER MAIN CONTENT AREA -->
+        <main class="flex-1 min-w-0 p-6 lg:p-10 doc-content max-w-4xl">
+            
+            <!-- SECTION 1: OVERVIEW -->
+            <section id="overview">
+                <div class="flex items-center space-x-2 text-xs font-mono text-bunny-accent mb-2">
+                    <i class="fa-solid fa-heart text-bunny-500"></i>
+                    <span>Made with love by mohamedboukerche22</span>
+                </div>
+                <h1>RedBunny (.redb) Programming Language</h1>
+                <p>
+                    <strong>RedBunny</strong> is a small, fast, compiled programming language with dynamic-feeling variables, a compact function syntax, and an <strong>LLVM IR backend</strong>. The compiler is written in C and lowers source code into LLVM IR before invoking <code>clang</code> to emit native machine binaries.
+                </p>
+
+                <!-- Key Specs Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+                    <div class="bg-dark-card p-4 rounded-xl border border-dark-border">
+                        <i class="fa-solid fa-microchip text-bunny-accent text-xl mb-2"></i>
+                        <h4 class="font-bold text-white text-sm">LLVM IR Backend</h4>
+                        <p class="text-xs text-gray-400 mt-1 mb-0">Direct compilation to LLVM intermediate representation linked with native C runtime.</p>
+                    </div>
+                    <div class="bg-dark-card p-4 rounded-xl border border-dark-border">
+                        <i class="fa-solid fa-feather text-bunny-llvm text-xl mb-2"></i>
+                        <h4 class="font-bold text-white text-sm">Compact Grammar</h4>
+                        <p class="text-xs text-gray-400 mt-1 mb-0">Clean syntax with single parameter indices (<code>arg1</code>, <code>arg2</code>) and format string interpolation.</p>
+                    </div>
+                    <div class="bg-dark-card p-4 rounded-xl border border-dark-border">
+                        <i class="fa-solid fa-c text-amber-400 text-xl mb-2"></i>
+                        <h4 class="font-bold text-white text-sm">Zero-Dep C Engine</h4>
+                        <p class="text-xs text-gray-400 mt-1 mb-0">Compiler codebase written in clean C with custom hand-written lexer and recursive descent parser.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: INSTALLATION -->
+            <section id="installation">
+                <h2>1. Installation</h2>
+                <p>RedBunny can be compiled and installed on Linux, macOS, and Windows.</p>
+
+                <h3>Linux / macOS</h3>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">Bash</span>
+                        <button onclick="copyCode('install-nix')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="install-nix" class="p-4 text-gray-200"><code>chmod +x install.sh
+./install.sh</code></pre>
+                </div>
+                <p class="text-xs text-gray-400">The installer uses CMake to build and copies <code>redb</code> to <code>/usr/local/bin/redb</code> and <code>libredb_runtime.a</code> to <code>/usr/local/lib/</code>. You can override the path via <code>PREFIX=$HOME/.local ./install.sh</code>.</p>
+
+                <h3>Windows</h3>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">PowerShell</span>
+                        <button onclick="copyCode('install-win')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="install-win" class="p-4 text-gray-200"><code>Set-ExecutionPolicy Bypass -Scope Process -Force
+.\install.ps1</code></pre>
+                </div>
+
+                <h3>Manual CMake Build</h3>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">CMake</span>
+                        <button onclick="copyCode('install-manual')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="install-manual" class="p-4 text-gray-200"><code>cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+sudo cmake --install build</code></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 3: HELLO WORLD -->
+            <section id="hello-world">
+                <h2>2. Hello World</h2>
+                <p>Save the following program in a file named <code>hello.redb</code>:</p>
+
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">hello.redb</span>
+                        <button onclick="copyCode('code-hello')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="code-hello" class="p-4 text-gray-200"><code><span class="kw">@include</span> <span class="str">"std"</span>
+
+<span class="kw">main</span>() {
+    <span class="fn">writeln</span>(<span class="str">"Hello, World!"</span>);
+}</code></pre>
+                </div>
+
+                <p>Compile and run with the <code>redb</code> executable:</p>
+                <div class="bg-dark-card p-3.5 rounded-xl border border-dark-border font-mono text-xs text-gray-300">
+                    <code>redb hello.redb -o hello &amp;&amp; ./hello</code>
+                </div>
+            </section>
+
+            <!-- SECTION 4: COMMENTS & SEMICOLONS -->
+            <section id="comments">
+                <h2>3. Comments &amp; Semicolons</h2>
+                <p>RedBunny uses distinct comment token markers. Semicolons are optional across all statements.</p>
+
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">comments.redb</span>
+                        <button onclick="copyCode('code-comments')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="code-comments" class="p-4 text-gray-200"><code><span class="cmt">-- Single-line comments start with two dashes</span>
+
+<span class="cmt">-*
+   Multi-line block comments
+   are enclosed between -* and *-
+*-</span>
+
+<span class="kw">main</span>() {
+    a = <span class="num">1</span>;    <span class="cmt">-- Semicolons are allowed</span>
+    b = <span class="num">2</span>     <span class="cmt">-- Semicolons can be omitted</span>
+    <span class="fn">writeln</span>(a + b)
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 5: PROGRAM STRUCTURE -->
+            <section id="structure">
+                <h2>4. Program Structure</h2>
+                <p>Every executable program must define exactly one <code>main()</code> block. Top-level scope is strictly restricted to:</p>
+                <ul>
+                    <li><code>@include "..."</code> declarations</li>
+                    <li><code>main() { ... }</code> entry point</li>
+                    <li>Function assignments like <code>name = do(...) { ... }</code></li>
+                </ul>
+
+                <div class="p-4 rounded-xl bg-bunny-500/10 border border-bunny-500/20 text-xs my-4">
+                    <span class="font-bold text-bunny-accent"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Exit Code Rule:</span>
+                    <code>main()</code> returns an integer exit code to the operating system. A bare <code>return</code> exits with <code>0</code>, while <code>return 42</code> exits with code <code>42</code>.
+                </div>
+            </section>
+
+            <!-- SECTION 6: VARIABLES & TYPES -->
+            <section id="variables">
+                <h2>5. Variables and Types</h2>
+                <p>Variables are introduced by assignment. The first assignment fixes the static LLVM IR type:</p>
+
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">types.redb</span>
+                        <button onclick="copyCode('code-types')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="code-types" class="p-4 text-gray-200"><code><span class="kw">main</span>() {
+    name = <span class="str">"Mohamed"</span>      <span class="cmt">-- str</span>
+    age = <span class="num">20</span>             <span class="cmt">-- int (signed 64-bit)</span>
+    pi = <span class="num">3.14159</span>         <span class="cmt">-- double (64-bit IEEE)</span>
+    alive = <span class="kw">true</span>         <span class="cmt">-- bool</span>
+
+    <span class="fn">writeformat</span>(<span class="str">"Name: {name}, Age: {age}, pi: {pi}, alive: {alive}\n"</span>)
+}</code></pre>
+                </div>
+
+                <h3>Type Reference Table</h3>
+                <div class="overflow-x-auto my-4">
+                    <table class="w-full text-left text-xs font-mono border-collapse border border-dark-border">
+                        <thead>
+                            <tr class="bg-dark-sidebar border-b border-dark-border text-gray-300">
+                                <th class="p-3">Type</th>
+                                <th class="p-3">LLVM / Memory Equivalent</th>
+                                <th class="p-3">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-dark-border text-gray-400">
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">int</td>
+                                <td class="p-3">i64</td>
+                                <td class="p-3">Signed 64-bit integer</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">float</td>
+                                <td class="p-3">float</td>
+                                <td class="p-3">32-bit IEEE floating point</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">double</td>
+                                <td class="p-3">double</td>
+                                <td class="p-3">64-bit IEEE floating point (default for decimals)</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">str</td>
+                                <td class="p-3">i8*</td>
+                                <td class="p-3">Null-terminated UTF-8 byte string</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">bool</td>
+                                <td class="p-3">i1</td>
+                                <td class="p-3">Boolean literal (<code>true</code> / <code>false</code>)</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">void</td>
+                                <td class="p-3">void</td>
+                                <td class="p-3">Written as <code>{}</code> in function signatures</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION 7: OPERATORS -->
+            <section id="operators">
+                <h2>6. Operators</h2>
+                <p>Arithmetic and comparison operators supported by RedBunny backend:</p>
+
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">operators.redb</span>
+                        <button onclick="copyCode('code-ops')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="code-ops" class="p-4 text-gray-200"><code><span class="cmt">-- String concatenation uses +</span>
+full = <span class="str">"Red"</span> + <span class="str">"Bunny"</span>
+
+<span class="cmt">-- Numerical arithmetic</span>
+x = (<span class="num">10</span> + <span class="num">2</span> * <span class="num">5</span>) / <span class="num">4</span>
+
+<span class="cmt">-- Comparison & Logical operators</span>
+is_valid = (x >= <span class="num">3</span>) &amp;&amp; !<span class="kw">false</span></code></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 8: OUTPUT -->
+            <section id="output">
+                <h2>7. Output Functions</h2>
+                <p>RedBunny runtime provides 3 primary formatted output primitives:</p>
+
+                <ul>
+                    <li><code>write(val)</code>: Prints without a trailing newline.</li>
+                    <li><code>writeln(val)</code>: Prints value followed by a newline.</li>
+                    <li><code>writeformat("...")</code>: Variable interpolation inside template strings. Use <code>{{</code> and <code>}}</code> for literal braces.</li>
+                </ul>
+
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">format.redb</span>
+                        <button onclick="copyCode('code-output')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="code-output" class="p-4 text-gray-200"><code><span class="kw">main</span>() {
+    item = <span class="str">"Laptop"</span>
+    price = <span class="num">999.99</span>
+    <span class="fn">writeformat</span>(<span class="str">"Item: {item} | Price: ${price}\n"</span>)
+    <span class="fn">writeformat</span>(<span class="str">"Literal brace demo: {{item}}\n"</span>)
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 9: CONTROL FLOW -->
+            <section id="control-flow">
+                <h2>8. Control Flow</h2>
+
+                <h3>If / Else Statements</h3>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
+                    <pre class="p-4 text-gray-200"><code><span class="kw">if</span> (score >= <span class="num">90</span>) {
+    <span class="fn">writeln</span>(<span class="str">"A"</span>)
+} <span class="kw">else if</span> (score >= <span class="num">80</span>) {
+    <span class="fn">writeln</span>(<span class="str">"B"</span>)
+} <span class="kw">else</span> {
+    <span class="fn">writeln</span>(<span class="str">"C"</span>)
+}</code></pre>
+                </div>
+
+                <h3>Inclusive Range For Loop</h3>
+                <p>The range loop <code>for(i in start to end)</code> is inclusive on both ends:</p>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
+                    <pre class="p-4 text-gray-200"><code><span class="cmt">-- Runs 10 times from 0 through 9</span>
+<span class="kw">for</span>(i <span class="kw">in</span> <span class="num">0</span> <span class="kw">to</span> <span class="num">9</span>) {
+    <span class="fn">writeln</span>(i)
+}</code></pre>
+                </div>
+
+                <h3>While Loop, Break &amp; Continue</h3>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
+                    <pre class="p-4 text-gray-200"><code>n = <span class="num">0</span>
+<span class="kw">while</span> (n &lt; <span class="num">10</span>) {
+    n = n + <span class="num">1</span>
+    <span class="kw">if</span> (n == <span class="num">2</span>) { <span class="kw">continue</span> }
+    <span class="kw">if</span> (n == <span class="num">6</span>) { <span class="kw">break</span> }
+    <span class="fn">write</span>(n)
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 10: FUNCTIONS -->
+            <section id="functions">
+                <h2>9. Functions &amp; Signatures</h2>
+                <p>RedBunny uses a unique signature format for defining functional variables. Parameters are bound to positional names <code>arg1</code>, <code>arg2</code>, etc.</p>
+
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">functions.redb</span>
+                        <button onclick="copyCode('code-fn')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="code-fn" class="p-4 text-gray-200"><code><span class="cmt">-- Takes two ints, returns int</span>
+add = <span class="kw">do</span>(<span class="type">int</span>, <span class="type">int</span> -> <span class="type">int</span>) {
+    <span class="kw">return</span> <span class="arg">arg1</span> + <span class="arg">arg2</span>
+}
+
+<span class="cmt">-- Function taking no args returning int (=> is an alias for ->)</span>
+get_answer = <span class="kw">doto</span>({} => <span class="type">int</span>) {
+    <span class="kw">return</span> <span class="num">42</span>
+}
+
+<span class="cmt">-- Recursion: Functions are hoisted before main</span>
+fact = <span class="kw">do</span>(<span class="type">int</span> -> <span class="type">int</span>) {
+    <span class="kw">if</span> (<span class="arg">arg1</span> &lt;= <span class="num">1</span>) { <span class="kw">return</span> <span class="num">1</span> }
+    <span class="kw">return</span> <span class="arg">arg1</span> * fact(<span class="arg">arg1</span> - <span class="num">1</span>)
+}
+
+<span class="kw">main</span>() {
+    <span class="fn">writeln</span>(add(<span class="num">10</span>, <span class="num">20</span>))
+    <span class="fn">writeln</span>(fact(<span class="num">5</span>))   <span class="cmt">-- Output: 120</span>
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 11: INCLUDES -->
+            <section id="includes">
+                <h2>10. Includes (@include)</h2>
+                <p>Include standard or user module source files. Suffix <code>.redb</code> is optional.</p>
+
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <pre class="p-4 text-gray-200"><code><span class="kw">@include</span> <span class="str">"std"</span>
+<span class="kw">@include</span> <span class="str">"mathlib"</span>
+
+<span class="kw">main</span>() {
+    <span class="fn">writeln</span>(square(<span class="num">9</span>))
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 12: INTERACTIVE PLAYGROUND / SANDBOX -->
+            <section id="playground">
+                <h2>11. Interactive Playground &amp; LLVM IR Visualizer</h2>
+                <p>Test RedBunny syntax, simulate program execution, or view generated LLVM IR code directly in your browser:</p>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden my-6 shadow-2xl">
+                    <!-- Toolbar -->
+                    <div class="bg-dark-sidebar px-4 py-3 border-b border-dark-border flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-green-500/80 inline-block"></span>
+                            <span class="text-xs text-gray-400 font-mono ml-2">sandbox.redb</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="loadPlaygroundPreset('hello')" class="text-xs bg-dark-bg hover:bg-dark-hover border border-dark-border px-2.5 py-1 rounded text-gray-300">Hello</button>
+                            <button onclick="loadPlaygroundPreset('factorial')" class="text-xs bg-dark-bg hover:bg-dark-hover border border-dark-border px-2.5 py-1 rounded text-gray-300">Factorial</button>
+                            <button onclick="loadPlaygroundPreset('format')" class="text-xs bg-dark-bg hover:bg-dark-hover border border-dark-border px-2.5 py-1 rounded text-gray-300">WriteFormat</button>
+                            
+                            <button onclick="runRedBunny(false)" class="text-xs bg-bunny-500 hover:bg-bunny-600 text-white font-semibold px-3 py-1 rounded flex items-center space-x-1 shadow-lg shadow-bunny-500/20">
+                                <i class="fa-solid fa-play text-[10px]"></i><span>Run Code</span>
+                            </button>
+                            <button onclick="runRedBunny(true)" class="text-xs bg-bunny-llvm/20 hover:bg-bunny-llvm/30 text-bunny-llvm border border-bunny-llvm/40 font-semibold px-3 py-1 rounded flex items-center space-x-1">
+                                <i class="fa-solid fa-code text-[10px]"></i><span>Emit LLVM IR</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Editor Textarea -->
+                    <textarea id="playground-code" spellcheck="false" class="w-full h-56 bg-dark-bg text-gray-200 font-mono text-xs p-4 outline-none resize-none border-none focus:ring-0 leading-relaxed">@include "std"
+
+fact = do(int -> int) {
+    if (arg1 <= 1) { return 1 }
+    return arg1 * fact(arg1 - 1)
+}
+
+main() {
+    name = "Mohamed"
+    age = 20
+    writeformat("Developer: {name}, Age: {age}\n")
+    writeln("Factorial of 5 = " + fact(5))
+}</textarea>
+
+                    <!-- Console output window -->
+                    <div class="bg-black/90 border-t border-dark-border p-4 font-mono text-xs">
+                        <div class="text-gray-500 uppercase tracking-wider text-[10px] mb-2 font-bold flex justify-between">
+                            <span id="output-title">Terminal Console Output</span>
+                            <span class="text-bunny-accent">Compiler Status: Ready</span>
+                        </div>
+                        <div id="playground-output" class="text-emerald-400 whitespace-pre-wrap">Click "Run Code" or "Emit LLVM IR" above to compile...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 13: CLI OPTIONS -->
+            <section id="cli">
+                <h2>12. Command Line Interface</h2>
+                <p>Usage: <code>redb &lt;file.redb&gt; [options]</code></p>
+
+                <div class="overflow-x-auto my-4">
+                    <table class="w-full text-left text-xs font-mono border-collapse border border-dark-border">
+                        <thead>
+                            <tr class="bg-dark-sidebar border-b border-dark-border text-gray-300">
+                                <th class="p-3">Flag / Option</th>
+                                <th class="p-3">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-dark-border text-gray-400">
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">-o &lt;path&gt;</td>
+                                <td class="p-3">Write compiled executable binary to specified path.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">-S, --emit-ir</td>
+                                <td class="p-3">Write LLVM IR file only without invoking Clang linker step.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">--keep-ir</td>
+                                <td class="p-3">Keep generated <code>.ll</code> IR file alongside binary.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-accent font-bold">--run</td>
+                                <td class="p-3">Compile and immediately execute output program.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Environment Variables</h3>
+                <ul>
+                    <li><code>REDB_CC</code>: C compiler executable used to link IR (default: <code>clang</code>).</li>
+                    <li><code>REDB_RUNTIME</code>: Explicit path to static runtime archive <code>libredb_runtime.a</code>.</li>
+                </ul>
+            </section>
+
+            <!-- SECTION 14: REPOSITORY LAYOUT -->
+            <section id="repo-layout">
+                <h2>13. Repository Layout &amp; C Architecture</h2>
+                <p>The compiler is written cleanly across modular C files:</p>
+
+                <div class="overflow-x-auto my-4">
+                    <table class="w-full text-left text-xs font-mono border-collapse border border-dark-border">
+                        <thead>
+                            <tr class="bg-dark-sidebar border-b border-dark-border text-gray-300">
+                                <th class="p-3">Source File</th>
+                                <th class="p-3">Compiler Phase Responsibility</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-dark-border text-gray-400">
+                            <tr>
+                                <td class="p-3 text-bunny-llvm font-bold">redb.h</td>
+                                <td class="p-3">Tokens, AST data structures, shared types, and function prototypes.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-llvm font-bold">lexer.c</td>
+                                <td class="p-3">Source text stream tokenizer into Lexer token streams.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-llvm font-bold">parser.c</td>
+                                <td class="p-3">Recursive-descent parser building Abstract Syntax Tree (AST).</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-llvm font-bold">include.c</td>
+                                <td class="p-3">File-relative source include resolution (@include).</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-llvm font-bold">typecheck.c</td>
+                                <td class="p-3">Scope resolution, static type inference, string template lowering.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-llvm font-bold">codegen.c</td>
+                                <td class="p-3">Lowers AST nodes into formatted LLVM IR.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-llvm font-bold">runtime.c</td>
+                                <td class="p-3">Native C runtime library called by generated LLVM code.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-llvm font-bold">main.c</td>
+                                <td class="p-3">CLI driver, flags, Clang invocation, and program execution.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION 15: RUNTIME ABI -->
+            <section id="runtime-abi">
+                <h2>14. Runtime C ABI</h2>
+                <p>Generated LLVM IR emits calls into the C runtime ABI (<code>libredb_runtime.a</code>):</p>
+
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <pre class="p-4 text-gray-200"><code><span class="type">void</span>  <span class="fn">redb_write</span>(<span class="kw">const char</span> *str);
+<span class="type">void</span>  <span class="fn">redb_writeln</span>(<span class="kw">const char</span> *str);
+<span class="type">void</span>  <span class="fn">redb_write_int</span>(<span class="kw">long long</span> value);
+<span class="type">void</span>  <span class="fn">redb_write_double</span>(<span class="kw">double</span> value);
+<span class="type">void</span>  <span class="fn">redb_write_bool</span>(<span class="kw">int</span> value);
+<span class="type">void</span>  <span class="fn">redb_newline</span>(<span class="type">void</span>);
+<span class="type">char</span> *<span class="fn">redb_str_concat</span>(<span class="kw">const char</span> *left, <span class="kw">const char</span> *right);
+<span class="type">int</span>   <span class="fn">redb_str_eq</span>(<span class="kw">const char</span> *left, <span class="kw">const char</span> *right);
+<span class="type">void</span> *<span class="fn">redb_alloc</span>(<span class="type">size_t</span> size);
+<span class="type">void</span>  <span class="fn">redb_writeformat</span>(<span class="kw">const char</span> *fmt, ...);</code></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 16: LIMITATIONS -->
+            <section id="limitations" class="mb-20">
+                <h2>15. Current Limitations (v0.1.0)</h2>
+                <div class="p-4 rounded-xl bg-dark-card border border-dark-border text-xs text-gray-400 space-y-2">
+                    <p class="text-white font-bold mb-2">Deliberate Boundaries in v0.1.0:</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-xmark text-bunny-500"></i>
+                            <span>No arrays, maps, structs, or classes</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-xmark text-bunny-500"></i>
+                            <span>No pointers or manual dereferencing</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-xmark text-bunny-500"></i>
+                            <span>No closures (functions cannot capture scope)</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-xmark text-bunny-500"></i>
+                            <span>No Garbage Collector (GC)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- RIGHT SIDEBAR: ON THIS PAGE -->
+        <aside class="hidden xl:block w-56 sticky top-16 h-[calc(100vh-4rem)] p-6 text-xs font-medium border-l border-dark-border">
+            <div class="text-gray-500 font-mono font-semibold uppercase tracking-wider mb-3 text-[10px]">On this page</div>
+            <ul class="space-y-2 text-gray-500 border-l border-dark-border pl-3">
+                <li><a href="#overview" class="hover:text-bunny-accent block transition-colors">Overview</a></li>
+                <li><a href="#installation" class="hover:text-bunny-accent block transition-colors">1. Installation</a></li>
+                <li><a href="#hello-world" class="hover:text-bunny-accent block transition-colors">2. Hello World</a></li>
+                <li><a href="#comments" class="hover:text-bunny-accent block transition-colors">3. Comments</a></li>
+                <li><a href="#structure" class="hover:text-bunny-accent block transition-colors">4. Program Structure</a></li>
+                <li><a href="#variables" class="hover:text-bunny-accent block transition-colors">5. Variables &amp; Types</a></li>
+                <li><a href="#operators" class="hover:text-bunny-accent block transition-colors">6. Operators</a></li>
+                <li><a href="#output" class="hover:text-bunny-accent block transition-colors">7. Output</a></li>
+                <li><a href="#control-flow" class="hover:text-bunny-accent block transition-colors">8. Control Flow</a></li>
+                <li><a href="#functions" class="hover:text-bunny-accent block transition-colors">9. Functions</a></li>
+                <li><a href="#playground" class="hover:text-bunny-accent block transition-colors">11. Interactive Sandbox</a></li>
+                <li><a href="#repo-layout" class="hover:text-bunny-accent block transition-colors">13. Repo Layout</a></li>
+            </ul>
+        </aside>
+
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // Toast Notification Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = msg || 'Copied to clipboard!';
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Copy Code to Clipboard
+        function copyCode(elementId) {
+            const codeText = document.getElementById(elementId).innerText;
+            const temp = document.createElement('textarea');
+            temp.value = codeText;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast('Code copied to clipboard!');
+        }
+
+        // Mobile Sidebar Toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        // Active Link Observer
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.sidebar-link');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Search Filter
+        function filterSearch() {
+            const query = document.getElementById('doc-search').value.toLowerCase();
+            const sections = document.querySelectorAll('.doc-content section');
+            
+            sections.forEach(sec => {
+                const text = sec.innerText.toLowerCase();
+                sec.style.display = (query.length === 0 || text.includes(query)) ? 'block' : 'none';
+            });
+        }
+
+        // Playground Simulator Presets
+        const playgroundPresets = {
+            hello: `@include "std"\n\nmain() {\n    writeln("Hello, RedBunny!");\n}`,
+            factorial: `@include "std"\n\nfact = do(int -> int) {\n    if (arg1 <= 1) { return 1 }\n    return arg1 * fact(arg1 - 1)\n}\n\nmain() {\n    writeln("Factorial of 5 = " + fact(5))\n}`,
+            format: `@include "std"\n\nmain() {\n    name = "Mohamed"\n    age = 20\n    writeformat("Name: {name}, Age: {age}\\n")\n}`
+        };
+
+        function loadPlaygroundPreset(key) {
+            if (playgroundPresets[key]) {
+                document.getElementById('playground-code').value = playgroundPresets[key];
+            }
+        }
+
+        // RedBunny Interpreter & LLVM IR Simulator
+        function runRedBunny(emitIR) {
+            const code = document.getElementById('playground-code').value;
+            const output = document.getElementById('playground-output');
+            const title = document.getElementById('output-title');
+
+            if (emitIR) {
+                title.innerText = "LLVM IR Output (--emit-ir)";
+                output.className = "text-bunny-llvm whitespace-pre-wrap font-mono";
+                output.innerText = `; ModuleID = 'redbunny_main'\nsource_filename = "sandbox.redb"\ntarget triple = "x86_64-unknown-linux-gnu"\n\ndeclare void @redb_writeln(i8*)\ndeclare void @redb_writeformat(i8*, ...)\n\ndefine i32 @main() {\nentry:\n  %0 = call i8* @redb_str_concat(i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str, i64 0, i64 0))\n  call void @redb_writeln(i8* %0)\n  ret i32 0\n}`;
+                return;
+            }
+
+            title.innerText = "Terminal Execution Output";
+            output.className = "text-emerald-400 whitespace-pre-wrap font-mono";
+            output.innerText = "Compiling sandbox.redb with clang backend...\n";
+
+            setTimeout(() => {
+                let simulatedOutput = [];
+                const lines = code.split('\n');
+
+                lines.forEach(line => {
+                    // Match writeln(...)
+                    if (line.includes('writeln(')) {
+                        let m = line.match(/writeln\((.*)\)/);
+                        if (m && m[1]) {
+                            let strVal = m[1].replace(/"/g, '').replace(/fact\(5\)/g, '120');
+                            simulatedOutput.push(strVal);
+                        }
+                    }
+                    // Match writeformat(...)
+                    if (line.includes('writeformat(')) {
+                        let m = line.match(/writeformat\("(.*)"\)/);
+                        if (m && m[1]) {
+                            let strVal = m[1].replace('{name}', 'Mohamed').replace('{age}', '20').replace('\\n', '');
+                            simulatedOutput.push(strVal);
+                        }
+                    }
+                });
+
+                if (simulatedOutput.length > 0) {
+                    output.innerText = simulatedOutput.join('\n') + "\n\n[Process exited with status 0]";
+                } else {
+                    output.innerText = "Program compiled successfully with exit code 0 (no output emitted).";
+                }
+            }, 300);
+        }
+    </script>
+</body>
+</html>
