@@ -2,6 +2,8 @@
 
 Made with ❤️ by mohamedboukerche22 (GitHub: [github.com/mohamedboukerche22](https://github.com/mohamedboukerche22))
 
+Live manual: **https://mohamedboukerche22.github.io/redbunny/**
+
 RedBunny is a small, fast, compiled language. Source files use the `.redb`
 extension, the compiler is written in C, and programs are lowered to LLVM IR
 before being linked into native executables.
@@ -13,8 +15,8 @@ before being linked into native executables.
 ### Linux / macOS
 
 ```bash
-chmod +x install.sh
-./install.sh
+chmod +x scripts/install.sh
+./scripts/install.sh
 ```
 
 The installer builds with CMake and installs:
@@ -22,13 +24,13 @@ The installer builds with CMake and installs:
 - `redb` to `/usr/local/bin/redb`
 - `libredb_runtime.a` to `/usr/local/lib/`
 
-Override the prefix with `PREFIX=$HOME/.local ./install.sh`.
+Override the prefix with `PREFIX=$HOME/.local ./scripts/install.sh`.
 
 ### Windows
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force
-.\install.ps1
+.\scripts\install.ps1
 ```
 
 Requirements: LLVM development libraries, Clang, CMake and Ninja. The compiler

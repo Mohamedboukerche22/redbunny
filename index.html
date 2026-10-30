@@ -269,10 +269,10 @@
                             <i class="fa-regular fa-copy"></i><span>Copy</span>
                         </button>
                     </div>
-                    <pre id="install-nix" class="p-4 text-gray-200"><code>chmod +x install.sh
-./install.sh</code></pre>
+                    <pre id="install-nix" class="p-4 text-gray-200"><code>chmod +x scripts/install.sh
+./scripts/install.sh</code></pre>
                 </div>
-                <p class="text-xs text-gray-400">The installer uses CMake to build and copies <code>redb</code> to <code>/usr/local/bin/redb</code> and <code>libredb_runtime.a</code> to <code>/usr/local/lib/</code>. You can override the path via <code>PREFIX=$HOME/.local ./install.sh</code>.</p>
+                <p class="text-xs text-gray-400">The installer uses CMake to build and copies <code>redb</code> to <code>/usr/local/bin/redb</code> and <code>libredb_runtime.a</code> to <code>/usr/local/lib/</code>. You can override the path via <code>PREFIX=$HOME/.local ./scripts/install.sh</code>.</p>
 
                 <h3>Windows</h3>
                 <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
@@ -283,7 +283,7 @@
                         </button>
                     </div>
                     <pre id="install-win" class="p-4 text-gray-200"><code>Set-ExecutionPolicy Bypass -Scope Process -Force
-.\install.ps1</code></pre>
+.\scripts\install.ps1</code></pre>
                 </div>
 
                 <h3>Manual CMake Build</h3>
@@ -676,41 +676,41 @@ main() {
                     <table class="w-full text-left text-xs font-mono border-collapse border border-dark-border">
                         <thead>
                             <tr class="bg-dark-sidebar border-b border-dark-border text-gray-300">
-                                <th class="p-3">Source File</th>
+                                <th class="p-3">Path</th>
                                 <th class="p-3">Compiler Phase Responsibility</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-dark-border text-gray-400">
                             <tr>
-                                <td class="p-3 text-bunny-llvm font-bold">redb.h</td>
+                                <td class="p-3 text-bunny-llvm font-bold">include/redb.h</td>
                                 <td class="p-3">Tokens, AST data structures, shared types, and function prototypes.</td>
                             </tr>
                             <tr>
-                                <td class="p-3 text-bunny-llvm font-bold">lexer.c</td>
+                                <td class="p-3 text-bunny-llvm font-bold">src/lexer.c</td>
                                 <td class="p-3">Source text stream tokenizer into Lexer token streams.</td>
                             </tr>
                             <tr>
-                                <td class="p-3 text-bunny-llvm font-bold">parser.c</td>
+                                <td class="p-3 text-bunny-llvm font-bold">src/parser.c</td>
                                 <td class="p-3">Recursive-descent parser building Abstract Syntax Tree (AST).</td>
                             </tr>
                             <tr>
-                                <td class="p-3 text-bunny-llvm font-bold">include.c</td>
+                                <td class="p-3 text-bunny-llvm font-bold">src/include.c</td>
                                 <td class="p-3">File-relative source include resolution (@include).</td>
                             </tr>
                             <tr>
-                                <td class="p-3 text-bunny-llvm font-bold">typecheck.c</td>
+                                <td class="p-3 text-bunny-llvm font-bold">src/typecheck.c</td>
                                 <td class="p-3">Scope resolution, static type inference, string template lowering.</td>
                             </tr>
                             <tr>
-                                <td class="p-3 text-bunny-llvm font-bold">codegen.c</td>
+                                <td class="p-3 text-bunny-llvm font-bold">src/codegen.c</td>
                                 <td class="p-3">Lowers AST nodes into formatted LLVM IR.</td>
                             </tr>
                             <tr>
-                                <td class="p-3 text-bunny-llvm font-bold">runtime.c</td>
+                                <td class="p-3 text-bunny-llvm font-bold">runtime/runtime.c</td>
                                 <td class="p-3">Native C runtime library called by generated LLVM code.</td>
                             </tr>
                             <tr>
-                                <td class="p-3 text-bunny-llvm font-bold">main.c</td>
+                                <td class="p-3 text-bunny-llvm font-bold">src/main.c</td>
                                 <td class="p-3">CLI driver, flags, Clang invocation, and program execution.</td>
                             </tr>
                         </tbody>

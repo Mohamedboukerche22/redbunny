@@ -6,7 +6,7 @@ set -euo pipefail
 
 PREFIX="${PREFIX:-/usr/local}"
 BUILD_DIR="${BUILD_DIR:-build}"
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 need() {
     command -v "$1" >/dev/null 2>&1
@@ -65,7 +65,9 @@ cmake -S "$ROOT" -B "$ROOT/$BUILD_DIR" \
 
 cmake --build "$ROOT/$BUILD_DIR" -j"$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)"
 
-if [ -w "$PREFIX" ] || [ -w "$PREFIX/bin" ] 2>/dev/null; then
+mkdir -p "$PREFIX" 2>/dev/null || true
+
+if [ -w "$PREFIX" ]; then
     cmake --install "$ROOT/$BUILD_DIR"
 else
     sudo cmake --install "$ROOT/$BUILD_DIR"

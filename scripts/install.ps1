@@ -1,6 +1,9 @@
 # RedBunny compiler installer for Windows.
 $ErrorActionPreference = "Stop"
 
+$Root = Split-Path -Parent $PSScriptRoot
+Set-Location $Root
+
 function Need($name) {
     return [bool](Get-Command $name -ErrorAction SilentlyContinue)
 }
@@ -26,8 +29,8 @@ if (Test-Path "$llvmRoot\bin") {
 }
 
 $cmakeArgs = @(
-    "-S", ".",
-    "-B", "build",
+    "-S", $Root,
+    "-B", (Join-Path $Root "build"),
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=Release"
 )
@@ -41,12 +44,12 @@ Write-Host "Configuring RedBunny..."
 if ($LASTEXITCODE -ne 0) { throw "cmake configure failed" }
 
 Write-Host "Building RedBunny..."
-& cmake --build build
+& cmake --build (Join-Path $Root "build")
 if ($LASTEXITCODE -ne 0) { throw "build failed" }
 
 $prefix = "C:\Program Files\RedBunny"
 Write-Host "Installing to $prefix..."
-& cmake --install build --prefix $prefix
+& cmake --install (Join-Path $Root "build") --prefix $prefix
 if ($LASTEXITCODE -ne 0) { throw "install failed" }
 
 $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")

@@ -9,7 +9,6 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 if(LLVM_LINK_LLVM_DYLIB)
@@ -18,16 +17,21 @@ else()
     llvm_map_components_to_libnames(LLVM_LIBS core analysis support)
 endif()
 
-add_library(redb_runtime STATIC runtime.c)
+add_library(redb_runtime STATIC runtime/runtime.c)
 
 add_executable(redb
-    main.c
-    util.c
-    lexer.c
-    parser.c
-    include.c
-    typecheck.c
-    codegen.c
+    src/main.c
+    src/util.c
+    src/lexer.c
+    src/parser.c
+    src/include.c
+    src/typecheck.c
+    src/codegen.c
+)
+
+target_include_directories(redb PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${LLVM_INCLUDE_DIRS}
 )
 
 if(MSVC)
