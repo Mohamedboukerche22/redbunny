@@ -1,0 +1,23 @@
+main() {
+    for(i in 0 to 9) {
+        if(i == 2) { continue }
+        if(i == 5) { break }
+        write(i)
+    }
+    writeln("")
+
+    n = 0
+    while(n < 3) {
+        write(n)
+        n = n + 1
+    }
+    writeln("")
+
+    if(0) {
+        writeln("bad")
+    } else if(1) {
+        writeln("truthy")
+    } else {
+        writeln("bad")
+    }
+}

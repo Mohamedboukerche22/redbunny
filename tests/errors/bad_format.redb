@@ -1,0 +1,3 @@
+main() {
+    writeformat("hello {missing}\n")
+}

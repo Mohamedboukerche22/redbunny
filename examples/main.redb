@@ -1,0 +1,14 @@
+
+
+add = do(int , int -> int ){
+    return arg1+arg2;
+}
+
+
+main(){
+  a=5
+  b=10
+  res = add(a,b)
+  writeformat("a+b = {res}")
+
+}

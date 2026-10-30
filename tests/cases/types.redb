@@ -1,0 +1,12 @@
+main() {
+    i = 7
+    f = 2.5
+    b = true
+    writeln(i)
+    writeln(f)
+    writeln(i + f)
+    writeln(b)
+    writeln(i > 3 && b)
+    i = 9
+    writeln(i)
+}

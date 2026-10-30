@@ -1,0 +1,10 @@
+main() {
+    a = "Red"
+    b = "Bunny"
+    c = a + b
+    writeln(c)
+    writeln(a == "Red")
+    writeln(a != b)
+    name = "bunny"
+    writeformat("{{literal}} {name}\n")
+}

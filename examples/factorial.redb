@@ -1,0 +1,18 @@
+-- Recursive factorial using the compact function syntax.
+@include "std"
+
+fact = do(int -> int) {
+    if (arg1 <= 1) {
+        return 1
+    }
+    return arg1 * fact(arg1 - 1)
+}
+
+main() {
+    n = 0
+    while (n <= 10) {
+        writeformat("{n}! = ")
+        writeln(fact(n))
+        n = n + 1
+    }
+}

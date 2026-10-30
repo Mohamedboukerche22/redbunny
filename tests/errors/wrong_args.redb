@@ -1,0 +1,6 @@
+f = do(int -> int) {
+    return arg1
+}
+main() {
+    writeln(f(1, 2))
+}

@@ -1,0 +1,52 @@
+-- RedBunny language tour
+@include "std"
+
+add_one = do(int -> int) {
+    return arg1 + 1;
+}
+
+greet = do(str -> {}) {
+    writeln(arg1)
+}
+
+answer = doto({} => int) {
+    return 42
+}
+
+main() {
+    -* variables get their type from the first assignment *-
+    name = "Mohamed"
+    age = 20
+    pi = 3.14159
+    alive = true
+
+    writeformat("Name: {name}, Age: {age}\n")
+    writeformat("pi={pi} alive={alive}\n")
+
+    writeln(add_one(41))
+    greet("hello from a function")
+    writeln(answer())
+
+    total = 0
+    for(i in 0 to 9) {
+        total = total + i
+    }
+    writeln(total)
+
+    n = 0
+    while(n < 3) {
+        write(n)
+        write(" ")
+        n = n + 1
+    }
+    writeln("")
+
+    if(age >= 18 && alive) {
+        writeln("adult")
+    } else {
+        writeln("minor")
+    }
+
+    writeformat("double: {pi} int: {age} str: {name}\n")
+    writeln("concat: " + name + "!")
+}

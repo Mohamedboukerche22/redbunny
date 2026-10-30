@@ -1,0 +1,8 @@
+build/
+build-*/
+*.o
+*.ll
+*.a
+*.exe
+/examples/hello
+/examples/main

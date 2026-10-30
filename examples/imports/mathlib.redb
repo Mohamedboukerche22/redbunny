@@ -1,0 +1,7 @@
+square = do(int -> int) {
+    return arg1 * arg1
+}
+
+cube = do(int -> int) {
+    return arg1 * arg1 * arg1
+}

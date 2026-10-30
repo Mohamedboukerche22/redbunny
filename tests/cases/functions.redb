@@ -1,0 +1,26 @@
+fact = do(int -> int) {
+    if(arg1 <= 1) { return 1 }
+    return arg1 * fact(arg1 - 1)
+}
+
+outer = do(int -> int) {
+    twice = do(int -> int) {
+        return arg1 * 2
+    }
+    return twice(arg1) + 1
+}
+
+hello = do(str -> {}) {
+    writeln(arg1)
+}
+
+answer = doto({} => int) {
+    return 42
+}
+
+main() {
+    writeln(fact(5))
+    writeln(outer(20))
+    hello("hi")
+    writeln(answer())
+}
