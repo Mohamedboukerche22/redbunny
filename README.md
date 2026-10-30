@@ -197,6 +197,7 @@ redb main.redb -S -o main.ll
 .
 ├── CMakeLists.txt          build, install and test configuration
 ├── README.md
+├── .nojekyll               serve the site as static files on GitHub Pages
 ├── index.html              live documentation website (GitHub Pages)
 ├── include/
 │   └── redb.h              tokens, AST, shared types and prototypes
