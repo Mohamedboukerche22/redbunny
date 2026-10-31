@@ -259,9 +259,36 @@
             <!-- SECTION 2: INSTALLATION -->
             <section id="installation">
                 <h2>1. Installation</h2>
-                <p>RedBunny can be compiled and installed on Linux, macOS, and Windows.</p>
+                <p>One command downloads RedBunny, builds the compiler, installs it, and runs the hello-world example.</p>
 
                 <h3>Linux / macOS</h3>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">Bash</span>
+                        <button onclick="copyCode('install-nix-one')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="install-nix-one" class="p-4 text-gray-200"><code>curl -fsSL https://raw.githubusercontent.com/Mohamedboukerche22/redbunny/main/scripts/get.sh | bash</code></pre>
+                </div>
+                <p class="text-xs text-gray-400">Installs to <code>~/.local</code>. Prefix it with <code>PREFIX=/some/path</code> to install elsewhere. Requires <code>curl</code> or <code>wget</code>, <code>tar</code>, and a C toolchain; the installer installs LLVM, CMake and build tools on common distributions.</p>
+
+                <h3>Windows</h3>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">PowerShell</span>
+                        <button onclick="copyCode('install-win-one')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="install-win-one" class="p-4 text-gray-200"><code>irm https://raw.githubusercontent.com/Mohamedboukerche22/redbunny/main/scripts/get.ps1 | iex</code></pre>
+                </div>
+                <p class="text-xs text-gray-400">Installs to <code>%LOCALAPPDATA%\RedBunny</code>. Set <code>$env:PREFIX</code> before running to install elsewhere. Requires PowerShell 5+; the installer installs LLVM, CMake and Ninja through Chocolatey.</p>
+
+                <h3>From a source checkout</h3>
+                <p class="text-xs text-gray-400">Clone the repository, then run the platform installer.</p>
+
+                <h4>Linux / macOS</h4>
                 <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
                     <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
                         <span class="text-gray-500">Bash</span>
@@ -274,7 +301,7 @@
                 </div>
                 <p class="text-xs text-gray-400">The installer uses CMake to build and copies <code>redb</code> to <code>/usr/local/bin/redb</code> and <code>libredb_runtime.a</code> to <code>/usr/local/lib/</code>. You can override the path via <code>PREFIX=$HOME/.local ./scripts/install.sh</code>.</p>
 
-                <h3>Windows</h3>
+                <h4>Windows</h4>
                 <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-3">
                     <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
                         <span class="text-gray-500">PowerShell</span>

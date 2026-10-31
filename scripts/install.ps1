@@ -47,15 +47,21 @@ Write-Host "Building RedBunny..."
 & cmake --build (Join-Path $Root "build")
 if ($LASTEXITCODE -ne 0) { throw "build failed" }
 
-$prefix = "C:\Program Files\RedBunny"
+$prefix = if ($env:PREFIX) { $env:PREFIX } else { "C:\Program Files\RedBunny" }
 Write-Host "Installing to $prefix..."
 & cmake --install (Join-Path $Root "build") --prefix $prefix
 if ($LASTEXITCODE -ne 0) { throw "install failed" }
 
-$machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-if ($machinePath -notlike "*$prefix\bin*") {
+$scope = "Machine"
+if ($env:LOCALAPPDATA -and $prefix.StartsWith(
+        $env:LOCALAPPDATA, [System.StringComparison]::OrdinalIgnoreCase)) {
+    $scope = "User"
+}
+$currentPath = [Environment]::GetEnvironmentVariable("Path", $scope)
+if (-not $currentPath) { $currentPath = "" }
+if ($currentPath -notlike "*$prefix\bin*") {
     [Environment]::SetEnvironmentVariable(
-        "Path", "$machinePath;$prefix\bin", "Machine")
+        "Path", "$currentPath;$prefix\bin", $scope)
 }
 
 Write-Host ""

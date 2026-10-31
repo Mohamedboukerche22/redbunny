@@ -12,7 +12,28 @@ before being linked into native executables.
 
 ## 1. Installation
 
-### Linux / macOS
+### One-line install
+
+Linux / macOS:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Mohamedboukerche22/redbunny/main/scripts/get.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Mohamedboukerche22/redbunny/main/scripts/get.ps1 | iex
+```
+
+The bootstrap downloads the current `main` branch, installs the compiler, then
+compiles and runs `examples/hello.redb`. Linux/macOS installs to `~/.local`;
+Windows installs to `%LOCALAPPDATA%\RedBunny`. Override with
+`PREFIX=/some/path` on Linux/macOS or `$env:PREFIX = "D:\RedBunny"` on Windows.
+
+### From a source checkout
+
+#### Linux / macOS
 
 ```bash
 chmod +x scripts/install.sh
@@ -26,7 +47,7 @@ The installer builds with CMake and installs:
 
 Override the prefix with `PREFIX=$HOME/.local ./scripts/install.sh`.
 
-### Windows
+#### Windows
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force
