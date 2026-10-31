@@ -203,6 +203,56 @@ static LLVMValueRef rt_str_eq(void)
     return get_runtime("redb_str_eq", LLVMInt32TypeInContext(ctx), params, 2);
 }
 
+/* ---- array support ---- */
+static LLVMValueRef rt_array_new(void)
+{
+    LLVMTypeRef params[] = { LLVMInt64TypeInContext(ctx), LLVMInt64TypeInContext(ctx),
+                             LLVMInt64TypeInContext(ctx) };
+    return get_runtime("redb_array_new", llvm_type(TY_STR), params, 3);
+}
+
+static LLVMValueRef rt_array_at(void)
+{
+    LLVMTypeRef params[] = { llvm_type(TY_STR), LLVMInt64TypeInContext(ctx) };
+    return get_runtime("redb_array_at", llvm_type(TY_STR), params, 2);
+}
+
+static LLVMValueRef rt_array_size(void)
+{
+    LLVMTypeRef params[] = { llvm_type(TY_STR) };
+    return get_runtime("redb_array_size", LLVMInt64TypeInContext(ctx), params, 1);
+}
+
+static LLVMValueRef rt_array_resize(void)
+{
+    LLVMTypeRef params[] = { llvm_type(TY_STR), LLVMInt64TypeInContext(ctx) };
+    return get_runtime("redb_array_resize", llvm_type(TY_VOID), params, 2);
+}
+
+/* Byte size of one scalar element; must match the runtime's expectations. */
+static int leaf_bytes(RedbType type)
+{
+    switch (type) {
+    case TY_BOOL:   return 1;
+    case TY_FLOAT:  return 4;
+    default:        return 8;   /* int, double, str (pointer) */
+    }
+}
+
+/* For array<array<int>>: depth = 1 (inner arrays), leaf = int. */
+static int array_depth(RedbType arr, RedbType *leaf)
+{
+    RedbType t = redb_elem_type(arr);
+    int depth = 0;
+
+    while (redb_is_array(t)) {
+        depth++;
+        t = redb_elem_type(t);
+    }
+    *leaf = t;
+    return depth;
+}
+
 static LLVMValueRef call_fn(LLVMValueRef fn, LLVMValueRef *args, unsigned count)
 {
     return LLVMBuildCall2(builder, LLVMGlobalGetValueType(fn), fn, args, count, "");
@@ -504,6 +554,39 @@ static LLVMValueRef gen_expr(ASTNode *node, RedbType *out_type)
         return NULL;
     }
 
+    case AST_INDEX: {
+        RedbType base_type, index_type;
+        LLVMValueRef base = gen_expr(node->children[0], &base_type);
+        LLVMValueRef index = gen_expr(node->children[1], &index_type);
+        LLVMValueRef args[2];
+        LLVMValueRef slot;
+        RedbType elem = redb_elem_type(base_type);
+
+        args[0] = base;
+        args[1] = convert(index, index_type, TY_INT);
+        slot = call_fn(rt_array_at(), args, 2);
+        *out_type = elem;
+        return LLVMBuildLoad2(builder, llvm_type(elem), slot, "elem");
+    }
+
+    case AST_METHOD: {
+        RedbType base_type, arg_type;
+        LLVMValueRef base = gen_expr(node->children[0], &base_type);
+        LLVMValueRef args[2];
+
+        (void)base_type;
+        args[0] = base;
+        if (!strcmp(node->name, "size")) {
+            *out_type = TY_INT;
+            return call_fn(rt_array_size(), args, 1);
+        }
+        args[1] = gen_expr(node->children[1], &arg_type);
+        args[1] = convert(args[1], arg_type, TY_INT);
+        call_fn(rt_array_resize(), args, 2);
+        *out_type = TY_VOID;
+        return NULL;
+    }
+
     default:
         cg_fail(node->line, "invalid expression node %d", (int)node->type);
         return NULL;
@@ -679,8 +762,54 @@ static void gen_stmt(ASTNode *node)
         } else if (current_is_main) {
             LLVMBuildRet(builder, LLVMConstInt(LLVMInt32TypeInContext(ctx), 0, 0));
         } else {
-            LLVMBuildRet(builder, LLVMConstInt(llvm_type(current_ret), 0, 0));
+            LLVMBuildRet(builder, LLVMConstNull(llvm_type(current_ret)));
         }
+        break;
+    }
+
+    case AST_ARRAY_DECL: {
+        RedbType arr_type = node->inferred;
+        LLVMValueRef arr;
+        LLVMValueRef slot;
+
+        if (node->has_init) {
+            RedbType init_type;
+
+            arr = gen_expr(node->children[1], &init_type);
+        } else {
+            LLVMValueRef args[3];
+            RedbType size_type, leaf;
+            int depth;
+            LLVMValueRef size = gen_expr(node->children[0], &size_type);
+
+            depth = array_depth(arr_type, &leaf);
+            args[0] = convert(size, size_type, TY_INT);
+            args[1] = LLVMConstInt(LLVMInt64TypeInContext(ctx), (unsigned long long)depth, 0);
+            args[2] = LLVMConstInt(LLVMInt64TypeInContext(ctx),
+                                   (unsigned long long)leaf_bytes(leaf), 0);
+            arr = call_fn(rt_array_new(), args, 3);
+        }
+        slot = entry_alloca(llvm_type(arr_type), node->name);
+        c_declare(node->name, arr_type, slot, node->line);
+        LLVMBuildStore(builder, arr, slot);
+        break;
+    }
+
+    case AST_INDEX_ASSIGN: {
+        ASTNode *target = node->children[0];
+        RedbType base_type, index_type, value_type;
+        LLVMValueRef base = gen_expr(target->children[0], &base_type);
+        LLVMValueRef index = gen_expr(target->children[1], &index_type);
+        LLVMValueRef value = gen_expr(node->children[1], &value_type);
+        RedbType elem = redb_elem_type(base_type);
+        LLVMValueRef args[2];
+        LLVMValueRef slot;
+
+        args[0] = base;
+        args[1] = convert(index, index_type, TY_INT);
+        slot = call_fn(rt_array_at(), args, 2);
+        value = convert(value, value_type, elem);
+        LLVMBuildStore(builder, value, slot);
         break;
     }
 
@@ -761,7 +890,7 @@ static void emit_function(ASTNode *node, LLVMValueRef fn)
         if (node->ret_type == TY_VOID)
             LLVMBuildRetVoid(builder);
         else
-            LLVMBuildRet(builder, LLVMConstInt(llvm_type(node->ret_type), 0, 0));
+            LLVMBuildRet(builder, LLVMConstNull(llvm_type(node->ret_type)));
     }
 
     pop_scope();

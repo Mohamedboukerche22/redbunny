@@ -1,0 +1,4 @@
+main() {
+    array<int> a(3)
+    a[0] = "text"
+}

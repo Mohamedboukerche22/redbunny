@@ -329,7 +329,43 @@ static RedbType infer_expr(ASTNode *node)
 
         if (arg == TY_VOID)
             tc_fail(node->line, "cannot print a void value");
+        if (redb_is_array(arg))
+            tc_fail(node->line, "cannot print an array; print one element with arr[i]");
         type = TY_VOID;
+        break;
+    }
+
+    case AST_INDEX: {
+        RedbType base = infer_expr(node->children[0]);
+        RedbType index = infer_expr(node->children[1]);
+
+        if (!redb_is_array(base))
+            tc_fail(node->line, "cannot index a value of type %s", redb_type_name(base));
+        if (index != TY_INT)
+            tc_fail(node->line, "array index must be int, got %s", redb_type_name(index));
+        type = redb_elem_type(base);
+        break;
+    }
+
+    case AST_METHOD: {
+        RedbType base = infer_expr(node->children[0]);
+
+        if (!redb_is_array(base))
+            tc_fail(node->line, "cannot call '%s' on a value of type %s",
+                    node->name, redb_type_name(base));
+        if (!strcmp(node->name, "size")) {
+            if (node->child_count != 1)
+                tc_fail(node->line, "size() takes no arguments");
+            type = TY_INT;
+        } else if (!strcmp(node->name, "resize")) {
+            if (node->child_count != 2)
+                tc_fail(node->line, "resize() takes exactly one argument");
+            if (infer_expr(node->children[1]) != TY_INT)
+                tc_fail(node->line, "resize() expects an int size");
+            type = TY_VOID;
+        } else {
+            tc_fail(node->line, "arrays have no method '%s'", node->name);
+        }
         break;
     }
 
@@ -488,6 +524,45 @@ static void typecheck_stmt(ASTNode *node)
                     node->type == AST_BREAK ? "break" : "continue");
         node->inferred = TY_VOID;
         break;
+
+    case AST_ARRAY_DECL: {
+        RedbType declared = node->ret_type;
+        RedbType size = infer_expr(node->children[0]);
+
+        if (size != TY_INT)
+            tc_fail(node->line, "array size must be int, got %s", redb_type_name(size));
+        if (node->has_init) {
+            RedbType init = infer_expr(node->children[1]);
+
+            if (redb_elem_type(declared) == TY_AUTO) {
+                if (!redb_is_array(init))
+                    tc_fail(node->line, "array<auto> '%s' must be initialized with an array",
+                            node->name);
+                declared = init;          /* element type comes from the initializer */
+            } else if (init != declared) {
+                tc_fail(node->line, "cannot initialize '%s' of type %s with %s",
+                        node->name, redb_type_name(declared), redb_type_name(init));
+            }
+        } else if (redb_elem_type(declared) == TY_AUTO) {
+            declared = redb_array_of(TY_INT);  /* no initializer: default to int */
+        }
+        declare(node->name, declared, node->line);
+        node->inferred = declared;
+        break;
+    }
+
+    case AST_INDEX_ASSIGN: {
+        RedbType target = infer_expr(node->children[0]);
+        RedbType value = infer_expr(node->children[1]);
+
+        if (value == TY_VOID)
+            tc_fail(node->line, "cannot assign a void value to an array element");
+        if (!assignable(value, target))
+            tc_fail(node->line, "cannot assign %s to an array element of type %s",
+                    redb_type_name(value), redb_type_name(target));
+        node->inferred = target;
+        break;
+    }
 
     case AST_INCLUDE:
         node->inferred = TY_VOID;

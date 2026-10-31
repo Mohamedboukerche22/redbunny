@@ -42,8 +42,53 @@ void redb_error(int line, const char *fmt, ...)
     fputc('\n', stderr);
 }
 
+#define REDB_MAX_ARRAY_TYPES 256
+static RedbType array_elems[REDB_MAX_ARRAY_TYPES];
+static int array_count;
+
+/* Returns the (interned) type "array<elem>". */
+RedbType redb_array_of(RedbType elem)
+{
+    int i;
+
+    for (i = 0; i < array_count; i++) {
+        if (array_elems[i] == elem)
+            return (RedbType)(REDB_ARRAY_BASE + i);
+    }
+    if (array_count >= REDB_MAX_ARRAY_TYPES) {
+        fprintf(stderr, "redb: error: too many distinct array types\n");
+        exit(1);
+    }
+    array_elems[array_count] = elem;
+    array_count++;
+    return (RedbType)(REDB_ARRAY_BASE + array_count - 1);
+}
+
+int redb_is_array(RedbType type)
+{
+    return (int)type >= REDB_ARRAY_BASE;
+}
+
+RedbType redb_elem_type(RedbType type)
+{
+    if (!redb_is_array(type))
+        return TY_UNKNOWN;
+    return array_elems[(int)type - REDB_ARRAY_BASE];
+}
+
 const char *redb_type_name(RedbType type)
 {
+    static char names[4][160];
+    static int next;
+    char *out;
+
+    if (redb_is_array(type)) {
+        out = names[next];
+        next = (next + 1) % 4;
+        snprintf(out, sizeof(names[0]), "array<%s>",
+                 redb_type_name(redb_elem_type(type)));
+        return out;
+    }
     switch (type) {
     case TY_VOID:   return "void";
     case TY_INT:    return "int";
@@ -52,6 +97,7 @@ const char *redb_type_name(RedbType type)
     case TY_STR:    return "str";
     case TY_BOOL:   return "bool";
     case TY_FUNC:   return "function";
+    case TY_AUTO:   return "auto";
     default:        return "unknown";
     }
 }

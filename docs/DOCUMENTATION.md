@@ -560,7 +560,7 @@ memory.
 
 ## 13. Current Limitations
 
-- No arrays, maps, structs, classes or pointers.
+- No maps, structs, classes or pointers. Arrays are supported (see `array<T>`).
 - No user-defined types or generics.
 - No closures; functions cannot capture enclosing locals.
 - No exceptions or panic handling.

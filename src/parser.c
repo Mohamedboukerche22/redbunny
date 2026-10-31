@@ -114,8 +114,41 @@ static Token *expect(TokenType type, const char *what)
     return advance();
 }
 
+/* array<T>: T is int, float, double, str, auto (declarations only) or another array. */
+static RedbType parse_array_type(int allow_auto)
+{
+    RedbType elem;
+
+    expect(TOKEN_ARRAY, "'array'");
+    expect(TOKEN_LT, "'<' after array");
+    if (check(TOKEN_ARRAY)) {
+        elem = parse_array_type(0);
+    } else if (match(TOKEN_TYPE_AUTO)) {
+        if (!allow_auto)
+            parse_fail(current()->line,
+                       "'auto' is only allowed in array variable declarations");
+        elem = TY_AUTO;
+    } else if (match(TOKEN_TYPE_INT)) {
+        elem = TY_INT;
+    } else if (match(TOKEN_TYPE_FLOAT)) {
+        elem = TY_FLOAT;
+    } else if (match(TOKEN_TYPE_DOUBLE)) {
+        elem = TY_DOUBLE;
+    } else if (match(TOKEN_TYPE_STR)) {
+        elem = TY_STR;
+    } else {
+        parse_fail(current()->line,
+                   "expected an element type (int, float, double, str, auto or array<...>)");
+        elem = TY_UNKNOWN;
+    }
+    expect(TOKEN_GT, "'>' to close the array type");
+    return redb_array_of(elem);
+}
+
 static RedbType parse_type(void)
 {
+    if (check(TOKEN_ARRAY))
+        return parse_array_type(0);
     if (match(TOKEN_TYPE_INT))
         return TY_INT;
     if (match(TOKEN_TYPE_FLOAT))
@@ -231,6 +264,42 @@ static ASTNode *parse_primary(void)
     return NULL;
 }
 
+/* Postfix operators: arr[i] and arr.method(args), chained left to right. */
+static ASTNode *parse_postfix(void)
+{
+    ASTNode *node = parse_primary();
+
+    for (;;) {
+        if (check(TOKEN_LBRACKET)) {
+            Token *tok = advance();
+            ASTNode *index = create_node(AST_INDEX, tok->line);
+
+            add_child(index, node);
+            add_child(index, parse_expression());
+            expect(TOKEN_RBRACKET, "']' after index");
+            node = index;
+        } else if (check(TOKEN_DOT)) {
+            Token *dot = advance();
+            Token *name = expect(TOKEN_IDENTIFIER, "a method name after '.'");
+            ASTNode *call = create_node(AST_METHOD, dot->line);
+
+            set_name(call, name->lexeme);
+            add_child(call, node);
+            expect(TOKEN_LPAREN, "'(' after method name");
+            if (!check(TOKEN_RPAREN)) {
+                add_child(call, parse_expression());
+                while (match(TOKEN_COMMA))
+                    add_child(call, parse_expression());
+            }
+            expect(TOKEN_RPAREN, "')' after method arguments");
+            node = call;
+        } else {
+            break;
+        }
+    }
+    return node;
+}
+
 static ASTNode *parse_unary(void)
 {
     Token *tok = current();
@@ -242,7 +311,7 @@ static ASTNode *parse_unary(void)
         add_child(node, parse_unary());
         return node;
     }
-    return parse_primary();
+    return parse_postfix();
 }
 
 static ASTNode *parse_multiplicative(void)
@@ -369,12 +438,46 @@ static ASTNode *parse_if_statement(void)
     return node;
 }
 
+/*
+ * array<T> name(size)        -- size elements, all default values
+ * array<T> name              -- empty array
+ * array<T> name = expr       -- initialized (shares the array of expr)
+ */
+static ASTNode *parse_array_decl(void)
+{
+    Token *tok = current();
+    ASTNode *node = create_node(AST_ARRAY_DECL, tok->line);
+    Token *name;
+
+    node->ret_type = parse_array_type(1);
+    name = expect(TOKEN_IDENTIFIER, "an array name");
+    set_name(node, name->lexeme);
+
+    if (match(TOKEN_LPAREN)) {
+        add_child(node, parse_expression());
+        expect(TOKEN_RPAREN, "')' after array size");
+        if (check(TOKEN_ASSIGN))
+            parse_fail(current()->line, "use either an array size or an initializer, not both");
+    } else {
+        add_child(node, create_node(AST_INT_LIT, tok->line)); /* size 0 */
+    }
+
+    if (match(TOKEN_ASSIGN)) {
+        node->has_init = 1;
+        add_child(node, parse_expression());
+    }
+    return node;
+}
+
 static ASTNode *parse_statement(void)
 {
     Token *tok = current();
 
     if (match(TOKEN_SEMI))
         return NULL;
+
+    if (check(TOKEN_ARRAY))
+        return parse_array_decl();
 
     if (check(TOKEN_FOR)) {
         ASTNode *node = create_node(AST_FOR_LOOP, tok->line);
@@ -452,7 +555,20 @@ static ASTNode *parse_statement(void)
         return node;
     }
 
-    return parse_expression();
+    {
+        ASTNode *expr = parse_expression();
+
+        /* arr[i] = value */
+        if (expr->type == AST_INDEX && check(TOKEN_ASSIGN)) {
+            Token *eq = advance();
+            ASTNode *assign = create_node(AST_INDEX_ASSIGN, eq->line);
+
+            add_child(assign, expr);
+            add_child(assign, parse_expression());
+            return assign;
+        }
+        return expr;
+    }
 }
 
 static ASTNode *parse_block(void)

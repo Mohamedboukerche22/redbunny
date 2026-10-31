@@ -38,6 +38,8 @@ static const Keyword keywords[] = {
     { "double",      TOKEN_TYPE_DOUBLE },
     { "str",         TOKEN_TYPE_STR },
     { "void",        TOKEN_TYPE_VOID },
+    { "array",       TOKEN_ARRAY },
+    { "auto",        TOKEN_TYPE_AUTO },
 };
 
 static void push_token(TokenType type, const char *lexeme, int line)
@@ -291,6 +293,9 @@ int redb_lex(const char *source, const char *filename)
         case ',': push_token(TOKEN_COMMA, ",", lex_line); break;
         case ';': push_token(TOKEN_SEMI, ";", lex_line); break;
         case '@': push_token(TOKEN_AT, "@", lex_line); break;
+        case '[': push_token(TOKEN_LBRACKET, "[", lex_line); break;
+        case ']': push_token(TOKEN_RBRACKET, "]", lex_line); break;
+        case '.': push_token(TOKEN_DOT, ".", lex_line); break;
         default:
             redb_error(lex_line, "unexpected character '%c' (0x%02x)", c, (unsigned char)c);
             g_lex_error = 1;

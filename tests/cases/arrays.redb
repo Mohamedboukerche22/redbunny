@@ -1,0 +1,31 @@
+total = do(array<int> -> int) {
+    return arg1[0] + arg1[1]
+}
+
+main() {
+    array<int> nums(5)
+    nums[0] = 10
+    nums[4] = 40
+    writeln(nums[0] + nums[4])
+    writeln(nums.size())
+    nums.resize(7)
+    writeln(nums.size())
+    writeln(nums[6])
+    array<auto> alias = nums
+    alias[1] = 3
+    writeln(nums[1])
+    array<array<int>> matrix(2)
+    array<int> row(3)
+    row[2] = 9
+    matrix[1] = row
+    writeln(matrix[1][2])
+    writeln(matrix.size())
+    array<str> names(2)
+    names[0] = "hi"
+    names[1] = "there"
+    writeln(names[0] + "!")
+    array<double> ds(2)
+    ds[0] = 1.5
+    writeln(ds[0])
+    writeln(total(nums))
+}
