@@ -132,3 +132,18 @@ ln = do(double -> double) {
 
     return 2.0 * sum + k * 0.6931471805599453
 }
+
+-- Integer minimum and maximum.
+max = do(int, int -> int) {
+    if (arg1 > arg2) {
+        return arg1
+    }
+    return arg2
+}
+
+min = do(int, int -> int) {
+    if (arg1 < arg2) {
+        return arg1
+    }
+    return arg2
+}

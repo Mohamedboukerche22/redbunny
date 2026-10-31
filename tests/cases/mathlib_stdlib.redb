@@ -20,4 +20,12 @@ main() {
     writeln(euler())
     writeln(tau())
     writeln(phi())
+    writeln(max(3, 7))
+    writeln(max(9, 2))
+    writeln(max(-1, -5))
+    writeln(max(4, 4))
+    writeln(min(3, 7))
+    writeln(min(9, 2))
+    writeln(min(-1, -5))
+    writeln(min(4, 4))
 }

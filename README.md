@@ -33,7 +33,7 @@ dependencies beyond LLVM and Clang.
   semicolons, and string templates built into the language.
 - **Easy to embed.** The runtime is a single static archive, `libredb_runtime.a`.
 - **Bundled math module.** `@include "mathlib"` provides powers, roots, trig,
-  exponentials, logarithms and constants.
+  exponentials, logarithms, min/max and constants.
 - **Hackable.** Roughly 7 source files and a test suite that runs in seconds.
 
 ## Quick Start
@@ -189,6 +189,8 @@ source file first, then the standard library directory (`lib/` in a checkout or
 | `cos(x)`      | `double -> double`| Taylor series, best for `-pi <= x <= pi`        |
 | `exp(x)`      | `double -> double`| 20-term Taylor series, moderate inputs     |
 | `ln(x)`       | `double -> double`| Range reduction + atanh series; returns `0` for `x <= 0` |
+| `max(a, b)`   | `int, int -> int` | Larger of two integers                     |
+| `min(a, b)`   | `int, int -> int` | Smaller of two integers                    |
 | `PI()`        | `{} -> double`    | 3.141592653589793                          |
 | `euler()`     | `{} -> double`    | 2.718281828459045                          |
 | `tau()`       | `{} -> double`    | 6.283185307179586                          |
