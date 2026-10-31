@@ -592,3 +592,40 @@ redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
 redb examples/math_demo.redb -o /tmp/math_demo && /tmp/math_demo
 redb examples/imports/app.redb -o /tmp/app && /tmp/app
 ```
+
+---
+
+## 15. Editor Support
+
+Vim and Neovim support lives in `editors/vim`:
+
+- `ftdetect/redb.vim` — maps `*.redb` to `filetype=redb`
+- `syntax/redb.vim` — keywords, types, functions, numbers, strings, comments
+  and operators
+- `ftplugin/redb.vim` — `--` comment strings and `.redb` suffix handling
+- `indent/redb.vim` — brace-based indentation
+
+Install for Vim 8+:
+
+```bash
+mkdir -p ~/.vim/pack/redb/start
+ln -s /path/to/redb/editors/vim ~/.vim/pack/redb/start/redb
+```
+
+Install for Neovim:
+
+```bash
+mkdir -p ~/.local/share/nvim/site/pack/redb/start
+ln -s /path/to/redb/editors/vim ~/.local/share/nvim/site/pack/redb/start/redb
+```
+
+Or add it directly to `runtimepath`:
+
+```vim
+set runtimepath+=/path/to/redb/editors/vim
+filetype plugin indent on
+syntax on
+```
+
+Open any `.redb` file and check `:set filetype?`; it should report
+`filetype=redb`.

@@ -127,6 +127,21 @@ cmake --build build -j
 sudo cmake --install build
 ```
 
+### Editor support
+
+Vim and Neovim get syntax highlighting, `.redb` filetype detection, comment
+strings and indentation from [`editors/vim`](editors/vim). Link it into your
+package directory:
+
+```bash
+mkdir -p ~/.vim/pack/redb/start
+ln -s "$PWD/editors/vim" ~/.vim/pack/redb/start/redb
+```
+
+For Neovim use `~/.local/share/nvim/site/pack/redb/start` instead. See
+[`editors/vim/README.md`](editors/vim/README.md) for `runtimepath` and
+`lazy.nvim` setups.
+
 ## Language at a Glance
 
 ### Hello, world
@@ -280,6 +295,13 @@ redb main.redb -S -o main.ll
 │   └── mathlib.redb        standard math module
 ├── docs/
 │   └── DOCUMENTATION.md    complete language manual
+├── editors/
+│   └── vim/
+│       ├── README.md       Vim/Neovim install instructions
+│       ├── ftdetect/redb.vim
+│       ├── ftplugin/redb.vim
+│       ├── indent/redb.vim
+│       └── syntax/redb.vim
 ├── examples/
 │   ├── hello.redb
 │   ├── tour.redb
@@ -289,8 +311,10 @@ redb main.redb -S -o main.ll
 │       ├── app.redb
 │       └── greeting.redb
 ├── scripts/
-│   ├── install.sh          Linux / macOS installer
-│   └── install.ps1         Windows installer
+│   ├── get.sh              Linux / macOS one-line installer
+│   ├── get.ps1             Windows one-line installer
+│   ├── install.sh          Linux / macOS source installer
+│   └── install.ps1         Windows source installer
 └── tests/
     ├── run.sh              test runner
     ├── cases/              programs with expected output
