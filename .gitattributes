@@ -1,0 +1,3 @@
+# Keep the generated documentation site out of GitHub's language bar.
+# Pages still serves the files normally.
+*.html linguist-detectable=false
