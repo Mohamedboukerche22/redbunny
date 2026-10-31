@@ -193,6 +193,7 @@
                     <li><a href="#comments" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Comments & Semicolons</a></li>
                     <li><a href="#structure" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Program Structure & main()</a></li>
                     <li><a href="#variables" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Variables & Type System</a></li>
+<li><a href="#arrays" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Arrays</a></li>
                     <li><a href="#operators" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Operators & Precedence</a></li>
                     <li><a href="#output" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Output Functions</a></li>
                     <li><a href="#control-flow" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Control Flow (if, for, while)</a></li>
@@ -463,6 +464,76 @@ sudo cmake --install build</code></pre>
                         </tbody>
                     </table>
                 </div>
+
+                <h3 id="arrays">Arrays</h3>
+                <p>An array holds many values of one element type. Declare one with <code>array&lt;T&gt;</code>, where <code>T</code> is <code>int</code>, <code>float</code>, <code>double</code>, <code>str</code>, <code>auto</code>, or another array type.</p>
+
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <div class="bg-dark-sidebar px-4 py-2 border-b border-dark-border flex justify-between items-center">
+                        <span class="text-gray-500">arrays.redb</span>
+                        <button onclick="copyCode('code-arrays')" class="text-gray-400 hover:text-bunny-accent flex items-center space-x-1">
+                            <i class="fa-regular fa-copy"></i><span>Copy</span>
+                        </button>
+                    </div>
+                    <pre id="code-arrays" class="p-4 text-gray-200"><code>main() {
+    array&lt;int&gt; nums(5)          <span class="cmt">-- 5 elements, all 0</span>
+    nums[0] = 10
+    nums[4] = 40
+    writeln(nums[0] + nums[4])  <span class="cmt">-- 50</span>
+    writeln(nums.size())        <span class="cmt">-- 5</span>
+
+    nums.resize(7)              <span class="cmt">-- grow to 7; new elements are 0</span>
+    writeln(nums.size())        <span class="cmt">-- 7</span>
+
+    array&lt;auto&gt; alias = nums    <span class="cmt">-- element type copied from nums (int)</span>
+    alias[1] = 3
+    writeln(nums[1])            <span class="cmt">-- 3: alias and nums are the same array</span>
+
+    array&lt;array&lt;int&gt;&gt; matrix(2) <span class="cmt">-- two inner arrays, each starts empty</span>
+    array&lt;int&gt; row(3)
+    row[2] = 9
+    matrix[1] = row
+    writeln(matrix[1][2])       <span class="cmt">-- 9</span>
+}</code></pre>
+                </div>
+
+                <h4 class="text-gray-300 font-semibold mt-6 mb-2">Array forms</h4>
+                <div class="overflow-x-auto my-4">
+                    <table class="w-full text-left text-xs font-mono border-collapse border border-dark-border">
+                        <thead>
+                            <tr class="bg-dark-sidebar border-b border-dark-border text-gray-300">
+                                <th class="p-3">Form</th>
+                                <th class="p-3">Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-dark-border text-gray-400">
+<tr><td class="p-3"><code>array&lt;int&gt; a(5)</code></td><td class="p-3">5 elements, all <code>0</code> (<code>0.0</code> for double, empty for str)</td></tr>
+<tr><td class="p-3"><code>array&lt;int&gt; a</code></td><td class="p-3">Empty array (size 0)</td></tr>
+<tr><td class="p-3"><code>array&lt;int&gt; a = b</code></td><td class="p-3"><code>a</code> refers to the same array as <code>b</code></td></tr>
+<tr><td class="p-3"><code>array&lt;auto&gt; a = b</code></td><td class="p-3"><code>a</code> takes the element type of <code>b</code></td></tr>
+<tr><td class="p-3"><code>array&lt;auto&gt; a(5)</code></td><td class="p-3">No initializer, so the element type defaults to <code>int</code></td></tr>
+<tr><td class="p-3"><code>a[i]</code>, <code>a[i] = x</code></td><td class="p-3">Read or write element <code>i</code> (indexes start at 0)</td></tr>
+<tr><td class="p-3"><code>a.size()</code></td><td class="p-3">Number of elements</td></tr>
+<tr><td class="p-3"><code>a.resize(n)</code></td><td class="p-3">Change the size; new elements are zero or empty</td></tr>
+<tr><td class="p-3"><code>array&lt;array&lt;int&gt;&gt; m(3)</code></td><td class="p-3">Nested arrays; <code>m[0][1] = 7</code> works</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>Arrays can be passed to and returned from functions:</p>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <pre id="code-arrays-fn" class="p-4 text-gray-200"><code>total = do(array&lt;int&gt; -&gt; int) {
+    return arg1[0] + arg1[1]
+}</code></pre>
+                </div>
+
+                <ul class="list-disc pl-6 space-y-1 text-gray-400 text-xs">
+                    <li>An index outside <code>0</code> to <code>size() - 1</code> stops the program with a runtime error.</li>
+                    <li>Assigning one array to another does not copy it; both names share the elements.</li>
+                    <li>Inner arrays created by <code>array&lt;array&lt;T&gt;&gt; m(n)</code> start empty. Call <code>resize()</code> on them before indexing.</li>
+                    <li>A whole array cannot be printed with <code>write</code> or <code>writeln</code>. Print one element at a time.</li>
+                    <li><code>array</code> and <code>auto</code> are reserved words.</li>
+                </ul>
             </section>
 
             <!-- SECTION 7: OPERATORS -->
@@ -789,7 +860,7 @@ main() {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="flex items-center space-x-2">
                             <i class="fa-solid fa-xmark text-bunny-500"></i>
-                            <span>No arrays, maps, structs, or classes</span>
+                            <span>No maps, structs, or classes</span>
                         </div>
                         <div class="flex items-center space-x-2">
                             <i class="fa-solid fa-xmark text-bunny-500"></i>

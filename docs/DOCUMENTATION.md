@@ -188,6 +188,64 @@ main() {
 }
 ```
 
+### Arrays
+
+An array holds many values of one element type. Declare one with `array<T>`,
+where `T` is `int`, `float`, `double`, `str`, `auto`, or another array type.
+
+```redb
+main() {
+    array<int> nums(5)          -- 5 elements, all 0
+    nums[0] = 10
+    nums[4] = 40
+    writeln(nums[0] + nums[4])  -- 50
+    writeln(nums.size())        -- 5
+
+    nums.resize(7)              -- grow to 7; new elements are 0
+    writeln(nums.size())        -- 7
+
+    array<auto> alias = nums    -- element type copied from nums (int)
+    alias[1] = 3
+    writeln(nums[1])            -- 3: alias and nums are the same array
+
+    array<array<int>> matrix(2) -- two inner arrays, each starts empty
+    array<int> row(3)
+    row[2] = 9
+    matrix[1] = row
+    writeln(matrix[1][2])       -- 9
+}
+```
+
+| Form                        | Meaning                                                    |
+|-----------------------------|------------------------------------------------------------|
+| `array<int> a(5)`           | 5 elements, all `0` (`0.0` for double, `""` for str)       |
+| `array<int> a`              | empty array (size 0)                                       |
+| `array<int> a = b`          | `a` refers to the same array as `b`                        |
+| `array<auto> a = b`         | `a` takes the element type of `b`                          |
+| `array<auto> a(5)`          | no initializer, so the element type defaults to `int`      |
+| `a[i]`, `a[i] = x`          | read or write element `i` (indexes start at 0)             |
+| `a.size()`                  | number of elements                                         |
+| `a.resize(n)`               | change the size; new elements are zero or empty            |
+| `array<array<int>> m(3)`    | nested arrays; `m[0][1] = 7` works                         |
+
+Arrays can be passed to and returned from functions:
+
+```redb
+total = do(array<int> -> int) {
+    return arg1[0] + arg1[1]
+}
+```
+
+Notes:
+
+- An index outside `0` to `size() - 1` stops the program with a runtime error.
+- Assigning one array to another does not copy it; both names share the elements.
+- Inner arrays created by `array<array<T>> m(n)` start empty. Call `resize()` on
+  them before indexing.
+- A whole array cannot be printed with `write` or `writeln`. Print one element at
+  a time.
+- `array` and `auto` are reserved words.
+
 ---
 
 ## 6. Operators
@@ -560,7 +618,7 @@ memory.
 
 ## 13. Current Limitations
 
-- No maps, structs, classes or pointers. Arrays are supported (see `array<T>`).
+- No maps, structs, classes or pointers.
 - No user-defined types or generics.
 - No closures; functions cannot capture enclosing locals.
 - No exceptions or panic handling.
