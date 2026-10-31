@@ -1,0 +1,23 @@
+@include "std"
+@include "mathlib"
+
+main() {
+    writeln(square(7))
+    writeln(cube(3))
+    writeln(power(2, 10))
+    writeln(power(9, 0))
+    writeln(power(2, -1))
+    writeln(sqrt(4.0))
+    writeln(sqrt(2.0))
+    writeln(sin(0.0))
+    writeln(cos(0.0))
+    writeln(exp(0.0))
+    writeln(exp(1.0))
+    writeln(ln(euler()))
+    writeln(ln(100.0))
+    writeln(ln(0.5))
+    writeln(PI())
+    writeln(euler())
+    writeln(tau())
+    writeln(phi())
+}

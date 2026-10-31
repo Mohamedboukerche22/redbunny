@@ -560,7 +560,7 @@ fact = <span class="kw">do</span>(<span class="type">int</span> -> <span class="
             <!-- SECTION 11: INCLUDES -->
             <section id="includes">
                 <h2>10. Includes (@include)</h2>
-                <p>Include standard or user module source files. Suffix <code>.redb</code> is optional.</p>
+                <p>Include standard or user module source files. Includes resolve relative to the source file first, then the standard library directory (<code>lib/</code> in a checkout or <code>share/redb/lib</code> when installed). Set <code>REDB_STDLIB</code> to override. The suffix <code>.redb</code> is optional.</p>
 
                 <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
                     <pre class="p-4 text-gray-200"><code><span class="kw">@include</span> <span class="str">"std"</span>
@@ -664,6 +664,7 @@ main() {
                 <ul>
                     <li><code>REDB_CC</code>: C compiler executable used to link IR (default: <code>clang</code>).</li>
                     <li><code>REDB_RUNTIME</code>: Explicit path to static runtime archive <code>libredb_runtime.a</code>.</li>
+                    <li><code>REDB_STDLIB</code>: Directory containing standard library modules (default: <code>lib/</code> in a checkout or <code>share/redb/lib</code> when installed).</li>
                 </ul>
             </section>
 
@@ -708,6 +709,10 @@ main() {
                             <tr>
                                 <td class="p-3 text-bunny-llvm font-bold">runtime/runtime.c</td>
                                 <td class="p-3">Native C runtime library called by generated LLVM code.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-bunny-llvm font-bold">lib/mathlib.redb</td>
+                                <td class="p-3">Standard math module: powers, roots, trig, exp/ln and constants.</td>
                             </tr>
                             <tr>
                                 <td class="p-3 text-bunny-llvm font-bold">src/main.c</td>

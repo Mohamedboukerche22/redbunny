@@ -32,6 +32,8 @@ dependencies beyond LLVM and Clang.
 - **Friendly syntax.** No type annotations for variables, no mandatory
   semicolons, and string templates built into the language.
 - **Easy to embed.** The runtime is a single static archive, `libredb_runtime.a`.
+- **Bundled math module.** `@include "mathlib"` provides powers, roots, trig,
+  exponentials, logarithms and constants.
 - **Hackable.** Roughly 7 source files and a test suite that runs in seconds.
 
 ## Quick Start
@@ -165,6 +167,40 @@ main() {
 See [`examples/`](examples/) for complete programs and
 [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md) for the full language reference.
 
+## Standard Library
+
+`@include "mathlib"` loads the bundled math module. Includes resolve next to the
+source file first, then the standard library directory (`lib/` in a checkout or
+`share/redb/lib` when installed). Set `REDB_STDLIB` to override that directory.
+
+| Function      | Signature         | Notes                                      |
+|---------------|-------------------|--------------------------------------------|
+| `square(x)`   | `int -> int`      | `x * x`                                    |
+| `cube(x)`     | `int -> int`      | `x * x * x`                                |
+| `power(x, n)` | `int, int -> int` | Non-negative `n`; returns `0` for `n < 0`  |
+| `sqrt(x)`     | `double -> double`| Returns `0` for `x <= 0`                   |
+| `sin(x)`      | `double -> double`| Taylor series, best for `-pi <= x <= pi`        |
+| `cos(x)`      | `double -> double`| Taylor series, best for `-pi <= x <= pi`        |
+| `exp(x)`      | `double -> double`| 20-term Taylor series, moderate inputs     |
+| `ln(x)`       | `double -> double`| Range reduction + atanh series; returns `0` for `x <= 0` |
+| `PI()`        | `{} -> double`    | 3.141592653589793                          |
+| `euler()`     | `{} -> double`    | 2.718281828459045                          |
+| `tau()`       | `{} -> double`    | 6.283185307179586                          |
+| `phi()`       | `{} -> double`    | 1.618033988749895                          |
+
+```redb
+@include "std"
+@include "mathlib"
+
+main() {
+    writeln(square(9))
+    writeln(power(2, 10))
+
+    r = sqrt(2.0)
+    writeformat("sqrt(2) = {r}\n")
+}
+```
+
 ## Command Line
 
 ```text
@@ -180,8 +216,9 @@ usage: redb <file.redb> [options]
 
 | Variable       | Purpose                                  |
 |----------------|------------------------------------------|
-| `REDB_CC`      | C compiler used to link generated IR     |
-| `REDB_RUNTIME` | explicit path to `libredb_runtime.a`     |
+| `REDB_CC`      | C compiler used to link generated IR      |
+| `REDB_RUNTIME` | explicit path to `libredb_runtime.a`      |
+| `REDB_STDLIB`  | directory containing standard library modules |
 
 Examples:
 
@@ -211,13 +248,18 @@ redb main.redb -S -o main.ll
 │   └── codegen.c           AST → LLVM IR
 ├── runtime/
 │   └── runtime.c           native runtime linked into every program
+├── lib/
+│   └── mathlib.redb        standard math module
 ├── docs/
 │   └── DOCUMENTATION.md    complete language manual
 ├── examples/
 │   ├── hello.redb
 │   ├── tour.redb
 │   ├── factorial.redb
+│   ├── math_demo.redb
 │   └── imports/
+│       ├── app.redb
+│       └── greeting.redb
 ├── scripts/
 │   ├── install.sh          Linux / macOS installer
 │   └── install.ps1         Windows installer

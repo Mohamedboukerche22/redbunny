@@ -44,7 +44,8 @@ static void usage(FILE *out)
         "\n"
         "environment:\n"
         "  REDB_CC         C compiler used for linking (default: clang)\n"
-        "  REDB_RUNTIME    path to libredb_runtime.a\n");
+        "  REDB_RUNTIME    path to libredb_runtime.a\n"
+        "  REDB_STDLIB     directory containing standard library modules\n");
 }
 
 static int file_exists(const char *path)
@@ -52,28 +53,27 @@ static int file_exists(const char *path)
     return path && REDB_ACCESS(path, REDB_R_OK) == 0;
 }
 
-static const char *runtime_path(const char *argv0)
+static int dir_exists(const char *path)
 {
-    static char buf[PATH_MAX + 64];
+#ifdef _WIN32
+    DWORD attrs;
+
+    if (!path || !path[0])
+        return 0;
+    attrs = GetFileAttributesA(path);
+    return attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_DIRECTORY);
+#else
+    struct stat st;
+
+    return path && path[0] && stat(path, &st) == 0 && S_ISDIR(st.st_mode);
+#endif
+}
+
+static const char *executable_dir(const char *argv0)
+{
     static char exe[PATH_MAX];
-    const char *env = getenv("REDB_RUNTIME");
     char *slash;
     long n;
-
-    if (file_exists(env))
-        return env;
-
-#ifdef REDB_RUNTIME_PATH
-    if (file_exists(REDB_RUNTIME_PATH))
-        return REDB_RUNTIME_PATH;
-#endif
-
-#ifndef _WIN32
-    if (file_exists("/usr/local/lib/" REDB_RUNTIME_FILE))
-        return "/usr/local/lib/" REDB_RUNTIME_FILE;
-    if (file_exists("/usr/lib/" REDB_RUNTIME_FILE))
-        return "/usr/lib/" REDB_RUNTIME_FILE;
-#endif
 
 #ifdef _WIN32
     n = (long)GetModuleFileNameA(NULL, exe, (DWORD)sizeof(exe));
@@ -96,23 +96,87 @@ static const char *runtime_path(const char *argv0)
             slash = backslash;
     }
 #endif
-    if (slash) {
-        *slash = '\0';
+    if (!slash)
+        return NULL;
 
-        snprintf(buf, sizeof(buf), "%s/%s", exe, REDB_RUNTIME_FILE);
+    *slash = '\0';
+    return exe;
+}
+
+static const char *runtime_path(const char *argv0)
+{
+    static char buf[PATH_MAX + 64];
+    const char *env = getenv("REDB_RUNTIME");
+    const char *dir;
+
+    if (file_exists(env))
+        return env;
+
+#ifdef REDB_RUNTIME_PATH
+    if (file_exists(REDB_RUNTIME_PATH))
+        return REDB_RUNTIME_PATH;
+#endif
+
+#ifndef _WIN32
+    if (file_exists("/usr/local/lib/" REDB_RUNTIME_FILE))
+        return "/usr/local/lib/" REDB_RUNTIME_FILE;
+    if (file_exists("/usr/lib/" REDB_RUNTIME_FILE))
+        return "/usr/lib/" REDB_RUNTIME_FILE;
+#endif
+
+    dir = executable_dir(argv0);
+    if (dir) {
+        snprintf(buf, sizeof(buf), "%s/%s", dir, REDB_RUNTIME_FILE);
         if (file_exists(buf))
             return buf;
 
-        snprintf(buf, sizeof(buf), "%s/%s", exe, REDB_ALT_RUNTIME_FILE);
+        snprintf(buf, sizeof(buf), "%s/%s", dir, REDB_ALT_RUNTIME_FILE);
         if (file_exists(buf))
             return buf;
 
-        snprintf(buf, sizeof(buf), "%s/../lib/%s", exe, REDB_RUNTIME_FILE);
+        snprintf(buf, sizeof(buf), "%s/../lib/%s", dir, REDB_RUNTIME_FILE);
         if (file_exists(buf))
             return buf;
 
-        snprintf(buf, sizeof(buf), "%s/../%s", exe, REDB_RUNTIME_FILE);
+        snprintf(buf, sizeof(buf), "%s/../%s", dir, REDB_RUNTIME_FILE);
         if (file_exists(buf))
+            return buf;
+    }
+
+    return NULL;
+}
+
+static const char *stdlib_path(const char *argv0)
+{
+    static char buf[PATH_MAX + 64];
+    const char *env = getenv("REDB_STDLIB");
+    const char *dir;
+
+    if (dir_exists(env))
+        return env;
+
+#ifdef REDB_STDLIB_PATH
+    if (dir_exists(REDB_STDLIB_PATH))
+        return REDB_STDLIB_PATH;
+#endif
+
+#ifndef _WIN32
+    if (dir_exists("/usr/local/share/redb/lib"))
+        return "/usr/local/share/redb/lib";
+    if (dir_exists("/usr/share/redb/lib"))
+        return "/usr/share/redb/lib";
+    if (dir_exists("/opt/homebrew/share/redb/lib"))
+        return "/opt/homebrew/share/redb/lib";
+#endif
+
+    dir = executable_dir(argv0);
+    if (dir) {
+        snprintf(buf, sizeof(buf), "%s/../share/redb/lib", dir);
+        if (dir_exists(buf))
+            return buf;
+
+        snprintf(buf, sizeof(buf), "%s/../lib/redb", dir);
+        if (dir_exists(buf))
             return buf;
     }
 
@@ -251,6 +315,7 @@ int main(int argc, char **argv)
     free(source);
 
     ast = redb_parse(input);
+    redb_set_stdlib_dir(stdlib_path(argv[0]));
     if (redb_expand_includes(ast, input) != 0) {
         free_ast(ast);
         return 1;

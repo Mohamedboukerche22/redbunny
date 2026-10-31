@@ -1,0 +1,13 @@
+-- RedBunny standard math library demo.
+@include "std"
+@include "mathlib"
+
+main() {
+    pi = PI()
+
+    writeln(cos(pi))
+    writeln(sin(pi))
+    writeln(sqrt(5.0))
+    writeln(power(2, 10))
+    writeln(ln(euler()))
+}

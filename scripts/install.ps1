@@ -60,6 +60,9 @@ if ($machinePath -notlike "*$prefix\bin*") {
 
 Write-Host ""
 Write-Host "RedBunny installed." -ForegroundColor Green
+Write-Host "  compiler: $prefix\bin\redb.exe"
+Write-Host "  runtime:  $prefix\lib\"
+Write-Host "  mathlib:  $prefix\share\redb\lib\mathlib.redb"
 Write-Host "Open a new terminal, then run:"
 Write-Host "  redb --version"
 Write-Host "  redb examples\hello.redb -o hello.exe"

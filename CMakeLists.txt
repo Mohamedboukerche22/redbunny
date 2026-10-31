@@ -39,6 +39,9 @@ if(MSVC)
 else()
     target_compile_options(redb PRIVATE -Wall -Wextra)
 endif()
+target_compile_definitions(redb PRIVATE
+    REDB_STDLIB_PATH="${CMAKE_CURRENT_SOURCE_DIR}/lib"
+)
 if(NOT WIN32)
     target_compile_definitions(redb PRIVATE
         REDB_RUNTIME_PATH="$<TARGET_FILE:redb_runtime>"
@@ -48,6 +51,8 @@ target_link_libraries(redb PRIVATE ${LLVM_LIBS} redb_runtime)
 
 install(TARGETS redb RUNTIME DESTINATION bin)
 install(TARGETS redb_runtime ARCHIVE DESTINATION lib)
+install(DIRECTORY lib/ DESTINATION share/redb/lib
+    FILES_MATCHING PATTERN "*.redb")
 
 if(UNIX)
     enable_testing()

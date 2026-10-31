@@ -77,6 +77,7 @@ echo
 echo "RedBunny installed."
 echo "  compiler: $PREFIX/bin/redb"
 echo "  runtime:  $PREFIX/lib/libredb_runtime.a"
+echo "  mathlib:  $PREFIX/share/redb/lib/mathlib.redb"
 echo
 echo "Try it:"
 echo "  redb --version"

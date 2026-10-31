@@ -166,6 +166,7 @@ void free_ast(ASTNode *node);
 ASTNode *redb_parse(const char *filename);
 
 /* include.c */
+void redb_set_stdlib_dir(const char *dir);
 int redb_expand_includes(ASTNode *program, const char *main_file);
 
 /* typecheck.c */

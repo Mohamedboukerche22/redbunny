@@ -6,6 +6,17 @@
 #define PATH_MAX 4096
 #endif
 
+static char g_stdlib_dir[PATH_MAX];
+
+void redb_set_stdlib_dir(const char *dir)
+{
+    if (!dir || !dir[0]) {
+        g_stdlib_dir[0] = '\0';
+        return;
+    }
+    snprintf(g_stdlib_dir, sizeof(g_stdlib_dir), "%s", dir);
+}
+
 static char *dir_of(const char *path)
 {
     char *copy = redb_xstrdup(path);
@@ -22,13 +33,14 @@ static char *dir_of(const char *path)
 
 static char *include_path(const char *base_dir, const char *name)
 {
-    char *path = redb_xmalloc(PATH_MAX);
     size_t len = strlen(name);
+    size_t size = strlen(base_dir) + len + 8;
+    char *path = redb_xmalloc(size);
 
     if (len >= 5 && !strcmp(name + len - 5, ".redb"))
-        snprintf(path, PATH_MAX, "%s/%s", base_dir, name);
+        snprintf(path, size, "%s/%s", base_dir, name);
     else
-        snprintf(path, PATH_MAX, "%s/%s.redb", base_dir, name);
+        snprintf(path, size, "%s/%s.redb", base_dir, name);
     return path;
 }
 
@@ -60,13 +72,31 @@ static int expand_program(ASTNode *program, const char *base_dir, int depth)
         {
             char *path = include_path(base_dir, child->string_val);
             char *source = redb_read_file(path);
+            char *fallback = NULL;
             char *inc_dir;
             ASTNode *included;
             size_t j;
 
+            if (!source && g_stdlib_dir[0]) {
+                fallback = include_path(g_stdlib_dir, child->string_val);
+                source = redb_read_file(fallback);
+                if (source) {
+                    free(path);
+                    path = fallback;
+                    fallback = NULL;
+                }
+            }
+
             if (!source) {
-                redb_error(child->line, "cannot include '%s' (looked for %s)",
-                           child->string_val, path);
+                if (fallback) {
+                    redb_error(child->line,
+                               "cannot include '%s' (looked for %s and %s)",
+                               child->string_val, path, fallback);
+                    free(fallback);
+                } else {
+                    redb_error(child->line, "cannot include '%s' (looked for %s)",
+                               child->string_val, path);
+                }
                 free(path);
                 return -1;
             }

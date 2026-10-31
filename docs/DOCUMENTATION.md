@@ -397,31 +397,69 @@ returns on every path.
 
 ---
 
-## 10. Includes
+## 10. Includes and Standard Library
 
 `@include "std"` is accepted and the runtime is linked automatically.
 
-Other includes load RedBunny source files relative to the including file:
+Includes are resolved in this order:
+
+1. Relative to the including file.
+2. The standard library directory: `REDB_STDLIB` if set, otherwise `lib/` in a
+   source checkout or `share/redb/lib` when installed.
+
+The `.redb` suffix is optional. Local files shadow standard library modules.
+Include cycles are rejected after 32 levels.
 
 ```redb
--- mathlib.redb
-square = do(int -> int) {
-    return arg1 * arg1
+-- greeting.redb (local module)
+greet = do(str -> {}) {
+    writeln("Hello, " + arg1 + "!")
 }
 ```
 
 ```redb
 -- app.redb
 @include "std"
+@include "greeting"
 @include "mathlib"
 
 main() {
+    greet("RedBunny")
     writeln(square(9))    -- 81
 }
 ```
 
-`@include "mathlib"` looks for `mathlib.redb` next to `app.redb`. An explicit
-`.redb` suffix is also accepted. Include cycles are rejected after 32 levels.
+### Math library
+
+`@include "mathlib"` loads the standard math module:
+
+| Function            | Signature              | Notes                                      |
+|---------------------|------------------------|--------------------------------------------|
+| `square(x)`         | `int -> int`           | `x * x`                                    |
+| `cube(x)`           | `int -> int`           | `x * x * x`                                |
+| `power(x, n)`       | `int, int -> int`      | Non-negative `n`; returns `0` for `n < 0`  |
+| `sqrt(x)`           | `double -> double`     | Returns `0` for `x <= 0`                   |
+| `sin(x)`            | `double -> double`     | Taylor series, best for `-pi <= x <= pi`        |
+| `cos(x)`            | `double -> double`     | Taylor series, best for `-pi <= x <= pi`        |
+| `exp(x)`            | `double -> double`     | 20-term Taylor series, moderate inputs     |
+| `ln(x)`             | `double -> double`     | Range reduction + atanh series; returns `0` for `x <= 0` |
+| `PI()`              | `{} -> double`         | 3.141592653589793                          |
+| `euler()`           | `{} -> double`         | 2.718281828459045                          |
+| `tau()`             | `{} -> double`         | 6.283185307179586                          |
+| `phi()`             | `{} -> double`         | 1.618033988749895                          |
+
+```redb
+@include "std"
+@include "mathlib"
+
+main() {
+    writeln(square(9))
+    writeln(power(2, 10))
+
+    r = sqrt(2.0)
+    writeformat("sqrt(2) = {r}\n")
+}
+```
 
 ---
 
@@ -456,6 +494,7 @@ Environment variables:
 |----------------|----------------------------------------------|
 | `REDB_CC`      | C compiler used to link the generated IR      |
 | `REDB_RUNTIME` | explicit path to `libredb_runtime.a`          |
+| `REDB_STDLIB`  | directory containing standard library modules |
 
 ---
 
@@ -488,7 +527,8 @@ memory.
 - No user-defined types or generics.
 - No closures; functions cannot capture enclosing locals.
 - No exceptions or panic handling.
-- No package registry; includes are file-relative source imports.
+- No package registry; includes resolve relative to the source file, then the
+  standard library directory.
 - Floating point `%` uses `frem` and is not the same as C `fmod` for all inputs.
 
 These are deliberate v0.1 boundaries, not parser accidents.
@@ -502,14 +542,16 @@ The `examples/` directory contains:
 - `hello.redb` — minimal program
 - `tour.redb` — variables, formatting, loops, conditionals, functions
 - `factorial.redb` — recursion
-- `imports/app.redb` — source include
+- `math_demo.redb` — standard math library
+- `imports/app.redb` — local and standard library includes
+- `imports/greeting.redb` — local module used by `app.redb`
 
 Build them all:
 
 ```bash
-for f in examples/*.redb examples/imports/*.redb; do
-    name="$(basename "$f" .redb)"
-    redb "$f" -o "/tmp/$name"
-    "/tmp/$name"
-done
+redb examples/hello.redb -o /tmp/hello && /tmp/hello
+redb examples/tour.redb -o /tmp/tour && /tmp/tour
+redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
+redb examples/math_demo.redb -o /tmp/math_demo && /tmp/math_demo
+redb examples/imports/app.redb -o /tmp/app && /tmp/app
 ```

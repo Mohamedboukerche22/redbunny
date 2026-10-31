@@ -1,0 +1,134 @@
+-- RedBunny math library.
+-- Use it with: @include "mathlib"
+
+square = do(int -> int) {
+    return arg1 * arg1
+}
+
+cube = do(int -> int) {
+    return arg1 * arg1 * arg1
+}
+
+power = do(int, int -> int) {
+    if (arg2 < 0) {
+        return 0
+    }
+
+    result = 1
+    i = 0
+    while (i < arg2) {
+        result = result * arg1
+        i = i + 1
+    }
+    return result
+}
+
+sqrt = do(double -> double) {
+    if (arg1 <= 0.0) {
+        return 0.0
+    }
+
+    guess = arg1 / 2.0
+    i = 0
+    while (i < 20) {
+        guess = (guess + (arg1 / guess)) / 2.0
+        i = i + 1
+    }
+    return guess
+}
+
+-- sin and cos use Taylor series recurrence formulas.
+-- They are accurate for small and moderate inputs (roughly |x| <= pi).
+sin = do(double -> double) {
+    x = arg1
+    sum = x
+    term = x
+    i = 1
+    while (i < 10) {
+        denom1 = 2.0 * i
+        denom2 = denom1 + 1.0
+        term = (0.0 - (term * x * x)) / (denom1 * denom2)
+        sum = sum + term
+        i = i + 1
+    }
+    return sum
+}
+
+cos = do(double -> double) {
+    x = arg1
+    sum = 1.0
+    term = 1.0
+    i = 1
+    while (i < 10) {
+        denom1 = (2.0 * i) - 1.0
+        denom2 = 2.0 * i
+        term = (0.0 - (term * x * x)) / (denom1 * denom2)
+        sum = sum + term
+        i = i + 1
+    }
+    return sum
+}
+
+-- Mathematical constants.
+PI = do({} -> double) {
+    return 3.141592653589793
+}
+
+euler = do({} -> double) {
+    return 2.718281828459045
+}
+
+tau = do({} -> double) {
+    return 6.283185307179586
+}
+
+phi = do({} -> double) {
+    return 1.618033988749895
+}
+
+-- Exponential and natural logarithm.
+-- exp uses a 20-term Taylor series and is intended for moderate inputs.
+exp = do(double -> double) {
+    x = arg1
+    sum = 1.0
+    term = 1.0
+    i = 1.0
+    while (i < 20.0) {
+        term = (term * x) / i
+        sum = sum + term
+        i = i + 1.0
+    }
+    return sum
+}
+
+-- ln uses range reduction and an atanh series.
+-- It returns 0 for inputs <= 0.
+ln = do(double -> double) {
+    if (arg1 <= 0.0) {
+        return 0.0
+    }
+
+    x = arg1
+    k = 0
+    while (x >= 2.0) {
+        x = x / 2.0
+        k = k + 1
+    }
+    while (x < 1.0) {
+        x = x * 2.0
+        k = k - 1
+    }
+
+    z = (x - 1.0) / (x + 1.0)
+    z2 = z * z
+    term = z
+    sum = z
+    i = 3
+    while (i < 40) {
+        term = term * z2
+        sum = sum + term / i
+        i = i + 2
+    }
+
+    return 2.0 * sum + k * 0.6931471805599453
+}
