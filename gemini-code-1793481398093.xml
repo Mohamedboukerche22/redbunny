@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <!-- Main Documentation Root -->
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/</loc>
+    <lastmod>2026-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- 1. Getting Started -->
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#overview</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#installation</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#hello-world</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 2. Language Grammar -->
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#comments</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#structure</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#variables</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#arrays</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#operators</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#output</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#control-flow</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#functions</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#includes</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- 3. Tooling & Sandbox -->
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#playground</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#cli</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 4. Architecture & Limits -->
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#repo-layout</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#runtime-abi</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mohamedboukerche22.github.io/redbunny/#limitations</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+</urlset>
