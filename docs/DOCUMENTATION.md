@@ -457,6 +457,8 @@ main() {
 | `ln(x)`             | `double -> double`     | Range reduction + atanh series; returns `0` for `x <= 0` |
 | `max(a, b)`         | `int, int -> int`      | Larger of two integers                     |
 | `min(a, b)`         | `int, int -> int`      | Smaller of two integers                    |
+| `maxf(a, b)`        | `double, double -> double` | Larger of two doubles                  |
+| `minf(a, b)`        | `double, double -> double` | Smaller of two doubles                 |
 | `PI()`              | `{} -> double`         | 3.141592653589793                          |
 | `euler()`           | `{} -> double`         | 2.718281828459045                          |
 | `tau()`             | `{} -> double`         | 6.283185307179586                          |

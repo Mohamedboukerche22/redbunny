@@ -12,4 +12,6 @@ main() {
     writeln(ln(euler()))
     writeln(max(3, 7))
     writeln(min(3, 7))
+    writeln(maxf(3.5, 7.25))
+    writeln(minf(3.5, 7.25))
 }

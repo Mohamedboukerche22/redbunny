@@ -28,4 +28,12 @@ main() {
     writeln(min(9, 2))
     writeln(min(-1, -5))
     writeln(min(4, 4))
+    writeln(maxf(3.5, 7.25))
+    writeln(maxf(9.5, 2.0))
+    writeln(maxf(-1.5, -5.5))
+    writeln(maxf(4.0, 4.0))
+    writeln(minf(3.5, 7.25))
+    writeln(minf(9.5, 2.0))
+    writeln(minf(-1.5, -5.5))
+    writeln(minf(4.0, 4.0))
 }

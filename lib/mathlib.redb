@@ -147,3 +147,18 @@ min = do(int, int -> int) {
     }
     return arg2
 }
+
+-- Floating-point minimum and maximum.
+maxf = do(double, double -> double) {
+    if (arg1 > arg2) {
+        return arg1
+    }
+    return arg2
+}
+
+minf = do(double, double -> double) {
+    if (arg1 < arg2) {
+        return arg1
+    }
+    return arg2
+}
