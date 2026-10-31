@@ -306,7 +306,19 @@ main() {
 ```
 
 The range is inclusive: the loop above runs ten times, from `0` through `9`.
-If the start is greater than the end, the body does not run.
+
+Use `downTo` to count downward:
+
+```redb
+main() {
+    for(i in 5 downTo 1) {
+        writeln(i)    -- 5, 4, 3, 2, 1
+    }
+}
+```
+
+`to` counts upward and `downTo` counts downward. If the bounds point the wrong
+way, the body does not run. `downTo` is a single keyword with a capital `T`.
 
 ### `while`
 

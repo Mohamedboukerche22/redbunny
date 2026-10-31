@@ -18,6 +18,7 @@ static const Keyword keywords[] = {
     { "for",         TOKEN_FOR },
     { "in",          TOKEN_IN },
     { "to",          TOKEN_TO },
+    { "downTo",      TOKEN_DOWNTO },
     { "write",       TOKEN_WRITE },
     { "writeln",     TOKEN_WRITELN },
     { "writeformat", TOKEN_WRITEFORMAT },

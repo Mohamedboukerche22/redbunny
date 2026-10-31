@@ -386,7 +386,15 @@ static ASTNode *parse_statement(void)
         set_name(node, var->lexeme);
         expect(TOKEN_IN, "'in' in for loop");
         add_child(node, parse_expression());
-        expect(TOKEN_TO, "'to' in for loop");
+        if (match(TOKEN_TO)) {
+            node->descending = 0;
+        } else if (match(TOKEN_DOWNTO)) {
+            node->descending = 1;
+        } else {
+            parse_fail(current()->line,
+                       "expected 'to' or 'downTo' in for loop, got '%s'",
+                       current()->lexeme[0] ? current()->lexeme : "end of file");
+        }
         add_child(node, parse_expression());
         expect(TOKEN_RPAREN, "')' after for range");
         add_child(node, parse_block());

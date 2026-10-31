@@ -584,7 +584,10 @@ static void gen_stmt(ASTNode *node)
         LLVMPositionBuilderAtEnd(builder, loop_bb);
         iter = LLVMBuildLoad2(builder, llvm_type(TY_INT), slot, "i");
         LLVMBuildCondBr(builder,
-                        LLVMBuildICmp(builder, LLVMIntSLE, iter, end, "forcond"),
+                        LLVMBuildICmp(builder,
+                                      node->descending ? LLVMIntSGE : LLVMIntSLE,
+                                      iter, end,
+                                      node->descending ? "fordowncond" : "forcond"),
                         body_bb, after_bb);
 
         LLVMPositionBuilderAtEnd(builder, body_bb);
@@ -599,7 +602,9 @@ static void gen_stmt(ASTNode *node)
         LLVMPositionBuilderAtEnd(builder, inc_bb);
         iter = LLVMBuildLoad2(builder, llvm_type(TY_INT), slot, "i.next");
         iter = LLVMBuildAdd(builder, iter,
-                            LLVMConstInt(LLVMInt64TypeInContext(ctx), 1, 0), "inc");
+                            LLVMConstInt(LLVMInt64TypeInContext(ctx),
+                                         node->descending ? (unsigned long long)-1 : 1ULL, 1),
+                            node->descending ? "dec" : "inc");
         LLVMBuildStore(builder, iter, slot);
         LLVMBuildBr(builder, loop_bb);
 

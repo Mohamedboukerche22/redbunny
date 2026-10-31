@@ -1,0 +1,33 @@
+@include "std"
+
+main() {
+    for(i in 5 downTo 1) {
+        write(i)
+        if (i > 1) { write(" ") }
+    }
+    writeln("")
+
+    for(i in 1 downTo 5) {
+        writeln(i)
+    }
+
+    for(i in 3 downTo 3) {
+        writeln(i)
+    }
+
+    start = 4
+    stop = 2
+    for(i in start downTo stop) {
+        write(i)
+        if (i > stop) { write(" ") }
+    }
+    writeln("")
+
+    for(i in 10 downTo 1) {
+        if (i == 6) { continue }
+        if (i == 3) { break }
+        write(i)
+        if (i > 4) { write(" ") }
+    }
+    writeln("")
+}

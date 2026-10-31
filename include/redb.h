@@ -26,6 +26,7 @@ typedef enum {
     TOKEN_FOR,
     TOKEN_IN,
     TOKEN_TO,
+    TOKEN_DOWNTO,
     TOKEN_WRITE,
     TOKEN_WRITELN,
     TOKEN_WRITEFORMAT,
@@ -136,6 +137,7 @@ typedef struct ASTNode {
     RedbType param_types[REDB_MAX_PARAMS];
 
     int is_main;
+    int descending;
 
     struct ASTNode **children;
     size_t child_count;

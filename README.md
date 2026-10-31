@@ -144,6 +144,12 @@ main() {
         total = total + i
     }
     writeln(total)
+
+    -- Count down inclusively: 3, 2, 1
+    for (i in 3 downTo 1) {
+        write(i)
+    }
+    writeln("")
 }
 ```
 
