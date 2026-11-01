@@ -1,0 +1,41 @@
+name: Regenerate training data
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "README.md"
+      - "docs/**"
+      - "examples/**"
+      - "lib/**"
+      - "tests/**"
+      - "TRAIN_IA_MODEL/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build dataset
+        run: python3 TRAIN_IA_MODEL/build.py
+
+      - name: Commit generated data if changed
+        run: |
+          if [[ -n "$(git status --porcelain TRAIN_IA_MODEL/data)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add TRAIN_IA_MODEL/data
+            git commit -m "Regenerate RedBunny training data"
+            git push
+          else
+            echo "Training data is already up to date."
+          fi

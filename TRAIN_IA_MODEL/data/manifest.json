@@ -1,0 +1,244 @@
+{
+  "format_version": 1,
+  "generator": "TRAIN_IA_MODEL/build.py",
+  "system_prompt": "You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no structs, no maps, no generics, no closures, and no exceptions. When asked for code, return a complete compilable program whenever possible. Use `@include \"std\"` for runtime output functions, `@include \"mathlib\"` for math helpers, and `@include \"algorithm\"` for array algorithms. Never use C, Python, Rust, or JavaScript syntax.",
+  "counts": {
+    "total": 143,
+    "train": 126,
+    "eval": 17,
+    "categories": {
+      "arrays": 8,
+      "basics": 1,
+      "cli": 1,
+      "code-output": 8,
+      "compile-error": 8,
+      "control-flow": 5,
+      "core": 1,
+      "errors": 8,
+      "example": 9,
+      "functions": 4,
+      "includes": 3,
+      "limitations": 1,
+      "manual": 19,
+      "operators": 2,
+      "output": 3,
+      "programs": 14,
+      "stdlib": 33,
+      "strings": 1,
+      "syntax": 2,
+      "test-output": 8,
+      "types": 4
+    }
+  },
+  "formats": {
+    "chat.jsonl": "OpenAI-style chat messages",
+    "train.jsonl": "90% split, chat messages",
+    "eval.jsonl": "10% deterministic split, chat messages",
+    "alpaca.jsonl": "instruction/input/output JSONL",
+    "concise.jsonl": "short syntax-focused chat records",
+    "moh_gpt.jsonl": "concise messages-only JSONL for the moh-gpt train.sh pipeline",
+    "plain.txt": "plain text for continued pretraining"
+  },
+  "sources": [
+    {
+      "path": "README.md",
+      "bytes": 15263,
+      "sha256": "b4473fc651dcfeca5d664281558f43e5be6ba246bbee2fdc959053fd91c323bf"
+    },
+    {
+      "path": "docs/DOCUMENTATION.md",
+      "bytes": 19425,
+      "sha256": "f1a735376ad73d4152f8b56a36a1ae5064bdc01549861d81f1e0046a7ba1f505"
+    },
+    {
+      "path": "examples/algorithm_demo.redb",
+      "bytes": 311,
+      "sha256": "f019a91a6702de6376289bc86f0d2f858b85be4a7fe89c895cd94b1d627ddf6f"
+    },
+    {
+      "path": "examples/arrays.redb",
+      "bytes": 466,
+      "sha256": "b69d4287415f24c853aee29aee3efbfc5c8d003ad585c7f1f8cae13965140784"
+    },
+    {
+      "path": "examples/factorial.redb",
+      "bytes": 301,
+      "sha256": "02e313cd6b362b608c7059153a7bb1f1d299eb60c9c1f7487e4b3b30755085f7"
+    },
+    {
+      "path": "examples/hello.redb",
+      "bytes": 57,
+      "sha256": "73a9fc4fef9a612291ca7207b313fcbcd64ca1cbb5182aa6e3f41e90cfb23517"
+    },
+    {
+      "path": "examples/imports/app.redb",
+      "bytes": 231,
+      "sha256": "26b17a922855e12682a4c9396194902c151c5305e8f812aebfc4ea9f41493bfc"
+    },
+    {
+      "path": "examples/imports/greeting.redb",
+      "bytes": 62,
+      "sha256": "b1c84b65ccc840a9b4a66dea14bd575440d85accce922629cc8e1c8c75ce00e8"
+    },
+    {
+      "path": "examples/main.redb",
+      "bytes": 127,
+      "sha256": "a1a3749077d55fa91071c7a910a0741f25b1e90720fc888d0a0d71be8f63be1c"
+    },
+    {
+      "path": "examples/math_demo.redb",
+      "bytes": 391,
+      "sha256": "da86915d633e55900093d09a2fd441a4c16fc8ff1b32a2b746b3cb8c9646c391"
+    },
+    {
+      "path": "examples/tour.redb",
+      "bytes": 884,
+      "sha256": "b1187f5b468497a1ec068434c6472fa3ba492087bb1f369e4f17757b6413cdbf"
+    },
+    {
+      "path": "lib/algorithm.redb",
+      "bytes": 2579,
+      "sha256": "bc09a1bea3d45381b73162c58637e1c83a7f7d92cea9f5a1eefc919e12ca69ee"
+    },
+    {
+      "path": "lib/mathlib.redb",
+      "bytes": 3369,
+      "sha256": "f6df2190722e3e53e3feb569146e6f2b2068b7fb9920992d6b6198040200c817"
+    },
+    {
+      "path": "tests/cases/algorithm_stdlib.redb",
+      "bytes": 998,
+      "sha256": "65fe3f9f1a1709109d7c3a2f56a770f5748fcb7bcf466d3226283664ded4b111"
+    },
+    {
+      "path": "tests/cases/arrays.redb",
+      "bytes": 1549,
+      "sha256": "2ebc483b850a924a76f4384ee0c6904e99f830b6b5b31bbc5ea479693c035fd8"
+    },
+    {
+      "path": "tests/cases/control.redb",
+      "bytes": 344,
+      "sha256": "f7b3cf4b7ee7a6621f94d459fb2d424fda505be783e0d5e9bafb6ed2d74a07d2"
+    },
+    {
+      "path": "tests/cases/downto.redb",
+      "bytes": 536,
+      "sha256": "7b8ca51431f616580f227d2ec92b71da4d852261ffaf16f04c6a9f1e09efbcae"
+    },
+    {
+      "path": "tests/cases/functions.redb",
+      "bytes": 387,
+      "sha256": "22fc0fd2021eafd8f1c82dc97071a7aa830c91a75c01df8456748a1250cb4e38"
+    },
+    {
+      "path": "tests/cases/mathlib_stdlib.redb",
+      "bytes": 1070,
+      "sha256": "e4d369a911041af5c11fc2e07c1097f005f419cf09438524d41d39e5ea290696"
+    },
+    {
+      "path": "tests/cases/strings.redb",
+      "bytes": 173,
+      "sha256": "d2e79f7189c0308c7cee5b815c8325526da0d0b9cf8aa47d125ee0b94c0a480e"
+    },
+    {
+      "path": "tests/cases/types.redb",
+      "bytes": 230,
+      "sha256": "6da67948a3c9e7078885367a67b1f1437adb8212891c8402bfd608962234f953"
+    },
+    {
+      "path": "tests/cases/algorithm_stdlib.expected",
+      "bytes": 131,
+      "sha256": "1167357f51993b1fd0eca6cf11c3666c1a8e5475ca21a1c661f3dbc2ad925ae9"
+    },
+    {
+      "path": "tests/cases/arrays.expected",
+      "bytes": 72,
+      "sha256": "d5c83b864858dbbd8bcfb350d930d63e88b597ecaaeef5052597b0dc378b9cbb"
+    },
+    {
+      "path": "tests/cases/control.expected",
+      "bytes": 16,
+      "sha256": "c260373a1f9ae455ee72c8d544bdda4b5099cba137d6d0ceb7dd3342a038cd9a"
+    },
+    {
+      "path": "tests/cases/downto.expected",
+      "bytes": 31,
+      "sha256": "35d0031f64641f83a742e1ef8433ac7604cec5d45e42d66a299fa6cc0188c705"
+    },
+    {
+      "path": "tests/cases/functions.expected",
+      "bytes": 13,
+      "sha256": "33a08e79806836698fdd74e7675cc0146bc7a05aba12e3d45c1e852e8ada258e"
+    },
+    {
+      "path": "tests/cases/mathlib_stdlib.expected",
+      "bytes": 158,
+      "sha256": "15d2cba37c0a7b581539f1da405b9d46f2f35621ba45cea9fababceecb3dd5a8"
+    },
+    {
+      "path": "tests/cases/strings.expected",
+      "bytes": 35,
+      "sha256": "57ff6cdf4e23f25986a4f142fd5475f677f5e17c6e6c3f0c1d753db33fa9c815"
+    },
+    {
+      "path": "tests/cases/types.expected",
+      "bytes": 27,
+      "sha256": "60d13c8cdc04151d5deb950848486409fb02f08660297e487dc6f06cfd4adf41"
+    },
+    {
+      "path": "tests/errors/array_literal_type_mismatch.redb",
+      "bytes": 41,
+      "sha256": "0a6377a4dedb60526ff3c6a9d8605a815caccfc6f29826d882acf776c0ac7aa2"
+    },
+    {
+      "path": "tests/errors/array_size_mismatch.redb",
+      "bytes": 43,
+      "sha256": "157e990845a32ccd9cb3ae2a24ea2f0f77512860c82f426b1a0f392167cd7133"
+    },
+    {
+      "path": "tests/errors/array_type_mismatch.redb",
+      "bytes": 49,
+      "sha256": "6d14ce0374cebaaf5676125fd5824ab9a125ae3c988e1c45f2e1a136d2cd233b"
+    },
+    {
+      "path": "tests/errors/bad_format.redb",
+      "bytes": 48,
+      "sha256": "bd3e72bd6521493222fd94652d17afa467f6015e4fe4eafe9bb19da745cf6062"
+    },
+    {
+      "path": "tests/errors/break_outside.redb",
+      "bytes": 21,
+      "sha256": "d2f3b5d8cbbdd61bf6dfb829739e87012bf59317c26b30580ff1c042b4670347"
+    },
+    {
+      "path": "tests/errors/type_mismatch.redb",
+      "bytes": 35,
+      "sha256": "e0fed9db920babd29281cddbc893e9f913af9dc4fafbe91bb7c2ab90a4fc67e7"
+    },
+    {
+      "path": "tests/errors/unknown_var.redb",
+      "bytes": 29,
+      "sha256": "7e877eeaf894d9aa667dda9cbdbe237954fd215a4886a64020b840546ba76cda"
+    },
+    {
+      "path": "tests/errors/wrong_args.redb",
+      "bytes": 71,
+      "sha256": "92622723a67bd966a7587c618a56fe8dcaced2912fbe0151e3e4cea46b5ae090"
+    },
+    {
+      "path": "TRAIN_IA_MODEL/build.py",
+      "bytes": 19331,
+      "sha256": "699847114586bb0e83c1a17142867682e57be506e3997653c6ac1305e88756e0"
+    },
+    {
+      "path": "TRAIN_IA_MODEL/seed.jsonl",
+      "bytes": 22750,
+      "sha256": "5b9d4e6c370e1e556e841d9873f3e47d67189de6e9213851ba2f41c77d41fe7c"
+    },
+    {
+      "path": "TRAIN_IA_MODEL/prompts/system.txt",
+      "bytes": 558,
+      "sha256": "f0cc16ac335138ce248d24a83d495d736360c348894626634898f1ebafe62d61"
+    }
+  ]
+}

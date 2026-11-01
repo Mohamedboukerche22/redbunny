@@ -317,6 +317,21 @@ main() {
 }
 ```
 
+## AI Training Data
+
+`TRAIN_IA_MODEL/` converts the manual, examples, standard library and tests into
+instruction-tuning data for local models. Generate it with:
+
+```bash
+python3 TRAIN_IA_MODEL/build.py
+```
+
+It writes OpenAI-style chat JSONL, a concise syntax-focused set, Alpaca JSONL,
+a `moh-gpt`-compatible `messages` file, train/eval splits, a plain-text corpus
+and a manifest under `TRAIN_IA_MODEL/data/`. Keep it updated while editing
+with `python3 TRAIN_IA_MODEL/watch.py`, or let the GitHub Actions workflow
+regenerate it on push. See `TRAIN_IA_MODEL/README.md` for training instructions.
+
 ## Command Line
 
 ```text
@@ -389,10 +404,16 @@ redb main.redb -S -o main.ll
 │   ├── get.ps1             Windows one-line installer
 │   ├── install.sh          Linux / macOS source installer
 │   └── install.ps1         Windows source installer
-└── tests/
-    ├── run.sh              test runner
-    ├── cases/              programs with expected output
-    └── errors/             programs that must be rejected
+├── tests/
+│   ├── run.sh              test runner
+│   ├── cases/              programs with expected output
+│   └── errors/             programs that must be rejected
+└── TRAIN_IA_MODEL/
+    ├── build.py            generate training data from the repo
+    ├── watch.py            rebuild on source changes
+    ├── seed.jsonl          curated syntax Q&A
+    ├── train_lora.py       optional local LoRA training script
+    └── data/               generated chat, Alpaca and plain-text datasets
 ```
 
 ## How It Works

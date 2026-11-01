@@ -1,0 +1,4075 @@
+# RedBunny training corpus
+
+## System prompt
+
+You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no structs, no maps, no generics, no closures, and no exceptions. When asked for code, return a complete compilable program whenever possible. Use `@include "std"` for runtime output functions, `@include "mathlib"` for math helpers, and `@include "algorithm"` for array algorithms. Never use C, Python, Rust, or JavaScript syntax.
+
+## core:seed:c2421939ba
+
+### User
+
+What is RedBunny?
+
+### Assistant
+
+RedBunny is a small, fast, compiled programming language. Source files use the `.redb` extension, the compiler is written in C, and programs are lowered to LLVM IR before being linked into native executables. Every executable defines a `main()` block, and `@include "std"` provides the output functions.
+
+## basics:seed:24427fa0e0
+
+### User
+
+Write a minimal RedBunny program that prints Hello, World!.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    writeln("Hello, World!")
+}
+```
+
+## syntax:seed:df07318c69
+
+### User
+
+How do comments work in RedBunny?
+
+### Assistant
+
+```redb
+-- single-line comment
+
+-*
+   multi-line
+   comment block
+*-
+
+main() {
+    writeln("comments are removed by the lexer")
+}
+```
+
+## syntax:seed:ca0ded9d97
+
+### User
+
+Are semicolons required in RedBunny?
+
+### Assistant
+
+No. Semicolons are optional. Statements are separated by the grammar, not by newlines.
+
+```redb
+main() {
+    a = 1;
+    b = 2
+    writeln(a + b)
+}
+```
+
+## types:seed:142f23570a
+
+### User
+
+How are variables declared in RedBunny?
+
+### Assistant
+
+Variables are introduced by assignment. The first assignment fixes the static type.
+
+```redb
+main() {
+    name = "Mohamed"     -- str
+    age = 20             -- int (signed 64-bit)
+    pi = 3.14159         -- double
+    alive = true         -- bool
+
+    writeformat("Name: {name}, Age: {age}, pi: {pi}, alive: {alive}\n")
+}
+```
+
+## types:seed:11056b4f49
+
+### User
+
+List the built-in RedBunny types.
+
+### Assistant
+
+| Type | Meaning |
+|---|---|
+| `int` | signed 64-bit integer |
+| `float` | 32-bit IEEE floating point |
+| `double` | 64-bit IEEE floating point |
+| `str` | null-terminated UTF-8 byte string |
+| `bool` | `true` or `false` |
+| `void` | no value, written `{}` in signatures |
+
+A decimal literal such as `3.14` is a `double`; integer literals are `int`.
+
+## types:seed:350e88e42b
+
+### User
+
+Can I change a variable's type after its first assignment?
+
+### Assistant
+
+No. Reassigning an existing variable keeps its original type.
+
+```redb
+main() {
+    count = 0
+    count = count + 1   -- ok
+    count = "one"       -- compile error: expected int, got str
+}
+```
+
+## types:seed:f8f81ca027
+
+### User
+
+How does block scoping work in RedBunny?
+
+### Assistant
+
+New names are block scoped. Assigning an existing name writes the nearest visible binding.
+
+```redb
+main() {
+    if (true) {
+        local = 1
+    }
+    writeln(local)      -- error: unknown identifier
+}
+```
+
+## strings:seed:6b4ac30bc8
+
+### User
+
+How do I concatenate and compare strings in RedBunny?
+
+### Assistant
+
+Use `+` for concatenation and `==` / `!=` for equality. Ordering comparisons are numeric only.
+
+```redb
+main() {
+    name = "Red" + "Bunny"
+    writeln(name)
+    writeln(name == "RedBunny")
+    writeln(name != "Other")
+}
+```
+
+## operators:seed:13a6fb90c3
+
+### User
+
+Show the arithmetic and logical operators in RedBunny.
+
+### Assistant
+
+```redb
+main() {
+    writeln(1 + 2)
+    writeln(10 - 3)
+    writeln(4 * 5)
+    writeln(20 / 4)
+    writeln(21 % 4)
+
+    writeln(3 < 5)
+    writeln(3 <= 3)
+    writeln(3 == 3)
+    writeln(3 != 4)
+    writeln(true && false)
+    writeln(true || false)
+    writeln(!false)
+}
+```
+
+## operators:seed:59b40089ff
+
+### User
+
+What is the operator precedence in RedBunny?
+
+### Assistant
+
+Highest to lowest:
+
+1. unary `-`, `!`
+2. `*`, `/`, `%`
+3. `+`, `-`
+4. `<`, `<=`, `>`, `>=`
+5. `==`, `!=`
+6. `&&`
+7. `||`
+
+Use parentheses when the intended order is not obvious.
+
+## control-flow:seed:8f832d8b0c
+
+### User
+
+How do if and else work in RedBunny?
+
+### Assistant
+
+```redb
+main() {
+    age = 20
+
+    if (age >= 18) {
+        writeln("adult")
+    } else {
+        writeln("minor")
+    }
+}
+```
+
+Conditions accept `bool` values and numeric values. `0` is false; everything else is true.
+
+## control-flow:seed:1436518004
+
+### User
+
+How does the for loop work in RedBunny?
+
+### Assistant
+
+`for (i in start to end)` is inclusive at both ends.
+
+```redb
+main() {
+    for (i in 0 to 9) {
+        writeln(i)
+    }
+}
+```
+
+The loop above runs ten times, from `0` through `9`.
+
+## control-flow:seed:7b29721b88
+
+### User
+
+How do I count downward in RedBunny?
+
+### Assistant
+
+Use `downTo`, with a capital `T`.
+
+```redb
+main() {
+    for (i in 5 downTo 1) {
+        writeln(i)
+    }
+}
+```
+
+Output: `5`, `4`, `3`, `2`, `1`.
+
+## control-flow:seed:152d9c93d4
+
+### User
+
+How does a while loop work in RedBunny?
+
+### Assistant
+
+```redb
+main() {
+    n = 0
+    while (n < 5) {
+        write(n)
+        n = n + 1
+    }
+    writeln("")
+}
+```
+
+## control-flow:seed:19378f3bcc
+
+### User
+
+How do break and continue work in RedBunny?
+
+### Assistant
+
+```redb
+main() {
+    for (i in 0 to 9) {
+        if (i == 2) { continue }
+        if (i == 5) { break }
+        write(i)
+    }
+    writeln("")
+}
+```
+
+`break` and `continue` may only appear inside a loop.
+
+## functions:seed:f7c50f64f7
+
+### User
+
+How do I define a function in RedBunny?
+
+### Assistant
+
+Function values use a compact signature syntax.
+
+```redb
+@include "std"
+
+add_one = do(int -> int) {
+    return arg1 + 1
+}
+
+main() {
+    writeln(add_one(41))
+}
+```
+
+Parameters are available as `arg1`, `arg2`, and so on.
+
+## functions:seed:60cec556a5
+
+### User
+
+How do I declare a no-argument function that returns a value?
+
+### Assistant
+
+Use `doto({} => int)` or `do(-> int)`.
+
+```redb
+@include "std"
+
+answer = doto({} => int) {
+    return 42
+}
+
+other = do(-> int) {
+    return 7
+}
+
+main() {
+    writeln(answer())
+    writeln(other())
+}
+```
+
+## functions:seed:926d470231
+
+### User
+
+How does recursion work in RedBunny?
+
+### Assistant
+
+Functions are hoisted before `main`, so they can call each other and recurse.
+
+```redb
+@include "std"
+
+fact = do(int -> int) {
+    if (arg1 <= 1) {
+        return 1
+    }
+    return arg1 * fact(arg1 - 1)
+}
+
+main() {
+    writeln(fact(5))    -- 120
+}
+```
+
+## functions:seed:66e30f98e5
+
+### User
+
+Can main return an exit status in RedBunny?
+
+### Assistant
+
+Yes. `main()` returns an integer exit status. A bare `return` exits with `0`; `return 42` exits with `42`.
+
+```redb
+main() {
+    return 42
+}
+```
+
+## includes:seed:7e66b97305
+
+### User
+
+What does @include "std" do in RedBunny?
+
+### Assistant
+
+`@include "std"` is accepted and the runtime is linked automatically. It is the conventional include for programs that use `write`, `writeln`, or `writeformat`.
+
+```redb
+@include "std"
+
+main() {
+    writeln("ready")
+}
+```
+
+## includes:seed:fa9d9f33e7
+
+### User
+
+How are includes resolved in RedBunny?
+
+### Assistant
+
+Includes are resolved in this order:
+
+1. Relative to the including file.
+2. The standard library directory: `REDB_STDLIB` if set, otherwise `lib/` in a source checkout or `share/redb/lib` when installed.
+
+The `.redb` suffix is optional. Local files shadow standard library modules. Include cycles are rejected after 32 levels.
+
+## includes:seed:48079baa19
+
+### User
+
+Show a local module include in RedBunny.
+
+### Assistant
+
+`greeting.redb`:
+
+```redb
+greet = do(str -> {}) {
+    writeln("Hello, " + arg1 + "!")
+}
+```
+
+`app.redb`:
+
+```redb
+@include "std"
+@include "greeting"
+
+main() {
+    greet("RedBunny")
+}
+```
+
+## output:seed:c0227162b0
+
+### User
+
+What is the difference between write and writeln in RedBunny?
+
+### Assistant
+
+`write` prints without a trailing newline. `writeln` prints a value followed by a newline.
+
+```redb
+@include "std"
+
+main() {
+    write("loading")
+    write("...")
+    writeln("")
+    writeln("done")
+}
+```
+
+## output:seed:83cb4afc1e
+
+### User
+
+How does writeformat work in RedBunny?
+
+### Assistant
+
+`writeformat` interpolates variables into a template.
+
+```redb
+@include "std"
+
+main() {
+    name = "Mohamed"
+    age = 20
+
+    writeformat("my name is {name} and my age is {age}\n")
+}
+```
+
+Only variable names may appear inside `{...}`. Unknown names and function names are rejected at compile time.
+
+## output:seed:442d50ef23
+
+### User
+
+How do I print literal braces with writeformat?
+
+### Assistant
+
+Use doubled braces.
+
+```redb
+@include "std"
+
+main() {
+    name = "bunny"
+    writeformat("{{literal}} {name}\n")
+}
+```
+
+Output: `{literal} bunny`.
+
+## cli:seed:5f16698f4c
+
+### User
+
+How do I compile and run a RedBunny program?
+
+### Assistant
+
+```bash
+redb main.redb -o app
+./app
+
+redb main.redb --run
+redb main.redb -S -o main.ll
+```
+
+`-o` chooses the output executable, `--run` compiles and runs, and `-S` emits LLVM IR only.
+
+## limitations:seed:c904758fd6
+
+### User
+
+What are the current limitations of RedBunny?
+
+### Assistant
+
+- No maps, structs, classes or pointers.
+- No user-defined types or generics.
+- No closures; functions cannot capture enclosing locals.
+- No exceptions or panic handling.
+- No package registry; includes resolve relative to the source file, then the standard library directory.
+- Floating point `%` uses `frem` and is not the same as C `fmod` for all inputs.
+
+These are deliberate v0.1 boundaries.
+
+## arrays:seed:50fcfd484d
+
+### User
+
+How do I declare and index an array in RedBunny?
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    array<int> nums(5)          -- 5 elements, all 0
+    nums[0] = 10
+    nums[4] = 40
+    writeln(nums[0] + nums[4])  -- 50
+    writeln(nums.size())        -- 5
+}
+```
+
+## arrays:seed:9d4872300d
+
+### User
+
+How do array literals work in RedBunny?
+
+### Assistant
+
+Use braces. The length is inferred.
+
+```redb
+@include "std"
+
+main() {
+    array<int> literal = {2, 4, 6}
+    writeln(literal[0] + literal[2]) -- 8
+    writeln(literal.size())          -- 3
+}
+```
+
+Elements must share one type. Numeric literals are promoted: `{1, 2.5}` becomes `array<double>`.
+
+## arrays:seed:6829adf2d3
+
+### User
+
+What is array<auto> in RedBunny?
+
+### Assistant
+
+`array<auto>` takes its element type from the initializer or from another array.
+
+```redb
+@include "std"
+
+main() {
+    array<auto> inferred = {1, 2, 3}
+    array<int> nums = {4, 5}
+    array<auto> alias = nums
+
+    writeln(inferred.size())
+    writeln(alias[1])
+}
+```
+
+`array<auto> a(5)` with no initializer defaults to `int`.
+
+## arrays:seed:f7c69bca97
+
+### User
+
+How do nested arrays work in RedBunny?
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    array<array<int>> grid = {{1, 2}, {3, 4}}
+    writeln(grid[0][1] + grid[1][0]) -- 5
+
+    array<array<int>> matrix(2)      -- two inner arrays, each starts empty
+    array<int> row(3)
+    row[2] = 9
+    matrix[1] = row
+    writeln(matrix[1][2])            -- 9
+}
+```
+
+## arrays:seed:7b1402d480
+
+### User
+
+How does resize work on a RedBunny array?
+
+### Assistant
+
+`resize(n)` changes the size. New elements are zero or empty.
+
+```redb
+@include "std"
+
+main() {
+    array<int> nums(4)
+    nums.resize(6)
+    writeln(nums.size()) -- 6
+    writeln(nums[5])     -- 0
+}
+```
+
+## arrays:seed:2af9f1a35b
+
+### User
+
+Do RedBunny array assignments copy the array?
+
+### Assistant
+
+No. Assigning one array to another makes both names refer to the same array.
+
+```redb
+@include "std"
+
+main() {
+    array<int> nums = {1, 2, 3}
+    array<auto> alias = nums
+    alias[1] = 99
+    writeln(nums[1]) -- 99
+}
+```
+
+## arrays:seed:a4b301e8ef
+
+### User
+
+How do I pass an array to a RedBunny function?
+
+### Assistant
+
+```redb
+@include "std"
+
+total = do(array<int> -> int) {
+    return arg1[0] + arg1[1]
+}
+
+main() {
+    array<int> nums = {5, 6}
+    writeln(total(nums))
+}
+```
+
+## arrays:seed:02da7c226e
+
+### User
+
+How do I return an array from a RedBunny function?
+
+### Assistant
+
+```redb
+@include "std"
+
+pair = do(-> array<int>) {
+    return {7, 8}
+}
+
+main() {
+    p = pair()
+    writeln(p[0] + p[1])
+}
+```
+
+## stdlib:seed:274feef19a
+
+### User
+
+How do I use the RedBunny math library?
+
+### Assistant
+
+```redb
+@include "std"
+@include "mathlib"
+
+main() {
+    writeln(square(9))
+    writeln(power(2, 10))
+    writeln(sqrt(2.0))
+    writeln(gcd(48, 18))
+    writeln(PI())
+}
+```
+
+## stdlib:seed:e595aa2156
+
+### User
+
+How do I use the RedBunny algorithm library?
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    array<int> nums = {5, 1, 4, 2, 3}
+
+    sort(nums)
+    writeln(nums[0])                 -- 1
+    writeln(binary_search(nums, 4))  -- 3
+
+    reverse(nums)
+    writeln(max_element(nums))       -- 5
+    writeln(min_element(nums))       -- 1
+}
+```
+
+## stdlib:seed:792eefc20d
+
+### User
+
+How do I get the 64-bit integer limits in RedBunny?
+
+### Assistant
+
+`MAX_INT64()` and `MIN_INT64()` are zero-argument helpers in the algorithm library.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    writeln(MAX_INT64()) -- 9223372036854775807
+    writeln(MIN_INT64()) -- -9223372036854775808
+}
+```
+
+## stdlib:seed:486081437b
+
+### User
+
+How do I declare a constant in RedBunny?
+
+### Assistant
+
+RedBunny has no `const` keyword. Use a zero-argument function instead.
+
+```redb
+@include "std"
+
+ANSWER = do(-> int) {
+    return 42
+}
+
+main() {
+    writeln(ANSWER())
+}
+```
+
+## stdlib:seed:67a7b1b9e1
+
+### User
+
+How do I sort an array in RedBunny?
+
+### Assistant
+
+Include the algorithm library and call `sort`. It sorts in place in ascending order.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    array<int> nums = {5, 1, 4, 2, 3}
+    sort(nums)
+    for (i in 0 to nums.size() - 1) {
+        writeln(nums[i])
+    }
+}
+```
+
+## stdlib:seed:6fc794ed77
+
+### User
+
+How does binary_search work in the RedBunny algorithm library?
+
+### Assistant
+
+The array must be sorted in ascending order. The function returns the index of the target, or `-1` when it is not present.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    array<int> nums = {1, 3, 5, 7, 9}
+    writeln(binary_search(nums, 7)) -- 3
+    writeln(binary_search(nums, 4)) -- -1
+}
+```
+
+## programs:seed:028144cb39
+
+### User
+
+Write FizzBuzz in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    for (i in 1 to 100) {
+        if (i % 15 == 0) {
+            writeln("FizzBuzz")
+        } else if (i % 3 == 0) {
+            writeln("Fizz")
+        } else if (i % 5 == 0) {
+            writeln("Buzz")
+        } else {
+            writeln(i)
+        }
+    }
+}
+```
+
+## programs:seed:ff3d041f63
+
+### User
+
+Write a recursive factorial program in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+fact = do(int -> int) {
+    if (arg1 <= 1) {
+        return 1
+    }
+    return arg1 * fact(arg1 - 1)
+}
+
+main() {
+    writeln(fact(10))
+}
+```
+
+## programs:seed:a9e281360d
+
+### User
+
+Write a Fibonacci program in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+fib = do(int -> int) {
+    if (arg1 <= 1) {
+        return arg1
+    }
+    a = 0
+    b = 1
+    i = 2
+    while (i <= arg1) {
+        next = a + b
+        a = b
+        b = next
+        i = i + 1
+    }
+    return b
+}
+
+main() {
+    for (i in 0 to 10) {
+        writeln(fib(i))
+    }
+}
+```
+
+## programs:seed:7946008c98
+
+### User
+
+Write a RedBunny program that sums an array.
+
+### Assistant
+
+```redb
+@include "std"
+
+sum = do(array<int> -> int) {
+    total = 0
+    for (i in 0 to arg1.size() - 1) {
+        total = total + arg1[i]
+    }
+    return total
+}
+
+main() {
+    array<int> nums = {1, 2, 3, 4, 5}
+    writeln(sum(nums))
+}
+```
+
+## programs:seed:6fe686b7f8
+
+### User
+
+Implement bubble sort in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    array<int> nums = {5, 1, 4, 2, 3}
+    n = nums.size()
+
+    for (i in 0 to n - 2) {
+        for (j in 0 to n - 2 - i) {
+            if (nums[j] > nums[j + 1]) {
+                tmp = nums[j]
+                nums[j] = nums[j + 1]
+                nums[j + 1] = tmp
+            }
+        }
+    }
+
+    for (i in 0 to n - 1) {
+        writeln(nums[i])
+    }
+}
+```
+
+## programs:seed:32452dea5a
+
+### User
+
+Implement binary search manually in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+search = do(array<int>, int -> int) {
+    left = 0
+    right = arg1.size() - 1
+
+    while (left <= right) {
+        mid = (left + right) / 2
+        if (arg1[mid] == arg2) {
+            return mid
+        } else if (arg1[mid] < arg2) {
+            left = mid + 1
+        } else {
+            right = mid - 1
+        }
+    }
+    return -1
+}
+
+main() {
+    array<int> nums = {1, 3, 5, 7, 9}
+    writeln(search(nums, 7))
+}
+```
+
+## programs:seed:83ced5d3f0
+
+### User
+
+Write a prime-checking function in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+is_prime = do(int -> bool) {
+    if (arg1 < 2) {
+        return false
+    }
+    i = 2
+    while (i * i <= arg1) {
+        if (arg1 % i == 0) {
+            return false
+        }
+        i = i + 1
+    }
+    return true
+}
+
+main() {
+    writeln(is_prime(17))
+    writeln(is_prime(18))
+}
+```
+
+## programs:seed:8b654db680
+
+### User
+
+Sum a matrix in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    array<array<int>> grid = {{1, 2}, {3, 4}}
+    total = 0
+
+    for (i in 0 to grid.size() - 1) {
+        for (j in 0 to grid[i].size() - 1) {
+            total = total + grid[i][j]
+        }
+    }
+
+    writeln(total)
+}
+```
+
+## programs:seed:e6c4b9182d
+
+### User
+
+Compute the average of an array in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+average = do(array<int> -> double) {
+    total = 0
+    for (i in 0 to arg1.size() - 1) {
+        total = total + arg1[i]
+    }
+    return total * 1.0 / arg1.size()
+}
+
+main() {
+    array<int> nums = {2, 4, 6, 8}
+    writeln(average(nums))
+}
+```
+
+## programs:seed:c2759bac68
+
+### User
+
+Check whether an array is sorted in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    array<int> nums = {1, 3, 5, 7, 9}
+    sorted = true
+
+    for (i in 1 to nums.size() - 1) {
+        if (nums[i] < nums[i - 1]) {
+            sorted = false
+            break
+        }
+    }
+
+    writeln(sorted)
+}
+```
+
+## programs:seed:e80bb36e90
+
+### User
+
+Swap two array elements in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    array<int> nums = {10, 20}
+    tmp = nums[0]
+    nums[0] = nums[1]
+    nums[1] = tmp
+
+    writeln(nums[0])
+    writeln(nums[1])
+}
+```
+
+## programs:seed:c429ba662d
+
+### User
+
+Create an empty array of strings in RedBunny.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    array<str> names = {}
+    writeln(names.size())
+
+    names.resize(2)
+    names[0] = "Red"
+    names[1] = "Bunny"
+    writeln(names[0] + names[1])
+}
+```
+
+## errors:seed:b789c278c5
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    x = 1
+    x = "one"
+}
+```
+
+### Assistant
+
+A variable keeps the type from its first assignment. `x = 1` makes `x` an `int`, so assigning the string `"one"` to `x` is a compile-time type error.
+
+## errors:seed:3e8bd11f4e
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+f = do(int -> int) {
+    return arg1
+}
+
+main() {
+    writeln(f(1, 2))
+}
+```
+
+### Assistant
+
+Function calls must pass exactly the number of arguments in the declared signature. `f` takes one `int`, but the call passes two arguments.
+
+## errors:seed:5ff144c762
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    writeln(nope)
+}
+```
+
+### Assistant
+
+Identifiers must be declared before use. `nope` has no visible binding.
+
+## errors:seed:b1f8547e36
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    break
+}
+```
+
+### Assistant
+
+`break` is only valid inside a `for` or `while` loop.
+
+## errors:seed:39679f34b4
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    writeformat("hello {missing}\n")
+}
+```
+
+### Assistant
+
+`writeformat` placeholders must name variables visible in scope. `{missing}` is not a declared variable.
+
+## errors:seed:33af966819
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    array<int> a = {1, "two"}
+}
+```
+
+### Assistant
+
+Array literal elements must share one element type. This literal mixes `int` and `str`.
+
+## errors:seed:a313b8eb72
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    array<int> a(2) = {1, 2, 3}
+}
+```
+
+### Assistant
+
+When an explicit array size is written before an initializer, the size must equal the number of literal elements. This declares size 2 but supplies 3 elements.
+
+## errors:seed:a0ae02ac25
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    array<int> a(3)
+    a[0] = "text"
+}
+```
+
+### Assistant
+
+The array element type is fixed by `array<int>`. Assigning a `str` to an `int` slot is a compile-time type error.
+
+## programs:seed:0eb3cee0ee
+
+### User
+
+Show a complete RedBunny math library demo.
+
+### Assistant
+
+```redb
+@include "std"
+@include "mathlib"
+
+main() {
+    pi = PI()
+
+    writeln(cos(pi))
+    writeln(sin(pi))
+    writeln(sqrt(5.0))
+    writeln(power(2, 10))
+    writeln(ln(euler()))
+    writeln(max(3, 7))
+    writeln(min(3, 7))
+    writeln(maxf(3.5, 7.25))
+    writeln(minf(3.5, 7.25))
+    writeln(abs(-42))
+    writeln(gcd(48, 18))
+    writeln(lcm(4, 6))
+}
+```
+
+## programs:seed:3f4043120f
+
+### User
+
+Show a complete RedBunny algorithm library demo.
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    array<int> nums = {5, 1, 4, 2, 3}
+
+    sort(nums)
+    writeln(nums[0])
+    writeln(binary_search(nums, 4))
+
+    reverse(nums)
+    writeln(nums[0])
+    writeln(max_element(nums))
+    writeln(min_element(nums))
+    writeln(MAX_INT64())
+    writeln(MIN_INT64())
+}
+```
+
+## manual:DOCUMENTATION:4d2286a553
+
+### User
+
+Explain RedBunny's Hello World with syntax and examples.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    writeln("Hello, World!");
+}
+```
+
+Compile and run:
+
+```bash
+redb hello.redb -o hello
+./hello
+```
+
+## manual:DOCUMENTATION:611a869a33
+
+### User
+
+Explain RedBunny's Comments with syntax and examples.
+
+### Assistant
+
+```redb
+-- single-line comment
+
+-*
+   multi-line
+   comment block
+*-
+```
+
+Comments are removed by the lexer and never appear in the generated program.
+
+Semicolons are optional. Statements are separated by the grammar, not by
+newlines, so either style works:
+
+```redb
+main() {
+    a = 1;
+    b = 2
+    writeln(a + b)
+}
+```
+
+## manual:DOCUMENTATION:804f4bc9e7
+
+### User
+
+Explain RedBunny's Program Structure with syntax and examples.
+
+### Assistant
+
+Every executable program must define exactly one `main()` block:
+
+```redb
+main() {
+    writeln("start");
+}
+```
+
+`main()` returns an integer exit status to the operating system. A bare
+`return` exits with `0`; `return 42` exits with `42`.
+
+Top-level declarations are limited to:
+
+- `@include "..."`
+- `main() { ... }`
+- function definitions such as `name = do(...) { ... }`
+
+All other statements live inside `main()` or another function.
+
+## manual:DOCUMENTATION:3119c4f11a
+
+### User
+
+Explain RedBunny's Variables and Types with syntax and examples.
+
+### Assistant
+
+Variables are introduced by assignment. The first assignment fixes the static
+type used by the LLVM backend:
+
+```redb
+main() {
+    name = "Mohamed"     -- str
+    age = 20             -- int (64-bit signed)
+    pi = 3.14159         -- double
+    alive = true         -- bool
+
+    writeformat("Name: {name}, Age: {age}, pi: {pi}, alive: {alive}\n")
+}
+```
+
+Supported types:
+
+| Type     | Meaning                              |
+|----------|--------------------------------------|
+| `int`    | signed 64-bit integer                |
+| `float`  | 32-bit IEEE floating point           |
+| `double` | 64-bit IEEE floating point           |
+| `str`    | null-terminated UTF-8 byte string    |
+| `bool`   | `true` or `false`                    |
+| `void`   | no value, written `{}` in signatures |
+
+A decimal literal such as `3.14` is a `double`. Integer literals are `int`.
+Numeric values convert automatically between `int`, `float` and `double`
+according to the destination type.
+
+Reassigning an existing variable keeps its original type:
+
+```redb
+main() {
+    count = 0
+    count = count + 1   -- ok
+    count = "one"       -- compile error
+}
+```
+
+New names are block scoped. Assigning an existing name writes the nearest
+visible binding:
+
+```redb
+main() {
+    if (true) {
+        local = 1
+    }
+    writeln(local)      -- error: unknown identifier
+}
+```
+
+## manual:DOCUMENTATION:24361554d7
+
+### User
+
+Explain RedBunny's Variables and Types - Arrays with syntax and examples.
+
+### Assistant
+
+An array holds many values of one element type. Declare one with `array<T>`,
+where `T` is `int`, `float`, `double`, `bool`, `str`, `auto`, or another array
+type.
+
+```redb
+main() {
+    array<int> nums(5)          -- 5 elements, all 0
+    nums[0] = 10
+    nums[4] = 40
+    writeln(nums[0] + nums[4])  -- 50
+    writeln(nums.size())        -- 5
+
+    nums.resize(7)              -- grow to 7; new elements are 0
+    writeln(nums.size())        -- 7
+
+    array<auto> alias = nums    -- element type copied from nums (int)
+    alias[1] = 3
+    writeln(nums[1])            -- 3: alias and nums are the same array
+
+    array<array<int>> matrix(2) -- two inner arrays, each starts empty
+    array<int> row(3)
+    row[2] = 9
+    matrix[1] = row
+    writeln(matrix[1][2])       -- 9
+
+    array<int> literal = {2, 4, 6}
+    writeln(literal[0] + literal[2]) -- 8
+    writeln(literal.size())          -- 3
+
+    array<auto> inferred = {1, 2, 3}
+    writeln(inferred.size())         -- 3
+
+    array<auto> sized(2) = {2, 5}
+    writeln(sized[0] + sized[1])     -- 7
+
+    array<array<int>> grid = {{1, 2}, {3, 4}}
+    writeln(grid[0][1] + grid[1][0]) -- 5
+}
+```
+
+| Form                        | Meaning                                                    |
+|-----------------------------|------------------------------------------------------------|
+| `array<int> a(5)`           | 5 elements, all `0` (`0.0` for double, `""` for str)       |
+| `array<int> a`              | empty array (size 0)                                       |
+| `array<int> a = b`          | `a` refers to the same array as `b`                        |
+| `array<auto> a = b`         | `a` takes the element type of `b`                          |
+| `array<auto> a(5)`          | no initializer, so the element type defaults to `int`      |
+| `array<int> a = {1, 2, 3}`  | literal initializer; length is inferred                    |
+| `array<auto> a = {1, 2}`    | element type inferred from the literal                     |
+| `array<auto> a(2) = {1, 2}` | explicit size must match the literal length                |
+| `a[i]`, `a[i] = x`          | read or write element `i` (indexes start at 0)             |
+| `a.size()`                  | number of elements                                         |
+| `a.resize(n)`               | change the size; new elements are zero or empty            |
+| `array<array<int>> m(3)`    | nested arrays; `m[0][1] = 7` works                         |
+
+Arrays can be passed to and returned from functions:
+
+```redb
+total = do(array<int> -> int) {
+    return arg1[0] + arg1[1]
+}
+```
+
+Notes:
+
+- Array literals use braces: `{1, 2, 3}`. Elements must share one type; numeric
+  literals are promoted (`{1, 2.5}` becomes `array<double>`).
+- An index outside `0` to `size() - 1` stops the program with a runtime error.
+- Assigning one array to another does not copy it; both names share the elements.
+- Inner arrays created by `array<array<T>> m(n)` start empty. Call `resize()` on
+  them before indexing.
+- A whole array cannot be printed with `write` or `writeln`. Print one element at
+  a time.
+- `array` and `auto` are reserved words.
+
+## manual:DOCUMENTATION:508558c494
+
+### User
+
+Explain RedBunny's Operators with syntax and examples.
+
+### Assistant
+
+Arithmetic:
+
+```redb
+a = 1 + 2
+b = 10 - 3
+c = 4 * 5
+d = 20 / 4
+e = 21 % 4
+```
+
+Comparison and logic:
+
+```redb
+writeln(3 < 5)
+writeln(3 <= 3)
+writeln(3 == 3)
+writeln(3 != 4)
+writeln(true && false)
+writeln(true || false)
+writeln(!false)
+```
+
+String concatenation uses `+`:
+
+```redb
+main() {
+    name = "Red" + "Bunny"
+    writeln(name)       -- RedBunny
+}
+```
+
+String equality uses `==` and `!=`. Ordering comparisons are numeric only.
+
+Precedence, highest to lowest:
+
+1. unary `-`, `!`
+2. `*`, `/`, `%`
+3. `+`, `-`
+4. `<`, `<=`, `>`, `>=`
+5. `==`, `!=`
+6. `&&`
+7. `||`
+
+## manual:DOCUMENTATION:932505f171
+
+### User
+
+Explain RedBunny's Output - `write` with syntax and examples.
+
+### Assistant
+
+Prints without a trailing newline. Accepts `str`, `int`, `float`, `double` or
+`bool`.
+
+```redb
+write("loading")
+write("...")
+writeln("")
+```
+
+## manual:DOCUMENTATION:279afc5482
+
+### User
+
+Explain RedBunny's Output - `writeln` with syntax and examples.
+
+### Assistant
+
+Prints a value followed by a newline.
+
+```redb
+writeln("done")
+writeln(42)
+writeln(3.5)
+writeln(true)
+```
+
+## manual:DOCUMENTATION:f9feb2f257
+
+### User
+
+Explain RedBunny's Output - `writeformat` with syntax and examples.
+
+### Assistant
+
+Interpolates variables into a template:
+
+```redb
+main() {
+    name = "Mohamed"
+    age = 20
+
+    writeformat("my name is {name} and my age is {age}\n")
+}
+```
+
+Use doubled braces for literal braces:
+
+```redb
+writeformat("{{name}} prints a literal brace block\n")
+```
+
+Only variable names may appear inside `{...}`. Unknown names and function names
+are rejected at compile time.
+
+## manual:DOCUMENTATION:3634659954
+
+### User
+
+Explain RedBunny's Control Flow - `if` / `else` with syntax and examples.
+
+### Assistant
+
+```redb
+main() {
+    age = 20
+
+    if (age >= 18) {
+        writeln("adult")
+    } else {
+        writeln("minor")
+    }
+}
+```
+
+`else if` works as expected:
+
+```redb
+if (score >= 90) {
+    writeln("A")
+} else if (score >= 80) {
+    writeln("B")
+} else {
+    writeln("C")
+}
+```
+
+Conditions accept `bool` values and numeric values (`0` is false, everything
+else is true).
+
+## manual:DOCUMENTATION:dcbb2bace2
+
+### User
+
+Explain RedBunny's Control Flow - `for` with syntax and examples.
+
+### Assistant
+
+```redb
+main() {
+    for(i in 0 to 9) {
+        writeln(i)
+    }
+}
+```
+
+The range is inclusive: the loop above runs ten times, from `0` through `9`.
+
+Use `downTo` to count downward:
+
+```redb
+main() {
+    for(i in 5 downTo 1) {
+        writeln(i)    -- 5, 4, 3, 2, 1
+    }
+}
+```
+
+`to` counts upward and `downTo` counts downward. If the bounds point the wrong
+way, the body does not run. `downTo` is a single keyword with a capital `T`.
+
+## manual:DOCUMENTATION:239f08f424
+
+### User
+
+Explain RedBunny's Control Flow - `while` with syntax and examples.
+
+### Assistant
+
+```redb
+main() {
+    n = 0
+    while (n < 5) {
+        write(n)
+        n = n + 1
+    }
+    writeln("")
+}
+```
+
+## manual:DOCUMENTATION:031b2b1730
+
+### User
+
+Explain RedBunny's Control Flow - `break` and `continue` with syntax and examples.
+
+### Assistant
+
+```redb
+for(i in 0 to 9) {
+    if (i == 2) { continue }
+    if (i == 5) { break }
+    write(i)
+}
+```
+
+`break` and `continue` may only appear inside a loop.
+
+## manual:DOCUMENTATION:8ecba60977
+
+### User
+
+Explain RedBunny's Functions with syntax and examples.
+
+### Assistant
+
+Function values use a compact signature syntax:
+
+```redb
+add_one = do(int -> int) {
+    return arg1 + 1;
+}
+```
+
+- `do(...)` declares a function.
+- The parameters appear before `->`.
+- The return type appears after `->`.
+- `{}` means `void`.
+- `do()` is shorthand for `do({} -> {})`.
+- `doto({} => int)` declares a function that takes no arguments.
+- `=>` is accepted as an alias for `->`.
+
+Parameters are available as `arg1`, `arg2`, and so on.
+
+```redb
+add = do(int, int -> int) {
+    return arg1 + arg2
+}
+
+greet = do(str -> {}) {
+    writeln(arg1)
+}
+
+answer = doto({} => int) {
+    return 42
+}
+
+main() {
+    writeln(add(2, 3))
+    greet("hello")
+    writeln(answer())
+}
+```
+
+Functions are hoisted before `main`, so they can call each other and recurse:
+
+```redb
+fact = do(int -> int) {
+    if (arg1 <= 1) {
+        return 1
+    }
+    return arg1 * fact(arg1 - 1)
+}
+
+main() {
+    writeln(fact(5))    -- 120
+}
+```
+
+The type checker verifies that every `return` matches the declared return type.
+It does not prove that all control-flow paths return. If execution reaches the
+end of a non-void function, the generated code returns zero, so write explicit
+returns on every path.
+
+## manual:DOCUMENTATION:4e0e89e3ba
+
+### User
+
+Explain RedBunny's Includes and Standard Library with syntax and examples.
+
+### Assistant
+
+`@include "std"` is accepted and the runtime is linked automatically.
+
+Includes are resolved in this order:
+
+1. Relative to the including file.
+2. The standard library directory: `REDB_STDLIB` if set, otherwise `lib/` in a
+   source checkout or `share/redb/lib` when installed.
+
+The `.redb` suffix is optional. Local files shadow standard library modules.
+Include cycles are rejected after 32 levels. The bundled modules are `mathlib`
+and `algorithm`.
+
+```redb
+-- greeting.redb (local module)
+greet = do(str -> {}) {
+    writeln("Hello, " + arg1 + "!")
+}
+```
+
+```redb
+-- app.redb
+@include "std"
+@include "greeting"
+@include "mathlib"
+
+main() {
+    greet("RedBunny")
+    writeln(square(9))    -- 81
+}
+```
+
+## manual:DOCUMENTATION:57dc07540c
+
+### User
+
+Explain RedBunny's Includes and Standard Library - Math library with syntax and examples.
+
+### Assistant
+
+`@include "mathlib"` loads the standard math module:
+
+| Function            | Signature              | Notes                                      |
+|---------------------|------------------------|--------------------------------------------|
+| `square(x)`         | `int -> int`           | `x * x`                                    |
+| `cube(x)`           | `int -> int`           | `x * x * x`                                |
+| `power(x, n)`       | `int, int -> int`      | Non-negative `n`; returns `0` for `n < 0`  |
+| `sqrt(x)`           | `double -> double`     | Returns `0` for `x <= 0`                   |
+| `sin(x)`            | `double -> double`     | Taylor series, best for `-pi <= x <= pi`        |
+| `cos(x)`            | `double -> double`     | Taylor series, best for `-pi <= x <= pi`        |
+| `exp(x)`            | `double -> double`     | 20-term Taylor series, moderate inputs     |
+| `ln(x)`             | `double -> double`     | Range reduction + atanh series; returns `0` for `x <= 0` |
+| `max(a, b)`         | `int, int -> int`      | Larger of two integers                     |
+| `min(a, b)`         | `int, int -> int`      | Smaller of two integers                    |
+| `maxf(a, b)`        | `double, double -> double` | Larger of two doubles                  |
+| `minf(a, b)`        | `double, double -> double` | Smaller of two doubles                 |
+| `abs(x)`            | `int -> int`           | Absolute value                             |
+| `gcd(a, b)`         | `int, int -> int`      | Greatest common divisor                    |
+| `lcm(a, b)`         | `int, int -> int`      | Least common multiple                      |
+| `PI()`              | `{} -> double`         | 3.141592653589793                          |
+| `euler()`           | `{} -> double`         | 2.718281828459045                          |
+| `tau()`             | `{} -> double`         | 6.283185307179586                          |
+| `phi()`             | `{} -> double`         | 1.618033988749895                          |
+
+```redb
+@include "std"
+@include "mathlib"
+
+main() {
+    writeln(square(9))
+    writeln(power(2, 10))
+
+    r = sqrt(2.0)
+    writeformat("sqrt(2) = {r}\n")
+}
+```
+
+## manual:DOCUMENTATION:02d27de1d7
+
+### User
+
+Explain RedBunny's Includes and Standard Library - Algorithm library with syntax and examples.
+
+### Assistant
+
+`@include "algorithm"` loads array algorithms for `array<int>`. `sort` and
+`reverse` mutate their array in place.
+
+| Function                  | Signature              | Notes                                      |
+|---------------------------|------------------------|--------------------------------------------|
+| `MAX_INT64()`             | `{} -> int`            | `9223372036854775807`                      |
+| `MIN_INT64()`             | `{} -> int`            | `-9223372036854775808`                     |
+| `binary_search(a, target)`| `array<int>, int -> int` | Index in an ascending sorted array, or `-1` |
+| `reverse(a)`              | `array<int> -> array<int>` | Reverses in place; returns the same array |
+| `max_element(a)`          | `array<int> -> int`    | Largest element; empty array gives `MIN_INT64()` |
+| `min_element(a)`          | `array<int> -> int`    | Smallest element; empty array gives `MAX_INT64()` |
+| `sort(a)`                 | `array<int> -> {}`     | In-place heap sort, `O(n log n)`           |
+
+`MAX_INT64` and `MIN_INT64` are zero-argument constant helpers because RedBunny
+has no `const` keyword.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    array<int> nums = {5, 1, 4, 2, 3}
+
+    sort(nums)
+    writeln(nums[0])                 -- 1
+    writeln(binary_search(nums, 4))  -- 3
+
+    reverse(nums)
+    writeln(nums[0])                 -- 5
+    writeln(max_element(nums))       -- 5
+    writeln(min_element(nums))       -- 1
+    writeln(MAX_INT64())
+    writeln(MIN_INT64())
+}
+```
+
+## manual:DOCUMENTATION:a920bc7629
+
+### User
+
+Explain RedBunny's Current Limitations with syntax and examples.
+
+### Assistant
+
+- No maps, structs, classes or pointers.
+- No user-defined types or generics.
+- No closures; functions cannot capture enclosing locals.
+- No exceptions or panic handling.
+- No package registry; includes resolve relative to the source file, then the
+  standard library directory.
+- Floating point `%` uses `frem` and is not the same as C `fmod` for all inputs.
+
+These are deliberate v0.1 boundaries, not parser accidents.
+
+## manual:DOCUMENTATION:588f47d5e5
+
+### User
+
+Explain RedBunny's Examples with syntax and examples.
+
+### Assistant
+
+The `examples/` directory contains:
+
+- `hello.redb` — minimal program
+- `tour.redb` — variables, formatting, loops, conditionals, functions
+- `factorial.redb` — recursion
+- `arrays.redb` — arrays, literals, resizing and nested arrays
+- `algorithm_demo.redb` — sorting, searching and array algorithms
+- `math_demo.redb` — standard math library
+- `imports/app.redb` — local and standard library includes
+- `imports/greeting.redb` — local module used by `app.redb`
+
+Build them all:
+
+```bash
+redb examples/hello.redb -o /tmp/hello && /tmp/hello
+redb examples/tour.redb -o /tmp/tour && /tmp/tour
+redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
+redb examples/arrays.redb -o /tmp/arrays && /tmp/arrays
+redb examples/algorithm_demo.redb -o /tmp/algorithm_demo && /tmp/algorithm_demo
+redb examples/math_demo.redb -o /tmp/math_demo && /tmp/math_demo
+redb examples/imports/app.redb -o /tmp/app && /tmp/app
+```
+
+## example:algorithm_demo:68a2e71bae
+
+### User
+
+Write a complete RedBunny program that demonstrates sorting, binary search, reversing and min/max element with the algorithm library.
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    array<int> nums = {5, 1, 4, 2, 3}
+
+    sort(nums)
+    writeln(nums[0])
+    writeln(binary_search(nums, 4))
+
+    reverse(nums)
+    writeln(nums[0])
+    writeln(max_element(nums))
+    writeln(min_element(nums))
+    writeln(MAX_INT64())
+    writeln(MIN_INT64())
+}
+```
+
+## example:arrays:f606504bb9
+
+### User
+
+Write a complete RedBunny program that demonstrates array allocation, indexing, resizing, literals and nested arrays.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    array<int> nums(4)
+    nums[0] = 10
+    nums[3] = 40
+    writeln(nums[0] + nums[3])
+    writeln(nums.size())
+
+    nums.resize(6)
+    writeln(nums.size())
+    writeln(nums[5])
+
+    array<int> literal = {2, 4, 6}
+    writeln(literal[1])
+
+    array<auto> inferred = {1, 2, 3}
+    array<auto> sized(2) = {2, 5}
+    writeln(inferred.size() + sized.size())
+
+    array<array<int>> grid = {{1, 2}, {3, 4}}
+    writeln(grid[0][1] + grid[1][0])
+}
+```
+
+## example:factorial:7daf253890
+
+### User
+
+Write a complete RedBunny program that demonstrates recursive factorial with a while loop and a user function.
+
+### Assistant
+
+```redb
+-- Recursive factorial using the compact function syntax.
+@include "std"
+
+fact = do(int -> int) {
+    if (arg1 <= 1) {
+        return 1
+    }
+    return arg1 * fact(arg1 - 1)
+}
+
+main() {
+    n = 0
+    while (n <= 10) {
+        writeformat("{n}! = ")
+        writeln(fact(n))
+        n = n + 1
+    }
+}
+```
+
+## example:hello:f4a5d29c0e
+
+### User
+
+Write a complete RedBunny program that demonstrates printing Hello, World!.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    writeln("Hello, World!");
+}
+```
+
+## example:app:1471ce0b36
+
+### User
+
+Write a complete RedBunny program that demonstrates app.
+
+### Assistant
+
+```redb
+@include "std"
+@include "mathlib"
+@include "greeting"
+
+main() {
+    greet("RedBunny")
+
+    for(i in 1 to 5) {
+        squared = square(i)
+        cubed = cube(i)
+        writeformat("i={i} square={squared} cube={cubed}\n")
+    }
+}
+```
+
+## example:greeting:fdf5b38ae6
+
+### User
+
+Write a complete RedBunny program that demonstrates greeting.
+
+### Assistant
+
+```redb
+greet = do(str -> {}) {
+    writeln("Hello, " + arg1 + "!")
+}
+```
+
+## example:main:accb1c7ff6
+
+### User
+
+Write a complete RedBunny program that demonstrates a user function that adds two integers.
+
+### Assistant
+
+```redb
+add = do(int , int -> int ){
+    return arg1+arg2;
+}
+
+
+main(){
+  a=5
+  b=10
+  res = add(a,b)
+  writeformat("a+b = {res}")
+
+}
+```
+
+## example:math_demo:090b9122b4
+
+### User
+
+Write a complete RedBunny program that demonstrates using the standard math library.
+
+### Assistant
+
+```redb
+-- RedBunny standard math library demo.
+@include "std"
+@include "mathlib"
+
+main() {
+    pi = PI()
+
+    writeln(cos(pi))
+    writeln(sin(pi))
+    writeln(sqrt(5.0))
+    writeln(power(2, 10))
+    writeln(ln(euler()))
+    writeln(max(3, 7))
+    writeln(min(3, 7))
+    writeln(maxf(3.5, 7.25))
+    writeln(minf(3.5, 7.25))
+    writeln(abs(-42))
+    writeln(gcd(48, 18))
+    writeln(lcm(4, 6))
+}
+```
+
+## example:tour:6944b1ae94
+
+### User
+
+Write a complete RedBunny program that demonstrates variables, formatting, loops, conditionals, functions and string concatenation.
+
+### Assistant
+
+```redb
+-- RedBunny language tour
+@include "std"
+
+add_one = do(int -> int) {
+    return arg1 + 1;
+}
+
+greet = do(str -> {}) {
+    writeln(arg1)
+}
+
+answer = doto({} => int) {
+    return 42
+}
+
+main() {
+    -* variables get their type from the first assignment *-
+    name = "Mohamed"
+    age = 20
+    pi = 3.14159
+    alive = true
+
+    writeformat("Name: {name}, Age: {age}\n")
+    writeformat("pi={pi} alive={alive}\n")
+
+    writeln(add_one(41))
+    greet("hello from a function")
+    writeln(answer())
+
+    total = 0
+    for(i in 0 to 9) {
+        total = total + i
+    }
+    writeln(total)
+
+    n = 0
+    while(n < 3) {
+        write(n)
+        write(" ")
+        n = n + 1
+    }
+    writeln("")
+
+    if(age >= 18 && alive) {
+        writeln("adult")
+    } else {
+        writeln("minor")
+    }
+
+    writeformat("double: {pi} int: {age} str: {name}\n")
+    writeln("concat: " + name + "!")
+}
+```
+
+## test-output:algorithm_stdlib:4bfad3d83f
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+9223372036854775807
+-9223372036854775808
+0
+3
+4
+-1
+4
+3
+2
+1
+-1
+-20
+-9223372036854775808
+9223372036854775807
+1
+2
+3
+4
+5
+1
+2
+2
+3
+3
+42
+0
+```
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    writeln(MAX_INT64())
+    writeln(MIN_INT64())
+
+    array<int> a = {1, 3, 5, 7, 9}
+    writeln(binary_search(a, 1))
+    writeln(binary_search(a, 7))
+    writeln(binary_search(a, 9))
+    writeln(binary_search(a, 4))
+
+    array<int> even = {1, 2, 3, 4}
+    reverse(even)
+    writeln(even[0])
+    writeln(even[1])
+    writeln(even[2])
+    writeln(even[3])
+
+    array<int> neg = {-8, -3, -20, -1}
+    writeln(max_element(neg))
+    writeln(min_element(neg))
+
+    array<int> empty = {}
+    writeln(max_element(empty))
+    writeln(min_element(empty))
+
+    array<int> s = {5, 1, 4, 2, 3}
+    sort(s)
+    writeln(s[0])
+    writeln(s[1])
+    writeln(s[2])
+    writeln(s[3])
+    writeln(s[4])
+
+    array<int> d = {3, 1, 3, 2, 2}
+    sort(d)
+    writeln(d[0])
+    writeln(d[1])
+    writeln(d[2])
+    writeln(d[3])
+    writeln(d[4])
+
+    array<int> one = {42}
+    sort(one)
+    writeln(one[0])
+
+    array<int> zero = {}
+    sort(zero)
+    writeln(zero.size())
+}
+```
+
+## code-output:algorithm_stdlib:8b32c78314
+
+### User
+
+What does this RedBunny program print?
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    writeln(MAX_INT64())
+    writeln(MIN_INT64())
+
+    array<int> a = {1, 3, 5, 7, 9}
+    writeln(binary_search(a, 1))
+    writeln(binary_search(a, 7))
+    writeln(binary_search(a, 9))
+    writeln(binary_search(a, 4))
+
+    array<int> even = {1, 2, 3, 4}
+    reverse(even)
+    writeln(even[0])
+    writeln(even[1])
+    writeln(even[2])
+    writeln(even[3])
+
+    array<int> neg = {-8, -3, -20, -1}
+    writeln(max_element(neg))
+    writeln(min_element(neg))
+
+    array<int> empty = {}
+    writeln(max_element(empty))
+    writeln(min_element(empty))
+
+    array<int> s = {5, 1, 4, 2, 3}
+    sort(s)
+    writeln(s[0])
+    writeln(s[1])
+    writeln(s[2])
+    writeln(s[3])
+    writeln(s[4])
+
+    array<int> d = {3, 1, 3, 2, 2}
+    sort(d)
+    writeln(d[0])
+    writeln(d[1])
+    writeln(d[2])
+    writeln(d[3])
+    writeln(d[4])
+
+    array<int> one = {42}
+    sort(one)
+    writeln(one[0])
+
+    array<int> zero = {}
+    sort(zero)
+    writeln(zero.size())
+}
+```
+
+### Assistant
+
+```text
+9223372036854775807
+-9223372036854775808
+0
+3
+4
+-1
+4
+3
+2
+1
+-1
+-20
+-9223372036854775808
+9223372036854775807
+1
+2
+3
+4
+5
+1
+2
+2
+3
+3
+42
+0
+```
+
+## test-output:arrays:48e293764b
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+50
+5
+7
+0
+3
+9
+2
+hi!
+1.5
+13
+8
+3
+3
+7
+5
+2
+11
+3.5
+ab
+true
+false
+3
+0
+20
+11
+15
+```
+
+### Assistant
+
+```redb
+total = do(array<int> -> int) {
+    return arg1[0] + arg1[1]
+}
+
+pair = do(-> array<int>) {
+    return {7, 8}
+}
+
+main() {
+    array<int> nums(5)
+    nums[0] = 10
+    nums[4] = 40
+    writeln(nums[0] + nums[4])
+    writeln(nums.size())
+    nums.resize(7)
+    writeln(nums.size())
+    writeln(nums[6])
+    array<auto> alias = nums
+    alias[1] = 3
+    writeln(nums[1])
+    array<array<int>> matrix(2)
+    array<int> row(3)
+    row[2] = 9
+    matrix[1] = row
+    writeln(matrix[1][2])
+    writeln(matrix.size())
+    array<str> names(2)
+    names[0] = "hi"
+    names[1] = "there"
+    writeln(names[0] + "!")
+    array<double> ds(2)
+    ds[0] = 1.5
+    writeln(ds[0])
+    writeln(total(nums))
+
+    array<int> lit = {2, 4, 6}
+    writeln(lit[0] + lit[2])
+    writeln(lit.size())
+    array<auto> auto_lit = {1, 2, 3}
+    writeln(auto_lit.size())
+    array<auto> sized_lit(2) = {2, 5}
+    writeln(sized_lit[0] + sized_lit[1])
+    array<array<int>> nested_lit = {{1, 2}, {3, 4}}
+    writeln(nested_lit[0][1] + nested_lit[1][0])
+    writeln(nested_lit.size())
+    nested_lit[0] = {5, 6}
+    writeln(nested_lit[0][0] + nested_lit[0][1])
+    array<double> double_lit = {1, 2.5}
+    writeln(double_lit[0] + double_lit[1])
+    array<str> str_lit = {"a", "b"}
+    writeln(str_lit[0] + str_lit[1])
+    array<bool> flags = {true, false, true}
+    writeln(flags[0])
+    writeln(flags[1])
+    writeln(flags.size())
+    array<int> empty_lit = {}
+    writeln(empty_lit.size())
+    writeln({10, 20}[1])
+    writeln(total({5, 6}))
+    p = pair()
+    writeln(p[0] + p[1])
+}
+```
+
+## code-output:arrays:8431413ae1
+
+### User
+
+What does this RedBunny program print?
+```redb
+total = do(array<int> -> int) {
+    return arg1[0] + arg1[1]
+}
+
+pair = do(-> array<int>) {
+    return {7, 8}
+}
+
+main() {
+    array<int> nums(5)
+    nums[0] = 10
+    nums[4] = 40
+    writeln(nums[0] + nums[4])
+    writeln(nums.size())
+    nums.resize(7)
+    writeln(nums.size())
+    writeln(nums[6])
+    array<auto> alias = nums
+    alias[1] = 3
+    writeln(nums[1])
+    array<array<int>> matrix(2)
+    array<int> row(3)
+    row[2] = 9
+    matrix[1] = row
+    writeln(matrix[1][2])
+    writeln(matrix.size())
+    array<str> names(2)
+    names[0] = "hi"
+    names[1] = "there"
+    writeln(names[0] + "!")
+    array<double> ds(2)
+    ds[0] = 1.5
+    writeln(ds[0])
+    writeln(total(nums))
+
+    array<int> lit = {2, 4, 6}
+    writeln(lit[0] + lit[2])
+    writeln(lit.size())
+    array<auto> auto_lit = {1, 2, 3}
+    writeln(auto_lit.size())
+    array<auto> sized_lit(2) = {2, 5}
+    writeln(sized_lit[0] + sized_lit[1])
+    array<array<int>> nested_lit = {{1, 2}, {3, 4}}
+    writeln(nested_lit[0][1] + nested_lit[1][0])
+    writeln(nested_lit.size())
+    nested_lit[0] = {5, 6}
+    writeln(nested_lit[0][0] + nested_lit[0][1])
+    array<double> double_lit = {1, 2.5}
+    writeln(double_lit[0] + double_lit[1])
+    array<str> str_lit = {"a", "b"}
+    writeln(str_lit[0] + str_lit[1])
+    array<bool> flags = {true, false, true}
+    writeln(flags[0])
+    writeln(flags[1])
+    writeln(flags.size())
+    array<int> empty_lit = {}
+    writeln(empty_lit.size())
+    writeln({10, 20}[1])
+    writeln(total({5, 6}))
+    p = pair()
+    writeln(p[0] + p[1])
+}
+```
+
+### Assistant
+
+```text
+50
+5
+7
+0
+3
+9
+2
+hi!
+1.5
+13
+8
+3
+3
+7
+5
+2
+11
+3.5
+ab
+true
+false
+3
+0
+20
+11
+15
+```
+
+## test-output:control:f130a08bde
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+0134
+012
+truthy
+```
+
+### Assistant
+
+```redb
+main() {
+    for(i in 0 to 9) {
+        if(i == 2) { continue }
+        if(i == 5) { break }
+        write(i)
+    }
+    writeln("")
+
+    n = 0
+    while(n < 3) {
+        write(n)
+        n = n + 1
+    }
+    writeln("")
+
+    if(0) {
+        writeln("bad")
+    } else if(1) {
+        writeln("truthy")
+    } else {
+        writeln("bad")
+    }
+}
+```
+
+## code-output:control:e3fc07a8ad
+
+### User
+
+What does this RedBunny program print?
+```redb
+main() {
+    for(i in 0 to 9) {
+        if(i == 2) { continue }
+        if(i == 5) { break }
+        write(i)
+    }
+    writeln("")
+
+    n = 0
+    while(n < 3) {
+        write(n)
+        n = n + 1
+    }
+    writeln("")
+
+    if(0) {
+        writeln("bad")
+    } else if(1) {
+        writeln("truthy")
+    } else {
+        writeln("bad")
+    }
+}
+```
+
+### Assistant
+
+```text
+0134
+012
+truthy
+```
+
+## test-output:downto:cc2dd1d2b4
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+5 4 3 2 1
+3
+4 3 2
+10 9 8 7 5 4
+```
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    for(i in 5 downTo 1) {
+        write(i)
+        if (i > 1) { write(" ") }
+    }
+    writeln("")
+
+    for(i in 1 downTo 5) {
+        writeln(i)
+    }
+
+    for(i in 3 downTo 3) {
+        writeln(i)
+    }
+
+    start = 4
+    stop = 2
+    for(i in start downTo stop) {
+        write(i)
+        if (i > stop) { write(" ") }
+    }
+    writeln("")
+
+    for(i in 10 downTo 1) {
+        if (i == 6) { continue }
+        if (i == 3) { break }
+        write(i)
+        if (i > 4) { write(" ") }
+    }
+    writeln("")
+}
+```
+
+## code-output:downto:c0109e8fcd
+
+### User
+
+What does this RedBunny program print?
+```redb
+@include "std"
+
+main() {
+    for(i in 5 downTo 1) {
+        write(i)
+        if (i > 1) { write(" ") }
+    }
+    writeln("")
+
+    for(i in 1 downTo 5) {
+        writeln(i)
+    }
+
+    for(i in 3 downTo 3) {
+        writeln(i)
+    }
+
+    start = 4
+    stop = 2
+    for(i in start downTo stop) {
+        write(i)
+        if (i > stop) { write(" ") }
+    }
+    writeln("")
+
+    for(i in 10 downTo 1) {
+        if (i == 6) { continue }
+        if (i == 3) { break }
+        write(i)
+        if (i > 4) { write(" ") }
+    }
+    writeln("")
+}
+```
+
+### Assistant
+
+```text
+5 4 3 2 1
+3
+4 3 2
+10 9 8 7 5 4
+```
+
+## test-output:functions:251a25ee46
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+120
+41
+hi
+42
+```
+
+### Assistant
+
+```redb
+fact = do(int -> int) {
+    if(arg1 <= 1) { return 1 }
+    return arg1 * fact(arg1 - 1)
+}
+
+outer = do(int -> int) {
+    twice = do(int -> int) {
+        return arg1 * 2
+    }
+    return twice(arg1) + 1
+}
+
+hello = do(str -> {}) {
+    writeln(arg1)
+}
+
+answer = doto({} => int) {
+    return 42
+}
+
+main() {
+    writeln(fact(5))
+    writeln(outer(20))
+    hello("hi")
+    writeln(answer())
+}
+```
+
+## code-output:functions:f88ee64849
+
+### User
+
+What does this RedBunny program print?
+```redb
+fact = do(int -> int) {
+    if(arg1 <= 1) { return 1 }
+    return arg1 * fact(arg1 - 1)
+}
+
+outer = do(int -> int) {
+    twice = do(int -> int) {
+        return arg1 * 2
+    }
+    return twice(arg1) + 1
+}
+
+hello = do(str -> {}) {
+    writeln(arg1)
+}
+
+answer = doto({} => int) {
+    return 42
+}
+
+main() {
+    writeln(fact(5))
+    writeln(outer(20))
+    hello("hi")
+    writeln(answer())
+}
+```
+
+### Assistant
+
+```text
+120
+41
+hi
+42
+```
+
+## test-output:mathlib_stdlib:0dc1098623
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+49
+27
+1024
+1
+0
+2
+1.41421
+0
+1
+1
+2.71828
+1
+4.60517
+-0.693147
+3.14159
+2.71828
+6.28319
+1.61803
+7
+9
+-1
+4
+3
+2
+-5
+4
+7.25
+9.5
+-1.5
+4
+3.5
+2
+-5.5
+4
+5
+7
+0
+6
+1
+4
+12
+0
+12
+```
+
+### Assistant
+
+```redb
+@include "std"
+@include "mathlib"
+
+main() {
+    writeln(square(7))
+    writeln(cube(3))
+    writeln(power(2, 10))
+    writeln(power(9, 0))
+    writeln(power(2, -1))
+    writeln(sqrt(4.0))
+    writeln(sqrt(2.0))
+    writeln(sin(0.0))
+    writeln(cos(0.0))
+    writeln(exp(0.0))
+    writeln(exp(1.0))
+    writeln(ln(euler()))
+    writeln(ln(100.0))
+    writeln(ln(0.5))
+    writeln(PI())
+    writeln(euler())
+    writeln(tau())
+    writeln(phi())
+    writeln(max(3, 7))
+    writeln(max(9, 2))
+    writeln(max(-1, -5))
+    writeln(max(4, 4))
+    writeln(min(3, 7))
+    writeln(min(9, 2))
+    writeln(min(-1, -5))
+    writeln(min(4, 4))
+    writeln(maxf(3.5, 7.25))
+    writeln(maxf(9.5, 2.0))
+    writeln(maxf(-1.5, -5.5))
+    writeln(maxf(4.0, 4.0))
+    writeln(minf(3.5, 7.25))
+    writeln(minf(9.5, 2.0))
+    writeln(minf(-1.5, -5.5))
+    writeln(minf(4.0, 4.0))
+    writeln(abs(-5))
+    writeln(abs(7))
+    writeln(abs(0))
+    writeln(gcd(48, 18))
+    writeln(gcd(17, 5))
+    writeln(gcd(-8, 12))
+    writeln(lcm(4, 6))
+    writeln(lcm(0, 5))
+    writeln(lcm(-4, 6))
+}
+```
+
+## code-output:mathlib_stdlib:7641c6483d
+
+### User
+
+What does this RedBunny program print?
+```redb
+@include "std"
+@include "mathlib"
+
+main() {
+    writeln(square(7))
+    writeln(cube(3))
+    writeln(power(2, 10))
+    writeln(power(9, 0))
+    writeln(power(2, -1))
+    writeln(sqrt(4.0))
+    writeln(sqrt(2.0))
+    writeln(sin(0.0))
+    writeln(cos(0.0))
+    writeln(exp(0.0))
+    writeln(exp(1.0))
+    writeln(ln(euler()))
+    writeln(ln(100.0))
+    writeln(ln(0.5))
+    writeln(PI())
+    writeln(euler())
+    writeln(tau())
+    writeln(phi())
+    writeln(max(3, 7))
+    writeln(max(9, 2))
+    writeln(max(-1, -5))
+    writeln(max(4, 4))
+    writeln(min(3, 7))
+    writeln(min(9, 2))
+    writeln(min(-1, -5))
+    writeln(min(4, 4))
+    writeln(maxf(3.5, 7.25))
+    writeln(maxf(9.5, 2.0))
+    writeln(maxf(-1.5, -5.5))
+    writeln(maxf(4.0, 4.0))
+    writeln(minf(3.5, 7.25))
+    writeln(minf(9.5, 2.0))
+    writeln(minf(-1.5, -5.5))
+    writeln(minf(4.0, 4.0))
+    writeln(abs(-5))
+    writeln(abs(7))
+    writeln(abs(0))
+    writeln(gcd(48, 18))
+    writeln(gcd(17, 5))
+    writeln(gcd(-8, 12))
+    writeln(lcm(4, 6))
+    writeln(lcm(0, 5))
+    writeln(lcm(-4, 6))
+}
+```
+
+### Assistant
+
+```text
+49
+27
+1024
+1
+0
+2
+1.41421
+0
+1
+1
+2.71828
+1
+4.60517
+-0.693147
+3.14159
+2.71828
+6.28319
+1.61803
+7
+9
+-1
+4
+3
+2
+-5
+4
+7.25
+9.5
+-1.5
+4
+3.5
+2
+-5.5
+4
+5
+7
+0
+6
+1
+4
+12
+0
+12
+```
+
+## test-output:strings:9cf52d2f07
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+RedBunny
+true
+true
+{literal} bunny
+```
+
+### Assistant
+
+```redb
+main() {
+    a = "Red"
+    b = "Bunny"
+    c = a + b
+    writeln(c)
+    writeln(a == "Red")
+    writeln(a != b)
+    name = "bunny"
+    writeformat("{{literal}} {name}\n")
+}
+```
+
+## code-output:strings:ba63c3a204
+
+### User
+
+What does this RedBunny program print?
+```redb
+main() {
+    a = "Red"
+    b = "Bunny"
+    c = a + b
+    writeln(c)
+    writeln(a == "Red")
+    writeln(a != b)
+    name = "bunny"
+    writeformat("{{literal}} {name}\n")
+}
+```
+
+### Assistant
+
+```text
+RedBunny
+true
+true
+{literal} bunny
+```
+
+## test-output:types:d001fb75bc
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+7
+2.5
+9.5
+true
+true
+true
+9
+```
+
+### Assistant
+
+```redb
+flip = do(bool -> bool) {
+    return !arg1
+}
+
+main() {
+    i = 7
+    f = 2.5
+    b = true
+    writeln(i)
+    writeln(f)
+    writeln(i + f)
+    writeln(b)
+    writeln(i > 3 && b)
+    writeln(flip(false))
+    i = 9
+    writeln(i)
+}
+```
+
+## code-output:types:a78376c6e9
+
+### User
+
+What does this RedBunny program print?
+```redb
+flip = do(bool -> bool) {
+    return !arg1
+}
+
+main() {
+    i = 7
+    f = 2.5
+    b = true
+    writeln(i)
+    writeln(f)
+    writeln(i + f)
+    writeln(b)
+    writeln(i > 3 && b)
+    writeln(flip(false))
+    i = 9
+    writeln(i)
+}
+```
+
+### Assistant
+
+```text
+7
+2.5
+9.5
+true
+true
+true
+9
+```
+
+## compile-error:array_literal_type_mismatch:574c6a9dfc
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    array<int> a = {1, "two"}
+}
+```
+
+### Assistant
+
+Array literal elements must share one element type. `array<int> a = {1, "two"}` mixes `int` and `str`, so the compiler rejects the literal.
+
+## compile-error:array_size_mismatch:4e951d5e1d
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    array<int> a(2) = {1, 2, 3}
+}
+```
+
+### Assistant
+
+When an explicit array size is written before an initializer, the size must equal the number of literal elements. `array<int> a(2) = {1, 2, 3}` declares size 2 but supplies 3 elements.
+
+## compile-error:array_type_mismatch:7ec900b2cd
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    array<int> a(3)
+    a[0] = "text"
+}
+```
+
+### Assistant
+
+The array element type is fixed by `array<int>`. Assigning `"text"` to `a[0]` tries to store a `str` in an `int` slot, which is a compile-time type error.
+
+## compile-error:bad_format:525504768d
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    writeformat("hello {missing}\n")
+}
+```
+
+### Assistant
+
+`writeformat` placeholders must name variables visible in scope. `{missing}` is not a declared variable, so the compiler rejects the format string.
+
+## compile-error:break_outside:1d890f312b
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    break
+}
+```
+
+### Assistant
+
+`break` is only valid inside a `for` or `while` loop. This program uses `break` directly in `main()`.
+
+## compile-error:type_mismatch:5f95f292f4
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    x = 1
+    x = "one"
+}
+```
+
+### Assistant
+
+A variable keeps the type from its first assignment. `x = 1` makes `x` an `int`, so `x = "one"` is rejected.
+
+## compile-error:unknown_var:1796cd1b91
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    writeln(nope)
+}
+```
+
+### Assistant
+
+Identifiers must be declared before use. `nope` has no visible binding, so `writeln(nope)` is rejected.
+
+## compile-error:wrong_args:e3caa78229
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+f = do(int -> int) {
+    return arg1
+}
+main() {
+    writeln(f(1, 2))
+}
+```
+
+### Assistant
+
+A function call must pass exactly the number of arguments in its declared signature. `f` is declared with one parameter, but this call passes two.
+
+## stdlib:algorithm:db088edfb5
+
+### User
+
+Show the RedBunny standard library function `MAX_INT64` and explain its signature.
+
+### Assistant
+
+-- 64-bit signed integer limits. RedBunny has no const keyword, so these are
+-- zero-argument constant helpers: call them as MAX_INT64() and MIN_INT64().
+
+Signature: `(-> int)`
+
+```redb
+MAX_INT64 = do(-> int) {
+    return 9223372036854775807
+}
+```
+
+## stdlib:algorithm:686fba190e
+
+### User
+
+Show the RedBunny standard library function `MIN_INT64` and explain its signature.
+
+### Assistant
+
+Signature: `(-> int)`
+
+```redb
+MIN_INT64 = do(-> int) {
+    return -9223372036854775807 - 1
+}
+```
+
+## stdlib:algorithm:d80c0ca1d3
+
+### User
+
+Show the RedBunny standard library function `binary_search` and explain its signature.
+
+### Assistant
+
+-- Binary search. The array must be sorted in ascending order.
+-- Returns the index of the target, or -1 when it is not present.
+
+Signature: `(array<int>, int -> int)`
+
+```redb
+binary_search = do(array<int>, int -> int) {
+    l = 0
+    r = arg1.size() - 1
+    while (l <= r) {
+        med = (l + r) / 2
+        if (arg1[med] == arg2) {
+            return med
+        } else if (arg1[med] < arg2) {
+            l = med + 1
+        } else {
+            r = med - 1
+        }
+    }
+    return -1
+}
+```
+
+## stdlib:algorithm:04cada23cb
+
+### User
+
+Show the RedBunny standard library function `reverse` and explain its signature.
+
+### Assistant
+
+-- Reverse an array in place.
+-- 1 2 3 4 5 -> 5 4 3 2 1
+
+Signature: `(array<int> -> array<int>)`
+
+```redb
+reverse = do(array<int> -> array<int>) {
+    l = 0
+    r = arg1.size() - 1
+    while (l < r) {
+        tmp = arg1[r]
+        arg1[r] = arg1[l]
+        arg1[l] = tmp
+        l = l + 1
+        r = r - 1
+    }
+    return arg1
+}
+```
+
+## stdlib:algorithm:001af5e470
+
+### User
+
+Show the RedBunny standard library function `max_element` and explain its signature.
+
+### Assistant
+
+-- Largest element in an array. O(n) time.
+-- Returns MIN_INT64() for an empty array.
+
+Signature: `(array<int> -> int)`
+
+```redb
+max_element = do(array<int> -> int) {
+    mx = MIN_INT64()
+    for (i in 0 to arg1.size() - 1) {
+        if (arg1[i] > mx) {
+            mx = arg1[i]
+        }
+    }
+    return mx
+}
+```
+
+## stdlib:algorithm:938710f1f7
+
+### User
+
+Show the RedBunny standard library function `min_element` and explain its signature.
+
+### Assistant
+
+-- Smallest element in an array. O(n) time.
+-- Returns MAX_INT64() for an empty array.
+
+Signature: `(array<int> -> int)`
+
+```redb
+min_element = do(array<int> -> int) {
+    mn = MAX_INT64()
+    for (i in 0 to arg1.size() - 1) {
+        if (arg1[i] < mn) {
+            mn = arg1[i]
+        }
+    }
+    return mn
+}
+```
+
+## stdlib:algorithm:5cb4d777df
+
+### User
+
+Show the RedBunny standard library function `sift_down` and explain its signature.
+
+### Assistant
+
+Signature: `(array<int>, int, int -> {})`
+
+```redb
+sift_down = do(array<int>, int, int -> {}) {
+    heap = arg1
+    root = arg2
+    heap_size = arg3
+
+    while (true) {
+        child = 2 * root + 1
+
+        if (child >= heap_size) {
+            break
+        }
+        if (child + 1 < heap_size && heap[child] < heap[child + 1]) {
+            child = child + 1
+        }
+        if (heap[root] >= heap[child]) {
+            break
+        }
+        temp = heap[root]
+        heap[root] = heap[child]
+        heap[child] = temp
+
+        root = child
+    }
+}
+```
+
+## stdlib:algorithm:fd8e038f0a
+
+### User
+
+Show the RedBunny standard library function `sort` and explain its signature.
+
+### Assistant
+
+Signature: `(array<int> -> {})`
+
+```redb
+sort = do(array<int> -> {}) {
+    arr = arg1
+    n = arr.size()
+
+    start = n / 2 - 1
+
+    while (start >= 0) {
+        sift_down(arr, start, n)
+        start = start - 1
+    }
+    finish = n - 1
+
+    while (finish > 0) {
+        temp = arr[0]
+        arr[0] = arr[finish]
+        arr[finish] = temp
+
+        sift_down(arr, 0, finish)
+
+        finish = finish - 1
+    }
+}
+```
+
+## stdlib:mathlib:d352ec5403
+
+### User
+
+Show the RedBunny standard library function `square` and explain its signature.
+
+### Assistant
+
+Signature: `(int -> int)`
+
+```redb
+square = do(int -> int) {
+    return arg1 * arg1
+}
+```
+
+## stdlib:mathlib:2de9658f62
+
+### User
+
+Show the RedBunny standard library function `cube` and explain its signature.
+
+### Assistant
+
+Signature: `(int -> int)`
+
+```redb
+cube = do(int -> int) {
+    return arg1 * arg1 * arg1
+}
+```
+
+## stdlib:mathlib:804ac496ff
+
+### User
+
+Show the RedBunny standard library function `power` and explain its signature.
+
+### Assistant
+
+Signature: `(int, int -> int)`
+
+```redb
+power = do(int, int -> int) {
+    if (arg2 < 0) {
+        return 0
+    }
+
+    result = 1
+    i = 0
+    while (i < arg2) {
+        result = result * arg1
+        i = i + 1
+    }
+    return result
+}
+```
+
+## stdlib:mathlib:110afacda1
+
+### User
+
+Show the RedBunny standard library function `sqrt` and explain its signature.
+
+### Assistant
+
+Signature: `(double -> double)`
+
+```redb
+sqrt = do(double -> double) {
+    if (arg1 <= 0.0) {
+        return 0.0
+    }
+
+    guess = arg1 / 2.0
+    i = 0
+    while (i < 20) {
+        guess = (guess + (arg1 / guess)) / 2.0
+        i = i + 1
+    }
+    return guess
+}
+```
+
+## stdlib:mathlib:a2974a6f7f
+
+### User
+
+Show the RedBunny standard library function `sin` and explain its signature.
+
+### Assistant
+
+-- sin and cos use Taylor series recurrence formulas.
+-- They are accurate for small and moderate inputs (roughly |x| <= pi).
+
+Signature: `(double -> double)`
+
+```redb
+sin = do(double -> double) {
+    x = arg1
+    sum = x
+    term = x
+    i = 1
+    while (i < 10) {
+        denom1 = 2.0 * i
+        denom2 = denom1 + 1.0
+        term = (0.0 - (term * x * x)) / (denom1 * denom2)
+        sum = sum + term
+        i = i + 1
+    }
+    return sum
+}
+```
+
+## stdlib:mathlib:6df685206c
+
+### User
+
+Show the RedBunny standard library function `cos` and explain its signature.
+
+### Assistant
+
+Signature: `(double -> double)`
+
+```redb
+cos = do(double -> double) {
+    x = arg1
+    sum = 1.0
+    term = 1.0
+    i = 1
+    while (i < 10) {
+        denom1 = (2.0 * i) - 1.0
+        denom2 = 2.0 * i
+        term = (0.0 - (term * x * x)) / (denom1 * denom2)
+        sum = sum + term
+        i = i + 1
+    }
+    return sum
+}
+```
+
+## stdlib:mathlib:0490849072
+
+### User
+
+Show the RedBunny standard library function `PI` and explain its signature.
+
+### Assistant
+
+-- Mathematical constants.
+
+Signature: `({} -> double)`
+
+```redb
+PI = do({} -> double) {
+    return 3.141592653589793
+}
+```
+
+## stdlib:mathlib:06f5a8be76
+
+### User
+
+Show the RedBunny standard library function `euler` and explain its signature.
+
+### Assistant
+
+Signature: `({} -> double)`
+
+```redb
+euler = do({} -> double) {
+    return 2.718281828459045
+}
+```
+
+## stdlib:mathlib:83274c8a1f
+
+### User
+
+Show the RedBunny standard library function `tau` and explain its signature.
+
+### Assistant
+
+Signature: `({} -> double)`
+
+```redb
+tau = do({} -> double) {
+    return 6.283185307179586
+}
+```
+
+## stdlib:mathlib:3f890f448e
+
+### User
+
+Show the RedBunny standard library function `phi` and explain its signature.
+
+### Assistant
+
+Signature: `({} -> double)`
+
+```redb
+phi = do({} -> double) {
+    return 1.618033988749895
+}
+```
+
+## stdlib:mathlib:4206525c66
+
+### User
+
+Show the RedBunny standard library function `exp` and explain its signature.
+
+### Assistant
+
+-- Exponential and natural logarithm.
+-- exp uses a 20-term Taylor series and is intended for moderate inputs.
+
+Signature: `(double -> double)`
+
+```redb
+exp = do(double -> double) {
+    x = arg1
+    sum = 1.0
+    term = 1.0
+    i = 1.0
+    while (i < 20.0) {
+        term = (term * x) / i
+        sum = sum + term
+        i = i + 1.0
+    }
+    return sum
+}
+```
+
+## stdlib:mathlib:b629eb7104
+
+### User
+
+Show the RedBunny standard library function `ln` and explain its signature.
+
+### Assistant
+
+-- ln uses range reduction and an atanh series.
+-- It returns 0 for inputs <= 0.
+
+Signature: `(double -> double)`
+
+```redb
+ln = do(double -> double) {
+    if (arg1 <= 0.0) {
+        return 0.0
+    }
+
+    x = arg1
+    k = 0
+    while (x >= 2.0) {
+        x = x / 2.0
+        k = k + 1
+    }
+    while (x < 1.0) {
+        x = x * 2.0
+        k = k - 1
+    }
+
+    z = (x - 1.0) / (x + 1.0)
+    z2 = z * z
+    term = z
+    sum = z
+    i = 3
+    while (i < 40) {
+        term = term * z2
+        sum = sum + term / i
+        i = i + 2
+    }
+
+    return 2.0 * sum + k * 0.6931471805599453
+}
+```
+
+## stdlib:mathlib:7c26467757
+
+### User
+
+Show the RedBunny standard library function `max` and explain its signature.
+
+### Assistant
+
+-- Integer minimum and maximum.
+
+Signature: `(int, int -> int)`
+
+```redb
+max = do(int, int -> int) {
+    if (arg1 > arg2) {
+        return arg1
+    }
+    return arg2
+}
+```
+
+## stdlib:mathlib:d20c3430d2
+
+### User
+
+Show the RedBunny standard library function `min` and explain its signature.
+
+### Assistant
+
+Signature: `(int, int -> int)`
+
+```redb
+min = do(int, int -> int) {
+    if (arg1 < arg2) {
+        return arg1
+    }
+    return arg2
+}
+```
+
+## stdlib:mathlib:7e0a10b015
+
+### User
+
+Show the RedBunny standard library function `maxf` and explain its signature.
+
+### Assistant
+
+-- Floating-point minimum and maximum.
+
+Signature: `(double, double -> double)`
+
+```redb
+maxf = do(double, double -> double) {
+    if (arg1 > arg2) {
+        return arg1
+    }
+    return arg2
+}
+```
+
+## stdlib:mathlib:e77982407c
+
+### User
+
+Show the RedBunny standard library function `minf` and explain its signature.
+
+### Assistant
+
+Signature: `(double, double -> double)`
+
+```redb
+minf = do(double, double -> double) {
+    if (arg1 < arg2) {
+        return arg1
+    }
+    return arg2
+}
+```
+
+## stdlib:mathlib:86cea7b1af
+
+### User
+
+Show the RedBunny standard library function `abs` and explain its signature.
+
+### Assistant
+
+-- Absolute value.
+
+Signature: `(int -> int)`
+
+```redb
+abs = do(int -> int) {
+    if (arg1 >= 0) {
+        return arg1
+    }
+    return -arg1
+}
+```
+
+## stdlib:mathlib:66e4a87166
+
+### User
+
+Show the RedBunny standard library function `gcd` and explain its signature.
+
+### Assistant
+
+-- Greatest common divisor (always non-negative).
+
+Signature: `(int, int -> int)`
+
+```redb
+gcd = do(int, int -> int) {
+    a = abs(arg1)
+    b = abs(arg2)
+    while (b != 0) {
+        tmp = b
+        b = a % b
+        a = tmp
+    }
+    return a
+}
+```
+
+## stdlib:mathlib:7d93a522b2
+
+### User
+
+Show the RedBunny standard library function `lcm` and explain its signature.
+
+### Assistant
+
+-- Least common multiple (always non-negative).
+
+Signature: `(int, int -> int)`
+
+```redb
+lcm = do(int, int -> int) {
+    if (arg1 == 0 || arg2 == 0) {
+        return 0
+    }
+    return abs(arg1 / gcd(arg1, arg2) * arg2)
+}
+```

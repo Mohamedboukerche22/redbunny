@@ -6,3 +6,10 @@ build-*/
 *.exe
 /examples/hello
 /examples/main
+
+# Python cache for the training-data generator.
+__pycache__/
+*.pyc
+
+# Local LoRA adapters and checkpoints.
+TRAIN_IA_MODEL/output/
