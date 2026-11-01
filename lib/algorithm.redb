@@ -1,0 +1,137 @@
+-- algorithm lib redbunny language
+-- include it using @include "algorithm"
+
+-- 64-bit signed integer limits. RedBunny has no const keyword, so these are
+-- zero-argument constant helpers: call them as MAX_INT64() and MIN_INT64().
+MAX_INT64 = do(-> int) {
+    return 9223372036854775807
+}
+
+MIN_INT64 = do(-> int) {
+    return -9223372036854775807 - 1
+}
+
+-- Binary search. The array must be sorted in ascending order.
+-- Returns the index of the target, or -1 when it is not present.
+binary_search = do(array<int>, int -> int) {
+    l = 0
+    r = arg1.size() - 1
+    while (l <= r) {
+        med = (l + r) / 2
+        if (arg1[med] == arg2) {
+            return med
+        } else if (arg1[med] < arg2) {
+            l = med + 1
+        } else {
+            r = med - 1
+        }
+    }
+    return -1
+}
+
+-- Reverse an array in place.
+-- 1 2 3 4 5 -> 5 4 3 2 1
+reverse = do(array<int> -> array<int>) {
+    l = 0
+    r = arg1.size() - 1
+    while (l < r) {
+        tmp = arg1[r]
+        arg1[r] = arg1[l]
+        arg1[l] = tmp
+        l = l + 1
+        r = r - 1
+    }
+    return arg1
+}
+-- Largest element in an array. O(n) time.
+-- Returns MIN_INT64() for an empty array.
+max_element = do(array<int> -> int) {
+    mx = MIN_INT64()
+    for (i in 0 to arg1.size() - 1) {
+        if (arg1[i] > mx) {
+            mx = arg1[i]
+        }
+    }
+    return mx
+}
+
+-- Smallest element in an array. O(n) time.
+-- Returns MAX_INT64() for an empty array.
+min_element = do(array<int> -> int) {
+    mn = MAX_INT64()
+    for (i in 0 to arg1.size() - 1) {
+        if (arg1[i] < mn) {
+            mn = arg1[i]
+        }
+    }
+    return mn
+}
+
+
+
+
+
+
+
+
+
+
+
+-- In-place Heap Sort
+-- O(n log n) time, O(1) extra space
+
+sift_down = do(array<int>, int, int -> {}) {
+    heap = arg1
+    root = arg2
+    heap_size = arg3
+
+    while (true) {
+        child = 2 * root + 1
+
+        if (child >= heap_size) {
+            break
+        }
+        if (child + 1 < heap_size && heap[child] < heap[child + 1]) {
+            child = child + 1
+        }
+        if (heap[root] >= heap[child]) {
+            break
+        }
+        temp = heap[root]
+        heap[root] = heap[child]
+        heap[child] = temp
+
+        root = child
+    }
+}
+
+sort = do(array<int> -> {}) {
+    arr = arg1
+    n = arr.size()
+
+    start = n / 2 - 1
+
+    while (start >= 0) {
+        sift_down(arr, start, n)
+        start = start - 1
+    }
+    finish = n - 1
+
+    while (finish > 0) {
+        temp = arr[0]
+        arr[0] = arr[finish]
+        arr[finish] = temp
+
+        sift_down(arr, 0, finish)
+
+        finish = finish - 1
+    }
+}
+
+
+
+
+
+
+
+

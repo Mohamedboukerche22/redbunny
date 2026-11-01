@@ -518,7 +518,8 @@ Includes are resolved in this order:
    source checkout or `share/redb/lib` when installed.
 
 The `.redb` suffix is optional. Local files shadow standard library modules.
-Include cycles are rejected after 32 levels.
+Include cycles are rejected after 32 levels. The bundled modules are `mathlib`
+and `algorithm`.
 
 ```redb
 -- greeting.redb (local module)
@@ -575,6 +576,44 @@ main() {
 
     r = sqrt(2.0)
     writeformat("sqrt(2) = {r}\n")
+}
+```
+
+### Algorithm library
+
+`@include "algorithm"` loads array algorithms for `array<int>`. `sort` and
+`reverse` mutate their array in place.
+
+| Function                  | Signature              | Notes                                      |
+|---------------------------|------------------------|--------------------------------------------|
+| `MAX_INT64()`             | `{} -> int`            | `9223372036854775807`                      |
+| `MIN_INT64()`             | `{} -> int`            | `-9223372036854775808`                     |
+| `binary_search(a, target)`| `array<int>, int -> int` | Index in an ascending sorted array, or `-1` |
+| `reverse(a)`              | `array<int> -> array<int>` | Reverses in place; returns the same array |
+| `max_element(a)`          | `array<int> -> int`    | Largest element; empty array gives `MIN_INT64()` |
+| `min_element(a)`          | `array<int> -> int`    | Smallest element; empty array gives `MAX_INT64()` |
+| `sort(a)`                 | `array<int> -> {}`     | In-place heap sort, `O(n log n)`           |
+
+`MAX_INT64` and `MIN_INT64` are zero-argument constant helpers because RedBunny
+has no `const` keyword.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    array<int> nums = {5, 1, 4, 2, 3}
+
+    sort(nums)
+    writeln(nums[0])                 -- 1
+    writeln(binary_search(nums, 4))  -- 3
+
+    reverse(nums)
+    writeln(nums[0])                 -- 5
+    writeln(max_element(nums))       -- 5
+    writeln(min_element(nums))       -- 1
+    writeln(MAX_INT64())
+    writeln(MIN_INT64())
 }
 ```
 
@@ -665,6 +704,7 @@ The `examples/` directory contains:
 - `tour.redb` — variables, formatting, loops, conditionals, functions
 - `factorial.redb` — recursion
 - `arrays.redb` — arrays, literals, resizing and nested arrays
+- `algorithm_demo.redb` — sorting, searching and array algorithms
 - `math_demo.redb` — standard math library
 - `imports/app.redb` — local and standard library includes
 - `imports/greeting.redb` — local module used by `app.redb`
@@ -676,6 +716,7 @@ redb examples/hello.redb -o /tmp/hello && /tmp/hello
 redb examples/tour.redb -o /tmp/tour && /tmp/tour
 redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
 redb examples/arrays.redb -o /tmp/arrays && /tmp/arrays
+redb examples/algorithm_demo.redb -o /tmp/algorithm_demo && /tmp/algorithm_demo
 redb examples/math_demo.redb -o /tmp/math_demo && /tmp/math_demo
 redb examples/imports/app.redb -o /tmp/app && /tmp/app
 ```

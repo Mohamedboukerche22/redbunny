@@ -1,0 +1,17 @@
+@include "std"
+@include "algorithm"
+
+main() {
+    array<int> nums = {5, 1, 4, 2, 3}
+
+    sort(nums)
+    writeln(nums[0])
+    writeln(binary_search(nums, 4))
+
+    reverse(nums)
+    writeln(nums[0])
+    writeln(max_element(nums))
+    writeln(min_element(nums))
+    writeln(MAX_INT64())
+    writeln(MIN_INT64())
+}

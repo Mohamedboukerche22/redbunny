@@ -34,6 +34,8 @@ dependencies beyond LLVM and Clang.
 - **Easy to embed.** The runtime is a single static archive, `libredb_runtime.a`.
 - **Bundled math module.** `@include "mathlib"` provides powers, roots, trig,
   exponentials, logarithms, abs/gcd/lcm, integer/double min/max and constants.
+- **Bundled algorithm module.** `@include "algorithm"` provides binary search,
+  in-place reverse and heap sort, min/max element, and 64-bit integer limits.
 - **Dynamic arrays.** `array<T>` values support indexing, `size()`, `resize()`,
   literal initializers and nested arrays.
 - **Hackable.** Roughly 7 source files and a test suite that runs in seconds.
@@ -237,9 +239,10 @@ See [`examples/`](examples/) for complete programs and
 
 ## Standard Library
 
-`@include "mathlib"` loads the bundled math module. Includes resolve next to the
-source file first, then the standard library directory (`lib/` in a checkout or
-`share/redb/lib` when installed). Set `REDB_STDLIB` to override that directory.
+`@include "mathlib"` loads the bundled math module and `@include "algorithm"`
+loads array algorithms. Includes resolve next to the source file first, then the
+standard library directory (`lib/` in a checkout or `share/redb/lib` when
+installed). Set `REDB_STDLIB` to override that directory.
 
 | Function      | Signature         | Notes                                      |
 |---------------|-------------------|--------------------------------------------|
@@ -273,6 +276,44 @@ main() {
 
     r = sqrt(2.0)
     writeformat("sqrt(2) = {r}\n")
+}
+```
+
+### Algorithm library
+
+`@include "algorithm"` loads array algorithms for `array<int>`. `sort` and
+`reverse` mutate their array in place.
+
+| Function                   | Signature                | Notes                                        |
+|----------------------------|--------------------------|----------------------------------------------|
+| `MAX_INT64()`              | `{} -> int`              | `9223372036854775807`                        |
+| `MIN_INT64()`              | `{} -> int`              | `-9223372036854775808`                       |
+| `binary_search(a, target)` | `array<int>, int -> int` | Index in an ascending sorted array, or `-1`  |
+| `reverse(a)`               | `array<int> -> array<int>` | Reverses in place; returns the same array  |
+| `max_element(a)`           | `array<int> -> int`      | Largest element; empty array gives `MIN_INT64()` |
+| `min_element(a)`           | `array<int> -> int`      | Smallest element; empty array gives `MAX_INT64()` |
+| `sort(a)`                  | `array<int> -> {}`       | In-place heap sort, `O(n log n)`             |
+
+`MAX_INT64` and `MIN_INT64` are zero-argument constant helpers because RedBunny
+has no `const` keyword.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    array<int> nums = {5, 1, 4, 2, 3}
+
+    sort(nums)
+    writeln(nums[0])                 -- 1
+    writeln(binary_search(nums, 4))  -- 3
+
+    reverse(nums)
+    writeln(nums[0])                 -- 5
+    writeln(max_element(nums))       -- 5
+    writeln(min_element(nums))       -- 1
+    writeln(MAX_INT64())
+    writeln(MIN_INT64())
 }
 ```
 
@@ -324,7 +365,8 @@ redb main.redb -S -o main.ll
 ├── runtime/
 │   └── runtime.c           native runtime linked into every program
 ├── lib/
-│   └── mathlib.redb        standard math module
+│   ├── mathlib.redb        standard math module
+│   └── algorithm.redb      standard array algorithms
 ├── docs/
 │   └── DOCUMENTATION.md    complete language manual
 ├── editors/
