@@ -19,6 +19,7 @@ static ASTNode *parse_statement(void);
 static ASTNode *parse_block(void);
 static ASTNode *parse_expression(void);
 static ASTNode *parse_if_statement(void);
+static ASTNode *parse_class_decl(void);
 
 ASTNode *create_node(ASTNodeType type, int line)
 {
@@ -138,9 +139,12 @@ static RedbType parse_array_type(int allow_auto)
         elem = TY_BOOL;
     } else if (match(TOKEN_TYPE_STR)) {
         elem = TY_STR;
+    } else if (check(TOKEN_IDENTIFIER)) {
+        elem = redb_class_of(current()->lexeme);
+        advance();
     } else {
         parse_fail(current()->line,
-                   "expected an element type (int, float, double, bool, str, auto or array<...>)");
+                   "expected an element type (int, float, double, bool, str, a class name, auto or array<...>)");
         elem = TY_UNKNOWN;
     }
     expect(TOKEN_GT, "'>' to close the array type");
@@ -168,8 +172,14 @@ static RedbType parse_type(void)
         advance();
         return TY_VOID;
     }
+    if (check(TOKEN_IDENTIFIER)) {
+        RedbType type = redb_class_of(current()->lexeme);
+
+        advance();
+        return type;
+    }
     parse_fail(current()->line,
-               "expected a type (int, float, double, bool, str, void or {})");
+               "expected a type (int, float, double, bool, str, void, a class name or {})");
     return TY_UNKNOWN;
 }
 
@@ -300,19 +310,27 @@ static ASTNode *parse_postfix(void)
             node = index;
         } else if (check(TOKEN_DOT)) {
             Token *dot = advance();
-            Token *name = expect(TOKEN_IDENTIFIER, "a method name after '.'");
-            ASTNode *call = create_node(AST_METHOD, dot->line);
+            Token *name = expect(TOKEN_IDENTIFIER, "a field or method name after '.'");
 
-            set_name(call, name->lexeme);
-            add_child(call, node);
-            expect(TOKEN_LPAREN, "'(' after method name");
-            if (!check(TOKEN_RPAREN)) {
-                add_child(call, parse_expression());
-                while (match(TOKEN_COMMA))
+            if (match(TOKEN_LPAREN)) {
+                ASTNode *call = create_node(AST_METHOD, dot->line);
+
+                set_name(call, name->lexeme);
+                add_child(call, node);
+                if (!check(TOKEN_RPAREN)) {
                     add_child(call, parse_expression());
+                    while (match(TOKEN_COMMA))
+                        add_child(call, parse_expression());
+                }
+                expect(TOKEN_RPAREN, "')' after method arguments");
+                node = call;
+            } else {
+                ASTNode *field = create_node(AST_FIELD, dot->line);
+
+                set_name(field, name->lexeme);
+                add_child(field, node);
+                node = field;
             }
-            expect(TOKEN_RPAREN, "')' after method arguments");
-            node = call;
         } else {
             break;
         }
@@ -579,10 +597,12 @@ static ASTNode *parse_statement(void)
     {
         ASTNode *expr = parse_expression();
 
-        /* arr[i] = value */
-        if (expr->type == AST_INDEX && check(TOKEN_ASSIGN)) {
+        /* arr[i] = value, or object.field = value */
+        if ((expr->type == AST_INDEX || expr->type == AST_FIELD) && check(TOKEN_ASSIGN)) {
             Token *eq = advance();
-            ASTNode *assign = create_node(AST_INDEX_ASSIGN, eq->line);
+            ASTNode *assign = create_node(
+                expr->type == AST_INDEX ? AST_INDEX_ASSIGN : AST_FIELD_ASSIGN,
+                eq->line);
 
             add_child(assign, expr);
             add_child(assign, parse_expression());
@@ -605,6 +625,46 @@ static ASTNode *parse_block(void)
     }
     expect(TOKEN_RBRACE, "'}'");
     return block;
+}
+
+static ASTNode *parse_class_decl(void)
+{
+    Token *tok = expect(TOKEN_CLASS, "'class'");
+    Token *name = expect(TOKEN_IDENTIFIER, "a class name");
+    ASTNode *cls = create_node(AST_CLASS_DECL, tok->line);
+
+    set_name(cls, name->lexeme);
+    expect(TOKEN_LBRACE, "'{' after class name");
+
+    while (!check(TOKEN_RBRACE) && !check(TOKEN_EOF)) {
+        if (match(TOKEN_SEMI))
+            continue;
+
+        if (check(TOKEN_IDENTIFIER) && peek(1)->type == TOKEN_ASSIGN &&
+            (peek(2)->type == TOKEN_DO || peek(2)->type == TOKEN_DOTO)) {
+            Token *method_name = advance();
+            ASTNode *method;
+
+            advance(); /* '=' */
+            method = parse_function_expr(method_name->lexeme, method_name->line);
+            method->is_method = 1;
+            snprintf(method->class_name, sizeof(method->class_name), "%s", cls->name);
+            add_child(cls, method);
+            continue;
+        }
+
+        {
+            ASTNode *field = create_node(AST_FIELD_DECL, current()->line);
+            Token *field_name;
+
+            field->ret_type = parse_type();
+            field_name = expect(TOKEN_IDENTIFIER, "a field name");
+            set_name(field, field_name->lexeme);
+            add_child(cls, field);
+        }
+    }
+    expect(TOKEN_RBRACE, "'}' after class body");
+    return cls;
 }
 
 static ASTNode *parse_include(void)
@@ -637,6 +697,11 @@ ASTNode *redb_parse(const char *filename)
             continue;
         }
 
+        if (check(TOKEN_CLASS)) {
+            add_child(program, parse_class_decl());
+            continue;
+        }
+
         if (check(TOKEN_MAIN)) {
             Token *tok = advance();
             ASTNode *fn = create_node(AST_FUNC_DECL, tok->line);
@@ -661,7 +726,7 @@ ASTNode *redb_parse(const char *filename)
         }
 
         parse_fail(current()->line,
-                   "only main(), function definitions and @include are allowed at top level");
+                   "only class, main(), function definitions and @include are allowed at top level");
     }
 
     (void)p_file;

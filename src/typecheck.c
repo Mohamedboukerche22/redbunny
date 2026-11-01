@@ -10,12 +10,34 @@ typedef struct {
     int param_count;
     RedbType params[REDB_MAX_PARAMS];
     RedbType ret;
+    int is_field;
+    int field_index;
+    RedbType owner_class;
 } TSym;
 
 typedef struct {
     TSym syms[MAX_SYMBOLS];
     int count;
 } TScope;
+
+#define MAX_CLASSES 128
+#define MAX_CLASS_FIELDS 64
+#define MAX_CLASS_METHODS 64
+
+typedef struct {
+    char name[128];
+    RedbType type;
+    int field_count;
+    char field_names[MAX_CLASS_FIELDS][128];
+    RedbType field_types[MAX_CLASS_FIELDS];
+    ASTNode *field_nodes[MAX_CLASS_FIELDS];
+    int method_count;
+    ASTNode *methods[MAX_CLASS_METHODS];
+} ClassInfo;
+
+static ClassInfo classes[MAX_CLASSES];
+static int class_count;
+static ClassInfo *current_class;
 
 static TScope scopes[MAX_SCOPE_DEPTH];
 static int scope_top;
@@ -97,6 +119,64 @@ static TSym *declare(const char *name, RedbType type, int line)
     snprintf(sym->name, sizeof(sym->name), "%s", name);
     sym->type = type;
     return sym;
+}
+
+static ClassInfo *find_class_by_name(const char *name)
+{
+    int i;
+
+    for (i = 0; i < class_count; i++) {
+        if (!strcmp(classes[i].name, name))
+            return &classes[i];
+    }
+    return NULL;
+}
+
+static ClassInfo *find_class_by_type(RedbType type)
+{
+    int i;
+
+    for (i = 0; i < class_count; i++) {
+        if (classes[i].type == type)
+            return &classes[i];
+    }
+    return NULL;
+}
+
+static int find_field(ClassInfo *ci, const char *name)
+{
+    int i;
+
+    if (!ci)
+        return -1;
+    for (i = 0; i < ci->field_count; i++) {
+        if (!strcmp(ci->field_names[i], name))
+            return i;
+    }
+    return -1;
+}
+
+static ASTNode *find_method(ClassInfo *ci, const char *name)
+{
+    int i;
+
+    if (!ci)
+        return NULL;
+    for (i = 0; i < ci->method_count; i++) {
+        if (!strcmp(ci->methods[i]->name, name))
+            return ci->methods[i];
+    }
+    return NULL;
+}
+
+static void validate_type(RedbType type, int line)
+{
+    if (redb_is_array(type)) {
+        validate_type(redb_elem_type(type), line);
+    } else if (redb_is_class(type)) {
+        if (!find_class_by_type(type))
+            tc_fail(line, "unknown class type '%s'", redb_type_name(type));
+    }
 }
 
 static int is_numeric(RedbType type)
@@ -366,21 +446,51 @@ static RedbType infer_expr(ASTNode *node)
         TSym *sym = lookup(node->name);
         size_t i;
 
-        if (!sym || !sym->is_func)
-            tc_fail(node->line, "unknown function '%s'", node->name);
-        if ((int)node->child_count != sym->param_count)
-            tc_fail(node->line, "function '%s' expects %d argument(s), got %zu",
-                    node->name, sym->param_count, node->child_count);
+        if (sym && sym->is_func) {
+            if ((int)node->child_count != sym->param_count)
+                tc_fail(node->line, "function '%s' expects %d argument(s), got %zu",
+                        node->name, sym->param_count, node->child_count);
 
-        for (i = 0; i < node->child_count; i++) {
-            RedbType arg = infer_expr_expected(node->children[i], sym->params[i]);
+            for (i = 0; i < node->child_count; i++) {
+                RedbType arg = infer_expr_expected(node->children[i], sym->params[i]);
 
-            if (!assignable(arg, sym->params[i]))
-                tc_fail(node->line, "argument %zu of '%s' expects %s, got %s",
-                        i + 1, node->name, redb_type_name(sym->params[i]),
-                        redb_type_name(arg));
+                if (!assignable(arg, sym->params[i]))
+                    tc_fail(node->line, "argument %zu of '%s' expects %s, got %s",
+                            i + 1, node->name, redb_type_name(sym->params[i]),
+                            redb_type_name(arg));
+            }
+            type = sym->ret;
+            break;
         }
-        type = sym->ret;
+
+        {
+            ClassInfo *ci = find_class_by_name(node->name);
+            ASTNode *init;
+
+            if (!ci)
+                tc_fail(node->line, "unknown function or class '%s'", node->name);
+            init = find_method(ci, "init");
+            if (init) {
+                if ((int)node->child_count != init->param_count)
+                    tc_fail(node->line, "constructor '%s' expects %d argument(s), got %zu",
+                            node->name, init->param_count, node->child_count);
+                for (i = 0; i < node->child_count; i++) {
+                    RedbType arg = infer_expr_expected(node->children[i],
+                                                       init->param_types[i]);
+
+                    if (!assignable(arg, init->param_types[i]))
+                        tc_fail(node->line,
+                                "argument %zu of constructor '%s' expects %s, got %s",
+                                i + 1, node->name,
+                                redb_type_name(init->param_types[i]),
+                                redb_type_name(arg));
+                }
+            } else if (node->child_count != 0) {
+                tc_fail(node->line, "class '%s' has no init() constructor",
+                        node->name);
+            }
+            type = ci->type;
+        }
         break;
     }
 
@@ -392,6 +502,8 @@ static RedbType infer_expr(ASTNode *node)
             tc_fail(node->line, "cannot print a void value");
         if (redb_is_array(arg))
             tc_fail(node->line, "cannot print an array; print one element with arr[i]");
+        if (redb_is_class(arg))
+            tc_fail(node->line, "cannot print a class object; print one of its fields");
         type = TY_VOID;
         break;
     }
@@ -415,22 +527,65 @@ static RedbType infer_expr(ASTNode *node)
     case AST_METHOD: {
         RedbType base = infer_expr(node->children[0]);
 
-        if (!redb_is_array(base))
+        if (redb_is_array(base)) {
+            if (!strcmp(node->name, "size")) {
+                if (node->child_count != 1)
+                    tc_fail(node->line, "size() takes no arguments");
+                type = TY_INT;
+            } else if (!strcmp(node->name, "resize")) {
+                if (node->child_count != 2)
+                    tc_fail(node->line, "resize() takes exactly one argument");
+                if (infer_expr(node->children[1]) != TY_INT)
+                    tc_fail(node->line, "resize() expects an int size");
+                type = TY_VOID;
+            } else {
+                tc_fail(node->line, "arrays have no method '%s'", node->name);
+            }
+        } else if (redb_is_class(base)) {
+            ClassInfo *ci = find_class_by_type(base);
+            ASTNode *method = find_method(ci, node->name);
+            size_t i;
+
+            if (!method)
+                tc_fail(node->line, "class '%s' has no method '%s'",
+                        redb_type_name(base), node->name);
+            if ((int)node->child_count - 1 != method->param_count)
+                tc_fail(node->line, "method '%s.%s' expects %d argument(s), got %zu",
+                        redb_type_name(base), node->name, method->param_count,
+                        node->child_count - 1);
+            for (i = 1; i < node->child_count; i++) {
+                RedbType arg = infer_expr_expected(node->children[i],
+                                                   method->param_types[i - 1]);
+
+                if (!assignable(arg, method->param_types[i - 1]))
+                    tc_fail(node->line,
+                            "argument %zu of '%s.%s' expects %s, got %s",
+                            i, redb_type_name(base), node->name,
+                            redb_type_name(method->param_types[i - 1]),
+                            redb_type_name(arg));
+            }
+            type = method->ret_type;
+        } else {
             tc_fail(node->line, "cannot call '%s' on a value of type %s",
                     node->name, redb_type_name(base));
-        if (!strcmp(node->name, "size")) {
-            if (node->child_count != 1)
-                tc_fail(node->line, "size() takes no arguments");
-            type = TY_INT;
-        } else if (!strcmp(node->name, "resize")) {
-            if (node->child_count != 2)
-                tc_fail(node->line, "resize() takes exactly one argument");
-            if (infer_expr(node->children[1]) != TY_INT)
-                tc_fail(node->line, "resize() expects an int size");
-            type = TY_VOID;
-        } else {
-            tc_fail(node->line, "arrays have no method '%s'", node->name);
         }
+        break;
+    }
+
+    case AST_FIELD: {
+        RedbType base = infer_expr(node->children[0]);
+        ClassInfo *ci;
+        int index;
+
+        if (!redb_is_class(base))
+            tc_fail(node->line, "cannot access field '%s' on a value of type %s",
+                    node->name, redb_type_name(base));
+        ci = find_class_by_type(base);
+        index = find_field(ci, node->name);
+        if (index < 0)
+            tc_fail(node->line, "class '%s' has no field '%s'",
+                    redb_type_name(base), node->name);
+        type = ci->field_types[index];
         break;
     }
 
@@ -455,11 +610,30 @@ static void typecheck_function(ASTNode *fn)
     int saved_loop = loop_depth;
     int saved_top = scope_top;
     int saved_barrier = scope_barrier;
+    ClassInfo *saved_class = current_class;
     int i;
 
     /* Functions see globals and their arguments, not the caller's locals. */
     scope_barrier = saved_top;
     push_scope();
+
+    if (fn->is_method) {
+        ClassInfo *ci = find_class_by_name(fn->class_name);
+
+        if (!ci)
+            tc_fail(fn->line, "unknown class '%s'", fn->class_name);
+        current_class = ci;
+        declare("self", ci->type, fn->line);
+        for (i = 0; i < ci->field_count; i++) {
+            TSym *field = declare(ci->field_names[i], ci->field_types[i], fn->line);
+
+            field->is_field = 1;
+            field->field_index = i;
+            field->owner_class = ci->type;
+        }
+    } else {
+        current_class = NULL;
+    }
 
     for (i = 0; i < fn->param_count; i++) {
         char argname[32];
@@ -479,6 +653,7 @@ static void typecheck_function(ASTNode *fn)
     current_ret = saved_ret;
     current_is_main = saved_main;
     loop_depth = saved_loop;
+    current_class = saved_class;
     fn->inferred = TY_FUNC;
 }
 
@@ -525,6 +700,18 @@ static void typecheck_stmt(ASTNode *node)
 
     case AST_FUNC_DECL:
         typecheck_function(node);
+        break;
+
+    case AST_CLASS_DECL:
+        for (i = 0; i < node->child_count; i++) {
+            if (node->children[i]->type == AST_FUNC_DECL)
+                typecheck_function(node->children[i]);
+        }
+        node->inferred = redb_class_of(node->name);
+        break;
+
+    case AST_FIELD_DECL:
+        node->inferred = node->ret_type;
         break;
 
     case AST_FOR_LOOP: {
@@ -647,6 +834,36 @@ static void typecheck_stmt(ASTNode *node)
         break;
     }
 
+    case AST_FIELD_ASSIGN: {
+        ASTNode *target_node = node->children[0];
+        RedbType base = infer_expr(target_node->children[0]);
+        RedbType value;
+        ClassInfo *ci;
+        int index;
+        RedbType field_type;
+
+        if (!redb_is_class(base))
+            tc_fail(node->line, "cannot assign field '%s' on a value of type %s",
+                    target_node->name, redb_type_name(base));
+        ci = find_class_by_type(base);
+        index = find_field(ci, target_node->name);
+        if (index < 0)
+            tc_fail(node->line, "class '%s' has no field '%s'",
+                    redb_type_name(base), target_node->name);
+        field_type = ci->field_types[index];
+        value = infer_expr_expected(node->children[1], field_type);
+        if (value == TY_VOID)
+            tc_fail(node->line, "cannot assign a void value to field '%s'",
+                    target_node->name);
+        if (!assignable(value, field_type))
+            tc_fail(node->line, "cannot assign %s to field '%s' of type %s",
+                    redb_type_name(value), target_node->name,
+                    redb_type_name(field_type));
+        target_node->inferred = field_type;
+        node->inferred = field_type;
+        break;
+    }
+
     case AST_INCLUDE:
         node->inferred = TY_VOID;
         break;
@@ -657,6 +874,80 @@ static void typecheck_stmt(ASTNode *node)
     }
 }
 
+static void register_classes(ASTNode *node)
+{
+    size_t i;
+
+    if (!node)
+        return;
+
+    if (node->type == AST_CLASS_DECL) {
+        ClassInfo *ci;
+
+        if (find_class_by_name(node->name))
+            tc_fail(node->line, "class '%s' is already defined", node->name);
+        if (class_count >= MAX_CLASSES)
+            tc_fail(node->line, "too many classes");
+        ci = &classes[class_count++];
+        memset(ci, 0, sizeof(*ci));
+        snprintf(ci->name, sizeof(ci->name), "%s", node->name);
+        ci->type = redb_class_of(node->name);
+
+        for (i = 0; i < node->child_count; i++) {
+            ASTNode *child = node->children[i];
+
+            if (child->type == AST_FIELD_DECL) {
+                if (!strcmp(child->name, "self"))
+                    tc_fail(child->line, "'self' is reserved inside a class");
+                if (find_field(ci, child->name) >= 0)
+                    tc_fail(child->line, "field '%s' is already defined in class '%s'",
+                            child->name, ci->name);
+                if (ci->field_count >= MAX_CLASS_FIELDS)
+                    tc_fail(child->line, "too many fields in class '%s'", ci->name);
+                snprintf(ci->field_names[ci->field_count],
+                         sizeof(ci->field_names[ci->field_count]), "%s", child->name);
+                ci->field_types[ci->field_count] = child->ret_type;
+                ci->field_nodes[ci->field_count] = child;
+                ci->field_count++;
+            } else if (child->type == AST_FUNC_DECL) {
+                if (find_method(ci, child->name))
+                    tc_fail(child->line, "method '%s' is already defined in class '%s'",
+                            child->name, ci->name);
+                if (ci->method_count >= MAX_CLASS_METHODS)
+                    tc_fail(child->line, "too many methods in class '%s'", ci->name);
+                ci->methods[ci->method_count++] = child;
+            }
+        }
+        return;
+    }
+
+    for (i = 0; i < node->child_count; i++)
+        register_classes(node->children[i]);
+}
+
+static void validate_class_members(void)
+{
+    int i, j;
+
+    for (i = 0; i < class_count; i++) {
+        ClassInfo *ci = &classes[i];
+
+        for (j = 0; j < ci->field_count; j++)
+            validate_type(ci->field_types[j], ci->field_nodes[j]->line);
+
+        for (j = 0; j < ci->method_count; j++) {
+            ASTNode *method = ci->methods[j];
+            int k;
+
+            if (!strcmp(method->name, "init") && method->ret_type != TY_VOID)
+                tc_fail(method->line, "constructor init() must return void");
+            validate_type(method->ret_type, method->line);
+            for (k = 0; k < method->param_count; k++)
+                validate_type(method->param_types[k], method->line);
+        }
+    }
+}
+
 static void register_functions(ASTNode *node)
 {
     size_t i;
@@ -664,7 +955,10 @@ static void register_functions(ASTNode *node)
     if (!node)
         return;
 
-    if (node->type == AST_FUNC_DECL && !node->is_main) {
+    if (node->type == AST_CLASS_DECL)
+        return;
+
+    if (node->type == AST_FUNC_DECL && !node->is_main && !node->is_method) {
         TSym *sym;
 
         if (lookup_current(node->name))
@@ -692,6 +986,8 @@ void redb_typecheck(ASTNode *ast)
     current_is_main = 0;
     loop_depth = 0;
 
+    register_classes(ast);
+    validate_class_members();
     register_functions(ast);
 
     for (i = 0; i < ast->child_count; i++)

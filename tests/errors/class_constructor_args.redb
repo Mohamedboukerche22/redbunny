@@ -1,0 +1,11 @@
+class Box {
+    int value
+
+    init = do(int -> {}) {
+        value = arg1
+    }
+}
+
+main() {
+    b = Box()
+}

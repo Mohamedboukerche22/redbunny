@@ -2,7 +2,7 @@
 
 ## System prompt
 
-You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no structs, no maps, no generics, no closures, and no exceptions. When asked for code, return a complete compilable program whenever possible. Use `@include "std"` for runtime output functions, `@include "mathlib"` for math helpers, and `@include "algorithm"` for array algorithms. Never use C, Python, Rust, or JavaScript syntax.
+You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no maps, no generics beyond array<T>, no closures, no exceptions, and no inheritance. Classes are declared with `class Name { fieldType field; method = do(...) { ... } }`; `init` is the constructor and `self` is the receiver inside methods. When asked for code, return a complete compilable program whenever possible. Use `@include "std"` for runtime output functions, `@include "mathlib"` for math helpers, and `@include "algorithm"` for array algorithms and the `Queue` class. Never use C, Python, Rust, or JavaScript syntax.
 
 ## core:seed:c2421939ba
 
@@ -548,7 +548,7 @@ redb main.redb -S -o main.ll
 
 `-o` chooses the output executable, `--run` compiles and runs, and `-S` emits LLVM IR only.
 
-## limitations:seed:c904758fd6
+## limitations:seed:e8cfdd1d09
 
 ### User
 
@@ -556,8 +556,10 @@ What are the current limitations of RedBunny?
 
 ### Assistant
 
-- No maps, structs, classes or pointers.
-- No user-defined types or generics.
+- No maps, structs or pointers.
+- No generics beyond `array<T>`.
+- No class inheritance, interfaces, access control or static members.
+- No field initializers; initialize arrays and strings in `init`.
 - No closures; functions cannot capture enclosing locals.
 - No exceptions or panic handling.
 - No package registry; includes resolve relative to the source file, then the standard library directory.
@@ -1379,6 +1381,99 @@ main() {
 }
 ```
 
+## classes:seed:838434449e
+
+### User
+
+How do I define a class with fields and methods in RedBunny?
+
+### Assistant
+
+```redb
+@include "std"
+
+class Counter {
+    int value
+
+    init = do(int -> {}) {
+        value = arg1
+    }
+
+    add = do(int -> {}) {
+        value = value + arg1
+    }
+
+    get = do(-> int) {
+        return value
+    }
+}
+
+main() {
+    c = Counter(5)
+    c.add(7)
+    writeln(c.get())    -- 12
+}
+```
+
+Fields use explicit types. `init` is the constructor and must return `{}`. Inside methods, fields are in scope without `obj.`, and `self` refers to the receiver.
+
+## classes:seed:e66e0c0f75
+
+### User
+
+How do I create an object and access its fields in RedBunny?
+
+### Assistant
+
+Instantiate a class with `Name(args)`, then use `obj.field` for fields and `obj.method(...)` for methods.
+
+```redb
+class Point {
+    int x
+    int y
+
+    init = do(int, int -> {}) {
+        x = arg1
+        y = arg2
+    }
+}
+
+main() {
+    p = Point(3, 4)
+    writeln(p.x)        -- 3
+    p.y = 10
+    writeln(p.y)        -- 10
+}
+```
+
+Fields are zero-initialized before `init` runs. Class objects are heap-allocated and are never freed.
+
+## stdlib:seed:559e9b0ce7
+
+### User
+
+How do I use the Queue class from the algorithm library?
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    q = Queue(3)
+    q.enqueue(10)
+    q.enqueue(20)
+
+    writeln(q.front())      -- 10
+    writeln(q.dequeue())    -- 10
+    writeln(q.size())       -- 1
+    writeln(q.is_empty())   -- false
+}
+```
+
+`Queue(capacity)` is a fixed-capacity FIFO ring buffer. `dequeue` and `front` return `-1` when empty. `enqueue` prints `queue full` and drops the value when full.
+
 ## manual:DOCUMENTATION:4d2286a553
 
 ### User
@@ -1459,7 +1554,7 @@ Top-level declarations are limited to:
 
 All other statements live inside `main()` or another function.
 
-## manual:DOCUMENTATION:3119c4f11a
+## manual:DOCUMENTATION:d86cb5a199
 
 ### User
 
@@ -1491,6 +1586,8 @@ Supported types:
 | `str`    | null-terminated UTF-8 byte string    |
 | `bool`   | `true` or `false`                    |
 | `void`   | no value, written `{}` in signatures |
+| `array<T>` | heap array of `T`                  |
+| class name | heap object with typed fields      |
 
 A decimal literal such as `3.14` is a `double`. Integer literals are `int`.
 Numeric values convert automatically between `int`, `float` and `double`
@@ -1518,7 +1615,7 @@ main() {
 }
 ```
 
-## manual:DOCUMENTATION:24361554d7
+## manual:DOCUMENTATION:7e0f53aedd
 
 ### User
 
@@ -1527,8 +1624,8 @@ Explain RedBunny's Variables and Types - Arrays with syntax and examples.
 ### Assistant
 
 An array holds many values of one element type. Declare one with `array<T>`,
-where `T` is `int`, `float`, `double`, `bool`, `str`, `auto`, or another array
-type.
+where `T` is `int`, `float`, `double`, `bool`, `str`, `auto`, another array
+type, or a class name.
 
 ```redb
 main() {
@@ -1967,7 +2064,7 @@ main() {
 }
 ```
 
-## manual:DOCUMENTATION:02d27de1d7
+## manual:DOCUMENTATION:fa102551da
 
 ### User
 
@@ -1991,6 +2088,34 @@ Explain RedBunny's Includes and Standard Library - Algorithm library with syntax
 `MAX_INT64` and `MIN_INT64` are zero-argument constant helpers because RedBunny
 has no `const` keyword.
 
+The module also defines a fixed-capacity FIFO queue:
+
+| Member                | Signature        | Notes                                      |
+|-----------------------|------------------|--------------------------------------------|
+| `Queue(capacity)`     | `int -> Queue`   | Constructor; capacity must be greater than zero |
+| `q.enqueue(value)`    | `int -> {}`      | Prints `queue full` and drops the value when full |
+| `q.dequeue()`         | `{} -> int`      | Removes the front value; returns `-1` when empty |
+| `q.front()`           | `{} -> int`      | Peeks at the front value; returns `-1` when empty |
+| `q.size()`            | `{} -> int`      | Number of stored values                    |
+| `q.is_empty()`        | `{} -> bool`     | True when `size() == 0`                    |
+| `q.is_full()`         | `{} -> bool`     | True when `size() == capacity`             |
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    q = Queue(3)
+    q.enqueue(10)
+    q.enqueue(20)
+    writeln(q.front())      -- 10
+    writeln(q.dequeue())    -- 10
+    writeln(q.size())       -- 1
+}
+```
+
+See `examples/queue_demo.redb` for a longer ring-buffer example.
+
 ```redb
 @include "std"
 @include "algorithm"
@@ -2011,7 +2136,7 @@ main() {
 }
 ```
 
-## manual:DOCUMENTATION:a920bc7629
+## manual:DOCUMENTATION:61cd931932
 
 ### User
 
@@ -2019,8 +2144,10 @@ Explain RedBunny's Current Limitations with syntax and examples.
 
 ### Assistant
 
-- No maps, structs, classes or pointers.
-- No user-defined types or generics.
+- No maps, structs or pointers.
+- No generics beyond `array<T>`.
+- No class inheritance, interfaces, access control or static members.
+- Class fields are fixed 8-byte slots and there are no field initializers.
 - No closures; functions cannot capture enclosing locals.
 - No exceptions or panic handling.
 - No package registry; includes resolve relative to the source file, then the
@@ -2029,7 +2156,7 @@ Explain RedBunny's Current Limitations with syntax and examples.
 
 These are deliberate v0.1 boundaries, not parser accidents.
 
-## manual:DOCUMENTATION:588f47d5e5
+## manual:DOCUMENTATION:7a3f2d8c19
 
 ### User
 
@@ -2044,6 +2171,7 @@ The `examples/` directory contains:
 - `factorial.redb` — recursion
 - `arrays.redb` — arrays, literals, resizing and nested arrays
 - `algorithm_demo.redb` — sorting, searching and array algorithms
+- `queue_demo.redb` — a class-based FIFO queue
 - `math_demo.redb` — standard math library
 - `imports/app.redb` — local and standard library includes
 - `imports/greeting.redb` — local module used by `app.redb`
@@ -2056,6 +2184,7 @@ redb examples/tour.redb -o /tmp/tour && /tmp/tour
 redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
 redb examples/arrays.redb -o /tmp/arrays && /tmp/arrays
 redb examples/algorithm_demo.redb -o /tmp/algorithm_demo && /tmp/algorithm_demo
+redb examples/queue_demo.redb -o /tmp/queue_demo && /tmp/queue_demo
 redb examples/math_demo.redb -o /tmp/math_demo && /tmp/math_demo
 redb examples/imports/app.redb -o /tmp/app && /tmp/app
 ```
@@ -2256,6 +2385,40 @@ main() {
     writeln(abs(-42))
     writeln(gcd(48, 18))
     writeln(lcm(4, 6))
+}
+```
+
+## example:queue_demo:274af67a61
+
+### User
+
+Write a complete RedBunny program that demonstrates queue demo.
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    q = Queue(4)
+
+    q.enqueue(10)
+    q.enqueue(20)
+    q.enqueue(30)
+
+    writeln(q.size())       -- 3
+    writeln(q.front())      -- 10
+    writeln(q.dequeue())    -- 10
+    writeln(q.dequeue())    -- 20
+
+    q.enqueue(40)
+    q.enqueue(50)
+
+    writeln(q.front())      -- 30
+    writeln(q.dequeue())    -- 30
+    writeln(q.dequeue())    -- 40
+    writeln(q.is_empty())   -- false
 }
 ```
 
@@ -2704,6 +2867,164 @@ false
 20
 11
 15
+```
+
+## test-output:classes:11f88ff8a1
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+5
+12
+20
+23
+2
+1
+2
+false
+false
+true
+1
+2
+-1
+true
+```
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+class Counter {
+    int value
+
+    init = do(int -> {}) {
+        value = arg1
+    }
+
+    add = do(int -> {}) {
+        value = value + arg1
+    }
+
+    add_and_get = do(int -> int) {
+        value = value + arg1
+        return self.get()
+    }
+
+    get = do(-> int) {
+        return value
+    }
+}
+
+main() {
+    c = Counter(5)
+    writeln(c.get())
+    c.add(7)
+    writeln(c.value)
+    c.value = 20
+    writeln(c.get())
+    writeln(c.add_and_get(3))
+
+    q = Queue(3)
+    q.enqueue(1)
+    q.enqueue(2)
+    writeln(q.size())
+    writeln(q.dequeue())
+    q.enqueue(3)
+    writeln(q.front())
+    writeln(q.is_empty())
+    writeln(q.is_full())
+
+    small = Queue(2)
+    small.enqueue(1)
+    small.enqueue(2)
+    writeln(small.is_full())
+    writeln(small.dequeue())
+    writeln(small.dequeue())
+    writeln(small.dequeue())
+    writeln(small.is_empty())
+}
+```
+
+## code-output:classes:aabb6cdce0
+
+### User
+
+What does this RedBunny program print?
+```redb
+@include "std"
+@include "algorithm"
+
+class Counter {
+    int value
+
+    init = do(int -> {}) {
+        value = arg1
+    }
+
+    add = do(int -> {}) {
+        value = value + arg1
+    }
+
+    add_and_get = do(int -> int) {
+        value = value + arg1
+        return self.get()
+    }
+
+    get = do(-> int) {
+        return value
+    }
+}
+
+main() {
+    c = Counter(5)
+    writeln(c.get())
+    c.add(7)
+    writeln(c.value)
+    c.value = 20
+    writeln(c.get())
+    writeln(c.add_and_get(3))
+
+    q = Queue(3)
+    q.enqueue(1)
+    q.enqueue(2)
+    writeln(q.size())
+    writeln(q.dequeue())
+    q.enqueue(3)
+    writeln(q.front())
+    writeln(q.is_empty())
+    writeln(q.is_full())
+
+    small = Queue(2)
+    small.enqueue(1)
+    small.enqueue(2)
+    writeln(small.is_full())
+    writeln(small.dequeue())
+    writeln(small.dequeue())
+    writeln(small.dequeue())
+    writeln(small.is_empty())
+}
+```
+
+### Assistant
+
+```text
+5
+12
+20
+23
+2
+1
+2
+false
+false
+true
+1
+2
+-1
+true
 ```
 
 ## test-output:control:f130a08bde
@@ -3382,6 +3703,69 @@ main() {
 
 `break` is only valid inside a `for` or `while` loop. This program uses `break` directly in `main()`.
 
+## compile-error:class_constructor_args:0fdb628894
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+class Box {
+    int value
+
+    init = do(int -> {}) {
+        value = arg1
+    }
+}
+
+main() {
+    b = Box()
+}
+```
+
+### Assistant
+
+This program is rejected by the RedBunny compiler because it violates the language's static rules.
+
+## compile-error:class_field_type:1eb1403a75
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+class Box {
+    int value
+}
+
+main() {
+    b = Box()
+    b.value = "text"
+}
+```
+
+### Assistant
+
+This program is rejected by the RedBunny compiler because it violates the language's static rules.
+
+## compile-error:class_unknown_field:151328bbbc
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+class Box {
+    int value
+}
+
+main() {
+    b = Box()
+    b.missing = 1
+}
+```
+
+### Assistant
+
+This program is rejected by the RedBunny compiler because it violates the language's static rules.
+
 ## compile-error:type_mismatch:5f95f292f4
 
 ### User
@@ -3644,6 +4028,25 @@ sort = do(array<int> -> {}) {
 
         finish = finish - 1
     }
+}
+```
+
+## stdlib:algorithm:fc37347caf
+
+### User
+
+Show the RedBunny standard library function `new_int_array` and explain its signature.
+
+### Assistant
+
+-- Allocate an int array from a runtime size. Useful for class fields.
+
+Signature: `(int -> array<int>)`
+
+```redb
+new_int_array = do(int -> array<int>) {
+    array<int> a(arg1)
+    return a
 }
 ```
 

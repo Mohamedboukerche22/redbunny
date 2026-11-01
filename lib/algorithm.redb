@@ -135,3 +135,66 @@ sort = do(array<int> -> {}) {
 
 
 
+
+-- Allocate an int array from a runtime size. Useful for class fields.
+new_int_array = do(int -> array<int>) {
+    array<int> a(arg1)
+    return a
+}
+
+-- FIFO queue with a fixed capacity ring buffer.
+-- Create one with Queue(capacity); capacity must be greater than zero.
+class Queue {
+    array<int> data
+    int head
+    int tail
+    int count
+    int capacity
+
+    init = do(int -> {}) {
+        capacity = arg1
+        data = new_int_array(capacity)
+        head = 0
+        tail = 0
+        count = 0
+    }
+
+    enqueue = do(int -> {}) {
+        if (count == capacity) {
+            writeln("queue full")
+            return
+        }
+        data[tail] = arg1
+        tail = (tail + 1) % capacity
+        count = count + 1
+    }
+
+    dequeue = do(-> int) {
+        if (count == 0) {
+            return -1
+        }
+        value = data[head]
+        head = (head + 1) % capacity
+        count = count - 1
+        return value
+    }
+
+    front = do(-> int) {
+        if (count == 0) {
+            return -1
+        }
+        return data[head]
+    }
+
+    size = do(-> int) {
+        return count
+    }
+
+    is_empty = do(-> bool) {
+        return count == 0
+    }
+
+    is_full = do(-> bool) {
+        return count == capacity
+    }
+}

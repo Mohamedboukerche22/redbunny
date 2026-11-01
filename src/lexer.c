@@ -33,6 +33,7 @@ static const Keyword keywords[] = {
     { "false",       TOKEN_FALSE },
     { "break",       TOKEN_BREAK },
     { "continue",    TOKEN_CONTINUE },
+    { "class",       TOKEN_CLASS },
     { "int",         TOKEN_TYPE_INT },
     { "float",       TOKEN_TYPE_FLOAT },
     { "double",      TOKEN_TYPE_DOUBLE },

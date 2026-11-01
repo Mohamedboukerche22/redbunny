@@ -161,6 +161,8 @@ Supported types:
 | `str`    | null-terminated UTF-8 byte string    |
 | `bool`   | `true` or `false`                    |
 | `void`   | no value, written `{}` in signatures |
+| `array<T>` | heap array of `T`                  |
+| class name | heap object with typed fields      |
 
 A decimal literal such as `3.14` is a `double`. Integer literals are `int`.
 Numeric values convert automatically between `int`, `float` and `double`
@@ -191,8 +193,8 @@ main() {
 ### Arrays
 
 An array holds many values of one element type. Declare one with `array<T>`,
-where `T` is `int`, `float`, `double`, `bool`, `str`, `auto`, or another array
-type.
+where `T` is `int`, `float`, `double`, `bool`, `str`, `auto`, another array
+type, or a class name.
 
 ```redb
 main() {
@@ -507,7 +509,59 @@ returns on every path.
 
 ---
 
-## 10. Includes and Standard Library
+## 10. Classes
+
+Classes group named fields with methods. Declare a class with `class`; fields
+use explicit types; methods use the same `do(...)` syntax as functions.
+
+```redb
+@include "std"
+
+class Counter {
+    int value
+
+    init = do(int -> {}) {
+        value = arg1
+    }
+
+    add = do(int -> {}) {
+        value = value + arg1
+    }
+
+    get = do(-> int) {
+        return value
+    }
+}
+
+main() {
+    c = Counter(5)
+    writeln(c.get())      -- 5
+    c.add(7)
+    writeln(c.value)      -- 12
+    c.value = 20
+    writeln(c.get())      -- 20
+}
+```
+
+- Instantiate with `Name(args)`. `init` is the constructor and must return
+  `{}` (void). If a class has no `init`, only `Name()` is valid.
+- Fields are zero-initialized: numeric fields are `0`, `bool` is `false`, and
+  `str`, array and class fields start as null pointers. Initialize arrays and
+  strings in `init`.
+- Each field occupies an 8-byte slot. Read with `obj.field`; assign with
+  `obj.field = value`.
+- Call methods with `obj.method(...)`. Inside a method, fields are in scope
+  without `obj.`, and `self` refers to the receiver. Use `self.method(...)` to
+  call another method.
+- Method parameters are `arg1`, `arg2`, ... just like functions.
+- Classes have no inheritance, access control, static members, overloads,
+  destructors or garbage collection.
+- Class-typed fields start as null. Calling a method or reading a field through
+  a null object will crash.
+
+---
+
+## 11. Includes and Standard Library
 
 `@include "std"` is accepted and the runtime is linked automatically.
 
@@ -597,6 +651,34 @@ main() {
 `MAX_INT64` and `MIN_INT64` are zero-argument constant helpers because RedBunny
 has no `const` keyword.
 
+The module also defines a fixed-capacity FIFO queue:
+
+| Member                | Signature        | Notes                                      |
+|-----------------------|------------------|--------------------------------------------|
+| `Queue(capacity)`     | `int -> Queue`   | Constructor; capacity must be greater than zero |
+| `q.enqueue(value)`    | `int -> {}`      | Prints `queue full` and drops the value when full |
+| `q.dequeue()`         | `{} -> int`      | Removes the front value; returns `-1` when empty |
+| `q.front()`           | `{} -> int`      | Peeks at the front value; returns `-1` when empty |
+| `q.size()`            | `{} -> int`      | Number of stored values                    |
+| `q.is_empty()`        | `{} -> bool`     | True when `size() == 0`                    |
+| `q.is_full()`         | `{} -> bool`     | True when `size() == capacity`             |
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    q = Queue(3)
+    q.enqueue(10)
+    q.enqueue(20)
+    writeln(q.front())      -- 10
+    writeln(q.dequeue())    -- 10
+    writeln(q.size())       -- 1
+}
+```
+
+See `examples/queue_demo.redb` for a longer ring-buffer example.
+
 ```redb
 @include "std"
 @include "algorithm"
@@ -619,7 +701,7 @@ main() {
 
 ---
 
-## 11. Command Line
+## 12. Command Line
 
 ```text
 usage: redb <file.redb> [options]
@@ -654,7 +736,7 @@ Environment variables:
 
 ---
 
-## 12. Runtime ABI
+## 13. Runtime ABI
 
 The generated IR calls these C functions:
 
@@ -668,6 +750,7 @@ void  redb_newline(void);
 char *redb_str_concat(const char *left, const char *right);
 int   redb_str_eq(const char *left, const char *right);
 void *redb_alloc(size_t size);
+void *redb_alloc_zero(size_t size);
 void  redb_writeformat(const char *fmt, ...);
 
 void *redb_array_new(long long len, long long nest, long long leaf_size);
@@ -676,16 +759,19 @@ long long redb_array_size(void *array);
 void  redb_array_resize(void *array, long long size);
 ```
 
-String concatenation allocates a new buffer with `malloc`. RedBunny currently
-has no garbage collector, so long-running string-building loops will grow
-memory.
+Class objects are allocated with `redb_alloc_zero`; each field is stored in an
+8-byte slot. String concatenation allocates a new buffer with `malloc`.
+RedBunny currently has no garbage collector, so long-running string-building
+loops will grow memory.
 
 ---
 
-## 13. Current Limitations
+## 14. Current Limitations
 
-- No maps, structs, classes or pointers.
-- No user-defined types or generics.
+- No maps, structs or pointers.
+- No generics beyond `array<T>`.
+- No class inheritance, interfaces, access control or static members.
+- Class fields are fixed 8-byte slots and there are no field initializers.
 - No closures; functions cannot capture enclosing locals.
 - No exceptions or panic handling.
 - No package registry; includes resolve relative to the source file, then the
@@ -696,7 +782,7 @@ These are deliberate v0.1 boundaries, not parser accidents.
 
 ---
 
-## 14. Examples
+## 15. Examples
 
 The `examples/` directory contains:
 
@@ -705,6 +791,7 @@ The `examples/` directory contains:
 - `factorial.redb` — recursion
 - `arrays.redb` — arrays, literals, resizing and nested arrays
 - `algorithm_demo.redb` — sorting, searching and array algorithms
+- `queue_demo.redb` — a class-based FIFO queue
 - `math_demo.redb` — standard math library
 - `imports/app.redb` — local and standard library includes
 - `imports/greeting.redb` — local module used by `app.redb`
@@ -717,13 +804,14 @@ redb examples/tour.redb -o /tmp/tour && /tmp/tour
 redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
 redb examples/arrays.redb -o /tmp/arrays && /tmp/arrays
 redb examples/algorithm_demo.redb -o /tmp/algorithm_demo && /tmp/algorithm_demo
+redb examples/queue_demo.redb -o /tmp/queue_demo && /tmp/queue_demo
 redb examples/math_demo.redb -o /tmp/math_demo && /tmp/math_demo
 redb examples/imports/app.redb -o /tmp/app && /tmp/app
 ```
 
 ---
 
-## 15. Editor Support
+## 16. Editor Support
 
 Vim and Neovim support lives in `editors/vim`:
 

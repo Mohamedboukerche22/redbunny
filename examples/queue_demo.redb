@@ -1,0 +1,23 @@
+@include "std"
+@include "algorithm"
+
+main() {
+    q = Queue(4)
+
+    q.enqueue(10)
+    q.enqueue(20)
+    q.enqueue(30)
+
+    writeln(q.size())       -- 3
+    writeln(q.front())      -- 10
+    writeln(q.dequeue())    -- 10
+    writeln(q.dequeue())    -- 20
+
+    q.enqueue(40)
+    q.enqueue(50)
+
+    writeln(q.front())      -- 30
+    writeln(q.dequeue())    -- 30
+    writeln(q.dequeue())    -- 40
+    writeln(q.is_empty())   -- false
+}

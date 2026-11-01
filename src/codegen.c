@@ -9,6 +9,8 @@ typedef struct {
     char name[128];
     RedbType type;
     LLVMValueRef alloca;
+    int is_field;
+    int field_index;
 } CSym;
 
 typedef struct {
@@ -17,10 +19,27 @@ typedef struct {
 } CScope;
 
 typedef struct {
-    char name[128];
+    char name[512];
     ASTNode *node;
     LLVMValueRef fn;
 } FuncInfo;
+
+#define MAX_CLASSES 128
+#define MAX_CLASS_FIELDS 64
+#define MAX_CLASS_METHODS 64
+
+typedef struct {
+    char name[128];
+    RedbType type;
+    ASTNode *node;
+    int field_count;
+    ASTNode *fields[MAX_CLASS_FIELDS];
+    int method_count;
+    ASTNode *methods[MAX_CLASS_METHODS];
+} CgClass;
+
+static CgClass classes[MAX_CLASSES];
+static int class_count;
 
 typedef struct {
     LLVMBasicBlockRef break_bb;
@@ -229,6 +248,12 @@ static LLVMValueRef rt_array_resize(void)
     return get_runtime("redb_array_resize", llvm_type(TY_VOID), params, 2);
 }
 
+static LLVMValueRef rt_alloc_zero(void)
+{
+    LLVMTypeRef params[] = { LLVMInt64TypeInContext(ctx) };
+    return get_runtime("redb_alloc_zero", llvm_type(TY_STR), params, 1);
+}
+
 /* Byte size of one scalar element; must match the runtime's expectations. */
 static int leaf_bytes(RedbType type)
 {
@@ -302,6 +327,78 @@ static LLVMValueRef convert(LLVMValueRef value, RedbType from, RedbType to)
     return value;
 }
 
+static LLVMValueRef value_to_slot(LLVMValueRef value, RedbType type)
+{
+    LLVMTypeRef i64 = LLVMInt64TypeInContext(ctx);
+
+    switch (type) {
+    case TY_INT:
+        return value;
+    case TY_BOOL:
+        return LLVMBuildZExt(builder, value, i64, "fieldbool");
+    case TY_FLOAT: {
+        LLVMValueRef bits = LLVMBuildBitCast(builder, value,
+                                             LLVMInt32TypeInContext(ctx), "fieldf32");
+        return LLVMBuildZExt(builder, bits, i64, "fieldf32i");
+    }
+    case TY_DOUBLE:
+        return LLVMBuildBitCast(builder, value, i64, "fieldf64");
+    case TY_STR:
+        return LLVMBuildPtrToInt(builder, value, i64, "fieldptr");
+    default:
+        if (redb_is_array(type) || redb_is_class(type))
+            return LLVMBuildPtrToInt(builder, value, i64, "fieldptr");
+        cg_fail(0, "cannot store a field of type %s", redb_type_name(type));
+        return NULL;
+    }
+}
+
+static LLVMValueRef slot_to_value(LLVMValueRef raw, RedbType type)
+{
+    switch (type) {
+    case TY_INT:
+        return raw;
+    case TY_BOOL:
+        return LLVMBuildTrunc(builder, raw, LLVMInt1TypeInContext(ctx), "fieldbool");
+    case TY_FLOAT: {
+        LLVMValueRef bits = LLVMBuildTrunc(builder, raw,
+                                           LLVMInt32TypeInContext(ctx), "fieldf32i");
+        return LLVMBuildBitCast(builder, bits, LLVMFloatTypeInContext(ctx), "fieldf32");
+    }
+    case TY_DOUBLE:
+        return LLVMBuildBitCast(builder, raw, LLVMDoubleTypeInContext(ctx), "fieldf64");
+    case TY_STR:
+        return LLVMBuildIntToPtr(builder, raw, llvm_type(TY_STR), "fieldptr");
+    default:
+        if (redb_is_array(type) || redb_is_class(type))
+            return LLVMBuildIntToPtr(builder, raw, llvm_type(type), "fieldptr");
+        cg_fail(0, "cannot load a field of type %s", redb_type_name(type));
+        return NULL;
+    }
+}
+
+static LLVMValueRef field_ptr(LLVMValueRef object, int index)
+{
+    LLVMValueRef idx = LLVMConstInt(LLVMInt64TypeInContext(ctx),
+                                    (unsigned long long)index, 0);
+    return LLVMBuildGEP2(builder, LLVMInt64TypeInContext(ctx), object, &idx, 1,
+                         "field");
+}
+
+static LLVMValueRef field_load(LLVMValueRef object, int index, RedbType type)
+{
+    LLVMValueRef raw = LLVMBuildLoad2(builder, LLVMInt64TypeInContext(ctx),
+                                      field_ptr(object, index), "fieldraw");
+
+    return slot_to_value(raw, type);
+}
+
+static void field_store(LLVMValueRef object, int index, LLVMValueRef value,
+                        RedbType type)
+{
+    LLVMBuildStore(builder, value_to_slot(value, type), field_ptr(object, index));
+}
+
 static void emit_newline(void)
 {
     call_fn(rt_newline(), NULL, 0);
@@ -355,6 +452,60 @@ static FuncInfo *find_func(const char *name)
             return &funcs[i];
     }
     return NULL;
+}
+
+static CgClass *find_class_by_name(const char *name)
+{
+    int i;
+
+    for (i = 0; i < class_count; i++) {
+        if (!strcmp(classes[i].name, name))
+            return &classes[i];
+    }
+    return NULL;
+}
+
+static CgClass *find_class_by_type(RedbType type)
+{
+    int i;
+
+    for (i = 0; i < class_count; i++) {
+        if (classes[i].type == type)
+            return &classes[i];
+    }
+    return NULL;
+}
+
+static int find_field_index(CgClass *ci, const char *name)
+{
+    int i;
+
+    if (!ci)
+        return -1;
+    for (i = 0; i < ci->field_count; i++) {
+        if (!strcmp(ci->fields[i]->name, name))
+            return i;
+    }
+    return -1;
+}
+
+static ASTNode *find_method_node(CgClass *ci, const char *name)
+{
+    int i;
+
+    if (!ci)
+        return NULL;
+    for (i = 0; i < ci->method_count; i++) {
+        if (!strcmp(ci->methods[i]->name, name))
+            return ci->methods[i];
+    }
+    return NULL;
+}
+
+static void method_fn_name(const char *class_name, const char *method_name,
+                           char *out, size_t out_size)
+{
+    snprintf(out, out_size, "__redb_%.120s__%.120s", class_name, method_name);
 }
 
 static LLVMValueRef gen_binary(ASTNode *node, RedbType *out_type)
@@ -524,6 +675,16 @@ static LLVMValueRef gen_expr(ASTNode *node, RedbType *out_type)
         if (!sym)
             cg_fail(node->line, "unknown identifier '%s'", node->name);
         *out_type = sym->type;
+        if (sym->is_field) {
+            CSym *self = c_lookup("self");
+            LLVMValueRef object;
+
+            if (!self)
+                cg_fail(node->line, "field '%s' used outside of a method", node->name);
+            object = LLVMBuildLoad2(builder, llvm_type(self->type), self->alloca,
+                                    "self");
+            return field_load(object, sym->field_index, sym->type);
+        }
         return LLVMBuildLoad2(builder, llvm_type(sym->type), sym->alloca, node->name);
     }
 
@@ -550,22 +711,65 @@ static LLVMValueRef gen_expr(ASTNode *node, RedbType *out_type)
 
     case AST_CALL: {
         FuncInfo *fi = find_func(node->name);
-        LLVMValueRef args[REDB_MAX_PARAMS];
+        LLVMValueRef args[REDB_MAX_PARAMS + 1];
         size_t i;
         RedbType arg_type;
 
-        if (!fi)
-            cg_fail(node->line, "unknown function '%s'", node->name);
-        if (node->child_count > REDB_MAX_PARAMS)
-            cg_fail(node->line, "too many arguments");
+        if (fi) {
+            if (node->child_count > REDB_MAX_PARAMS)
+                cg_fail(node->line, "too many arguments");
 
-        for (i = 0; i < node->child_count; i++) {
-            args[i] = gen_expr(node->children[i], &arg_type);
-            args[i] = convert(args[i], arg_type, fi->node->param_types[i]);
+            for (i = 0; i < node->child_count; i++) {
+                args[i] = gen_expr(node->children[i], &arg_type);
+                args[i] = convert(args[i], arg_type, fi->node->param_types[i]);
+            }
+
+            *out_type = fi->node->ret_type;
+            return call_fn(fi->fn, args, (unsigned)node->child_count);
         }
 
-        *out_type = fi->node->ret_type;
-        return call_fn(fi->fn, args, (unsigned)node->child_count);
+        {
+            CgClass *ci = find_class_by_name(node->name);
+            ASTNode *init;
+            LLVMValueRef object;
+            LLVMValueRef size_arg;
+
+            if (!ci)
+                cg_fail(node->line, "unknown function or class '%s'", node->name);
+            if (node->child_count > REDB_MAX_PARAMS)
+                cg_fail(node->line, "too many constructor arguments");
+
+            size_arg = LLVMConstInt(LLVMInt64TypeInContext(ctx),
+                                    (unsigned long long)(ci->field_count > 0
+                                        ? ci->field_count * 8 : 8), 0);
+            object = call_fn(rt_alloc_zero(), &size_arg, 1);
+
+            init = find_method_node(ci, "init");
+            if (init) {
+                char fname[512];
+                FuncInfo *init_fn;
+
+                method_fn_name(ci->name, "init", fname, sizeof(fname));
+                init_fn = find_func(fname);
+                if (!init_fn)
+                    cg_fail(node->line, "constructor for class '%s' was not generated",
+                            ci->name);
+
+                args[0] = object;
+                for (i = 0; i < node->child_count; i++) {
+                    args[i + 1] = gen_expr(node->children[i], &arg_type);
+                    args[i + 1] = convert(args[i + 1], arg_type,
+                                          init->param_types[i]);
+                }
+                call_fn(init_fn->fn, args, (unsigned)(node->child_count + 1));
+            } else if (node->child_count != 0) {
+                cg_fail(node->line, "class '%s' has no init() constructor",
+                        node->name);
+            }
+
+            *out_type = ci->type;
+            return object;
+        }
     }
 
     case AST_CALL_WRITE:
@@ -621,19 +825,70 @@ static LLVMValueRef gen_expr(ASTNode *node, RedbType *out_type)
     case AST_METHOD: {
         RedbType base_type, arg_type;
         LLVMValueRef base = gen_expr(node->children[0], &base_type);
-        LLVMValueRef args[2];
 
-        (void)base_type;
-        args[0] = base;
-        if (!strcmp(node->name, "size")) {
-            *out_type = TY_INT;
-            return call_fn(rt_array_size(), args, 1);
+        if (redb_is_array(base_type)) {
+            LLVMValueRef args[2];
+
+            args[0] = base;
+            if (!strcmp(node->name, "size")) {
+                *out_type = TY_INT;
+                return call_fn(rt_array_size(), args, 1);
+            }
+            args[1] = gen_expr(node->children[1], &arg_type);
+            args[1] = convert(args[1], arg_type, TY_INT);
+            call_fn(rt_array_resize(), args, 2);
+            *out_type = TY_VOID;
+            return NULL;
         }
-        args[1] = gen_expr(node->children[1], &arg_type);
-        args[1] = convert(args[1], arg_type, TY_INT);
-        call_fn(rt_array_resize(), args, 2);
-        *out_type = TY_VOID;
+
+        if (redb_is_class(base_type)) {
+            CgClass *ci = find_class_by_type(base_type);
+            ASTNode *method = find_method_node(ci, node->name);
+            LLVMValueRef args[REDB_MAX_PARAMS + 1];
+            char fname[512];
+            FuncInfo *fi;
+            size_t i;
+
+            if (!method)
+                cg_fail(node->line, "class '%s' has no method '%s'",
+                        redb_type_name(base_type), node->name);
+            method_fn_name(ci->name, node->name, fname, sizeof(fname));
+            fi = find_func(fname);
+            if (!fi)
+                cg_fail(node->line, "method '%s.%s' was not generated",
+                        ci->name, node->name);
+            if (node->child_count > REDB_MAX_PARAMS + 1)
+                cg_fail(node->line, "too many method arguments");
+
+            args[0] = base;
+            for (i = 1; i < node->child_count; i++) {
+                args[i] = gen_expr(node->children[i], &arg_type);
+                args[i] = convert(args[i], arg_type, method->param_types[i - 1]);
+            }
+            *out_type = method->ret_type;
+            return call_fn(fi->fn, args, (unsigned)node->child_count);
+        }
+
+        cg_fail(node->line, "cannot call '%s' on a value of type %s",
+                node->name, redb_type_name(base_type));
         return NULL;
+    }
+
+    case AST_FIELD: {
+        RedbType base_type;
+        LLVMValueRef base = gen_expr(node->children[0], &base_type);
+        CgClass *ci = find_class_by_type(base_type);
+        int index;
+
+        if (!ci)
+            cg_fail(node->line, "cannot access field '%s' on a value of type %s",
+                    node->name, redb_type_name(base_type));
+        index = find_field_index(ci, node->name);
+        if (index < 0)
+            cg_fail(node->line, "class '%s' has no field '%s'",
+                    redb_type_name(base_type), node->name);
+        *out_type = ci->fields[index]->ret_type;
+        return field_load(base, index, *out_type);
     }
 
     default:
@@ -674,10 +929,27 @@ static void gen_stmt(ASTNode *node)
         /* All functions are emitted before main. */
         break;
 
+    case AST_CLASS_DECL:
+    case AST_FIELD_DECL:
+        break;
+
     case AST_VAR_DECL: {
         CSym *sym = c_lookup(node->name);
         RedbType value_type;
         LLVMValueRef value = gen_expr(node->children[0], &value_type);
+
+        if (sym && sym->is_field) {
+            CSym *self = c_lookup("self");
+            LLVMValueRef object;
+
+            if (!self)
+                cg_fail(node->line, "field '%s' used outside of a method", node->name);
+            object = LLVMBuildLoad2(builder, llvm_type(self->type), self->alloca,
+                                    "self");
+            value = convert(value, value_type, sym->type);
+            field_store(object, sym->field_index, value, sym->type);
+            break;
+        }
 
         if (!sym) {
             LLVMValueRef slot = entry_alloca(llvm_type(node->inferred), node->name);
@@ -873,6 +1145,27 @@ static void gen_stmt(ASTNode *node)
         break;
     }
 
+    case AST_FIELD_ASSIGN: {
+        ASTNode *target = node->children[0];
+        RedbType base_type, value_type, field_type;
+        LLVMValueRef base = gen_expr(target->children[0], &base_type);
+        LLVMValueRef value = gen_expr(node->children[1], &value_type);
+        CgClass *ci = find_class_by_type(base_type);
+        int index;
+
+        if (!ci)
+            cg_fail(node->line, "cannot assign field '%s' on a value of type %s",
+                    target->name, redb_type_name(base_type));
+        index = find_field_index(ci, target->name);
+        if (index < 0)
+            cg_fail(node->line, "class '%s' has no field '%s'",
+                    redb_type_name(base_type), target->name);
+        field_type = ci->fields[index]->ret_type;
+        value = convert(value, value_type, field_type);
+        field_store(base, index, value, field_type);
+        break;
+    }
+
     case AST_BREAK:
         if (loop_top == 0)
             cg_fail(node->line, "'break' outside of a loop");
@@ -901,6 +1194,44 @@ static void collect_funcs(ASTNode *node)
     if (!node)
         return;
 
+    if (node->type == AST_CLASS_DECL) {
+        CgClass *ci;
+
+        if (find_class_by_name(node->name))
+            cg_fail(node->line, "class '%s' is already defined", node->name);
+        if (class_count >= MAX_CLASSES)
+            cg_fail(node->line, "too many classes");
+        ci = &classes[class_count++];
+        memset(ci, 0, sizeof(*ci));
+        snprintf(ci->name, sizeof(ci->name), "%s", node->name);
+        ci->type = redb_class_of(node->name);
+        ci->node = node;
+
+        for (i = 0; i < node->child_count; i++) {
+            ASTNode *child = node->children[i];
+
+            if (child->type == AST_FIELD_DECL) {
+                if (ci->field_count >= MAX_CLASS_FIELDS)
+                    cg_fail(child->line, "too many fields in class '%s'", ci->name);
+                ci->fields[ci->field_count++] = child;
+            } else if (child->type == AST_FUNC_DECL) {
+                char fname[512];
+
+                if (ci->method_count >= MAX_CLASS_METHODS)
+                    cg_fail(child->line, "too many methods in class '%s'", ci->name);
+                ci->methods[ci->method_count++] = child;
+                if (func_count >= MAX_FUNCS)
+                    cg_fail(child->line, "too many functions");
+                method_fn_name(ci->name, child->name, fname, sizeof(fname));
+                snprintf(funcs[func_count].name, sizeof(funcs[func_count].name),
+                         "%s", fname);
+                funcs[func_count].node = child;
+                func_count++;
+            }
+        }
+        return;
+    }
+
     if (node->type == AST_FUNC_DECL) {
         if (node->is_main) {
             if (main_node)
@@ -923,6 +1254,7 @@ static void collect_funcs(ASTNode *node)
 static void emit_function(ASTNode *node, LLVMValueRef fn)
 {
     unsigned i;
+    unsigned arg_offset = node->is_method ? 1 : 0;
 
     entry_bb = LLVMAppendBasicBlockInContext(ctx, fn, "entry");
     LLVMPositionBuilderAtEnd(builder, entry_bb);
@@ -934,13 +1266,31 @@ static void emit_function(ASTNode *node, LLVMValueRef fn)
     current_is_main = node->is_main;
     loop_top = 0;
 
+    if (node->is_method) {
+        CgClass *ci = find_class_by_name(node->class_name);
+        LLVMValueRef self_slot;
+
+        if (!ci)
+            cg_fail(node->line, "unknown class '%s'", node->class_name);
+        self_slot = entry_alloca(llvm_type(ci->type), "self");
+        LLVMBuildStore(builder, LLVMGetParam(fn, 0), self_slot);
+        c_declare("self", ci->type, self_slot, node->line);
+        for (i = 0; i < (unsigned)ci->field_count; i++) {
+            CSym *field = c_declare(ci->fields[i]->name, ci->fields[i]->ret_type,
+                                    NULL, node->line);
+
+            field->is_field = 1;
+            field->field_index = (int)i;
+        }
+    }
+
     for (i = 0; i < (unsigned)node->param_count; i++) {
         char argname[32];
         LLVMValueRef slot;
 
         snprintf(argname, sizeof(argname), "arg%d", i + 1);
         slot = entry_alloca(llvm_type(node->param_types[i]), argname);
-        LLVMBuildStore(builder, LLVMGetParam(fn, i), slot);
+        LLVMBuildStore(builder, LLVMGetParam(fn, i + arg_offset), slot);
         c_declare(argname, node->param_types[i], slot, node->line);
     }
 
@@ -976,14 +1326,17 @@ int redb_codegen(ASTNode *ast, const char *ir_path)
 
     for (i = 0; i < func_count; i++) {
         ASTNode *node = funcs[i].node;
-        LLVMTypeRef params[REDB_MAX_PARAMS];
+        LLVMTypeRef params[REDB_MAX_PARAMS + 1];
         LLVMTypeRef fn_type;
+        unsigned pcount = 0;
         int j;
 
+        if (node->is_method)
+            params[pcount++] = llvm_type(redb_class_of(node->class_name));
         for (j = 0; j < node->param_count; j++)
-            params[j] = llvm_type(node->param_types[j]);
+            params[pcount++] = llvm_type(node->param_types[j]);
         fn_type = LLVMFunctionType(llvm_type(node->ret_type), params,
-                                   (unsigned)node->param_count, 0);
+                                   pcount, 0);
         funcs[i].fn = LLVMAddFunction(mod, funcs[i].name, fn_type);
     }
 

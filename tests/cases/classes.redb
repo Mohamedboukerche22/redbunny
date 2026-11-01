@@ -1,0 +1,52 @@
+@include "std"
+@include "algorithm"
+
+class Counter {
+    int value
+
+    init = do(int -> {}) {
+        value = arg1
+    }
+
+    add = do(int -> {}) {
+        value = value + arg1
+    }
+
+    add_and_get = do(int -> int) {
+        value = value + arg1
+        return self.get()
+    }
+
+    get = do(-> int) {
+        return value
+    }
+}
+
+main() {
+    c = Counter(5)
+    writeln(c.get())
+    c.add(7)
+    writeln(c.value)
+    c.value = 20
+    writeln(c.get())
+    writeln(c.add_and_get(3))
+
+    q = Queue(3)
+    q.enqueue(1)
+    q.enqueue(2)
+    writeln(q.size())
+    writeln(q.dequeue())
+    q.enqueue(3)
+    writeln(q.front())
+    writeln(q.is_empty())
+    writeln(q.is_full())
+
+    small = Queue(2)
+    small.enqueue(1)
+    small.enqueue(2)
+    writeln(small.is_full())
+    writeln(small.dequeue())
+    writeln(small.dequeue())
+    writeln(small.dequeue())
+    writeln(small.is_empty())
+}

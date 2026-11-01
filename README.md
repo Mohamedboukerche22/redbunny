@@ -35,9 +35,12 @@ dependencies beyond LLVM and Clang.
 - **Bundled math module.** `@include "mathlib"` provides powers, roots, trig,
   exponentials, logarithms, abs/gcd/lcm, integer/double min/max and constants.
 - **Bundled algorithm module.** `@include "algorithm"` provides binary search,
-  in-place reverse and heap sort, min/max element, and 64-bit integer limits.
+  in-place reverse and heap sort, min/max element, 64-bit integer limits and a
+  class-based FIFO `Queue`.
 - **Dynamic arrays.** `array<T>` values support indexing, `size()`, `resize()`,
   literal initializers and nested arrays.
+- **Classes and methods.** Declare fields and methods with `class`, construct
+  objects with `init`, and call methods with `obj.method()`.
 - **Hackable.** Roughly 7 source files and a test suite that runs in seconds.
 
 ## Quick Start
@@ -234,6 +237,41 @@ main() {
 }
 ```
 
+### Classes
+
+```redb
+@include "std"
+
+class Counter {
+    int value
+
+    init = do(int -> {}) {
+        value = arg1
+    }
+
+    add = do(int -> {}) {
+        value = value + arg1
+    }
+
+    get = do(-> int) {
+        return value
+    }
+}
+
+main() {
+    c = Counter(5)
+    writeln(c.get())      -- 5
+    c.add(7)
+    writeln(c.value)      -- 12
+    c.value = 20
+    writeln(c.get())      -- 20
+}
+```
+
+Fields are zero-initialized, `init` is the constructor, and methods receive the
+receiver as `self`. Classes have no inheritance, access control, destructors or
+garbage collection. See the [class reference](docs/DOCUMENTATION.md#10-classes).
+
 See [`examples/`](examples/) for complete programs and
 [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md) for the full language reference.
 
@@ -296,6 +334,27 @@ main() {
 
 `MAX_INT64` and `MIN_INT64` are zero-argument constant helpers because RedBunny
 has no `const` keyword.
+
+The module also defines `Queue(capacity)`, a fixed-capacity FIFO ring buffer
+with `enqueue`, `dequeue`, `front`, `size`, `is_empty` and `is_full` methods.
+`dequeue` and `front` return `-1` when the queue is empty; `enqueue` prints
+`queue full` and drops the value when the queue is full.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    q = Queue(3)
+    q.enqueue(10)
+    q.enqueue(20)
+    writeln(q.front())      -- 10
+    writeln(q.dequeue())    -- 10
+    writeln(q.size())       -- 1
+}
+```
+
+See `examples/queue_demo.redb` for a longer example.
 
 ```redb
 @include "std"
@@ -384,7 +443,7 @@ redb main.redb -S -o main.ll
 │   └── runtime.c           native runtime linked into every program
 ├── lib/
 │   ├── mathlib.redb        standard math module
-│   └── algorithm.redb      standard array algorithms
+│   └── algorithm.redb      array algorithms and Queue
 ├── docs/
 │   └── DOCUMENTATION.md    complete language manual
 ├── editors/
@@ -398,6 +457,7 @@ redb main.redb -S -o main.ll
 │   ├── hello.redb
 │   ├── tour.redb
 │   ├── factorial.redb
+│   ├── queue_demo.redb
 │   ├── math_demo.redb
 │   └── imports/
 │       ├── app.redb
@@ -461,13 +521,15 @@ Version **0.1.0** — usable for small programs and language experiments.
 
 Current limitations:
 
-- No structs, classes or closures
-- No garbage collector; strings and arrays are heap-allocated and never freed
+- No inheritance, interfaces, access control or static class members
+- No field initializers; initialize arrays and strings in `init`
+- No closures
+- No garbage collector; strings, arrays and class objects are heap-allocated and never freed
 - No module system beyond textual `@include`
 - Windows support is provided but tested less than Linux/macOS
 
 Implemented types: `int` (64-bit), `float` (32-bit), `double` (64-bit),
-`bool`, `str`, and `array<T>`.
+`bool`, `str`, `array<T>`, and user-defined classes.
 
 ## Contributing
 

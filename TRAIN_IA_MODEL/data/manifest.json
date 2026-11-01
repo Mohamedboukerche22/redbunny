@@ -1,21 +1,22 @@
 {
   "format_version": 1,
   "generator": "TRAIN_IA_MODEL/build.py",
-  "system_prompt": "You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no structs, no maps, no generics, no closures, and no exceptions. When asked for code, return a complete compilable program whenever possible. Use `@include \"std\"` for runtime output functions, `@include \"mathlib\"` for math helpers, and `@include \"algorithm\"` for array algorithms. Never use C, Python, Rust, or JavaScript syntax.",
+  "system_prompt": "You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no maps, no generics beyond array<T>, no closures, no exceptions, and no inheritance. Classes are declared with `class Name { fieldType field; method = do(...) { ... } }`; `init` is the constructor and `self` is the receiver inside methods. When asked for code, return a complete compilable program whenever possible. Use `@include \"std\"` for runtime output functions, `@include \"mathlib\"` for math helpers, and `@include \"algorithm\"` for array algorithms and the `Queue` class. Never use C, Python, Rust, or JavaScript syntax.",
   "counts": {
-    "total": 143,
-    "train": 126,
-    "eval": 17,
+    "total": 153,
+    "train": 134,
+    "eval": 19,
     "categories": {
       "arrays": 8,
       "basics": 1,
+      "classes": 2,
       "cli": 1,
-      "code-output": 8,
-      "compile-error": 8,
+      "code-output": 9,
+      "compile-error": 11,
       "control-flow": 5,
       "core": 1,
       "errors": 8,
-      "example": 9,
+      "example": 10,
       "functions": 4,
       "includes": 3,
       "limitations": 1,
@@ -23,10 +24,10 @@
       "operators": 2,
       "output": 3,
       "programs": 14,
-      "stdlib": 33,
+      "stdlib": 35,
       "strings": 1,
       "syntax": 2,
-      "test-output": 8,
+      "test-output": 9,
       "types": 4
     }
   },
@@ -42,13 +43,13 @@
   "sources": [
     {
       "path": "README.md",
-      "bytes": 15433,
-      "sha256": "cf48be5f8163af1c2af95a453b06ecf280e8db12786e50c0c5cdd49a7421f2ee"
+      "bytes": 16983,
+      "sha256": "c15a9d2c9604b6bfce2eb5aabfee3b33c5e5d2e9a038d89c0132abe01ccaf4d5"
     },
     {
       "path": "docs/DOCUMENTATION.md",
-      "bytes": 19425,
-      "sha256": "f1a735376ad73d4152f8b56a36a1ae5064bdc01549861d81f1e0046a7ba1f505"
+      "bytes": 22524,
+      "sha256": "5d30ceb39d24e5e5938a78faba136cbbec87b6593e80545680cefa8239f50a69"
     },
     {
       "path": "examples/algorithm_demo.redb",
@@ -91,14 +92,19 @@
       "sha256": "da86915d633e55900093d09a2fd441a4c16fc8ff1b32a2b746b3cb8c9646c391"
     },
     {
+      "path": "examples/queue_demo.redb",
+      "bytes": 433,
+      "sha256": "773a5331006524d7b9848cfab85e2333ca01c5633233b122b5af4b99c058d573"
+    },
+    {
       "path": "examples/tour.redb",
       "bytes": 884,
       "sha256": "b1187f5b468497a1ec068434c6472fa3ba492087bb1f369e4f17757b6413cdbf"
     },
     {
       "path": "lib/algorithm.redb",
-      "bytes": 2579,
-      "sha256": "bc09a1bea3d45381b73162c58637e1c83a7f7d92cea9f5a1eefc919e12ca69ee"
+      "bytes": 3816,
+      "sha256": "fe3066c5f34da889c31492d796fb26d1676f3bae8a3d81aa24c0c9b611927b65"
     },
     {
       "path": "lib/mathlib.redb",
@@ -114,6 +120,11 @@
       "path": "tests/cases/arrays.redb",
       "bytes": 1549,
       "sha256": "2ebc483b850a924a76f4384ee0c6904e99f830b6b5b31bbc5ea479693c035fd8"
+    },
+    {
+      "path": "tests/cases/classes.redb",
+      "bytes": 888,
+      "sha256": "76a699f22475e27711f9fe0bf257c0661ec9a9f2f17612c1ae4feab1f7680ddf"
     },
     {
       "path": "tests/cases/control.redb",
@@ -154,6 +165,11 @@
       "path": "tests/cases/arrays.expected",
       "bytes": 72,
       "sha256": "d5c83b864858dbbd8bcfb350d930d63e88b597ecaaeef5052597b0dc378b9cbb"
+    },
+    {
+      "path": "tests/cases/classes.expected",
+      "bytes": 46,
+      "sha256": "d392716f016b0f1d3506620766d722adb30259ad6d1d2cb1b628194450529fc8"
     },
     {
       "path": "tests/cases/control.expected",
@@ -211,6 +227,21 @@
       "sha256": "d2f3b5d8cbbdd61bf6dfb829739e87012bf59317c26b30580ff1c042b4670347"
     },
     {
+      "path": "tests/errors/class_constructor_args.redb",
+      "bytes": 109,
+      "sha256": "31bab65993d1e19ac94671427a4ce86a4a4be92cc8f7e74ee484109c64048223"
+    },
+    {
+      "path": "tests/errors/class_field_type.redb",
+      "bytes": 75,
+      "sha256": "63ed625431e9d7dde0cf3b1817b7af1d678a16883d66f784fc84460058c50533"
+    },
+    {
+      "path": "tests/errors/class_unknown_field.redb",
+      "bytes": 72,
+      "sha256": "d75c1160ea874ef946dd39ca89cfa0c3fba1c2e73e8345d82c3bf2556327a7eb"
+    },
+    {
       "path": "tests/errors/type_mismatch.redb",
       "bytes": 35,
       "sha256": "e0fed9db920babd29281cddbc893e9f913af9dc4fafbe91bb7c2ab90a4fc67e7"
@@ -232,13 +263,13 @@
     },
     {
       "path": "TRAIN_IA_MODEL/seed.jsonl",
-      "bytes": 22750,
-      "sha256": "5b9d4e6c370e1e556e841d9873f3e47d67189de6e9213851ba2f41c77d41fe7c"
+      "bytes": 24642,
+      "sha256": "8836affd64c52aa6bfd1a1f262ea85f4ed1d2d2f0d657a0ddc6015c501555fc6"
     },
     {
       "path": "TRAIN_IA_MODEL/prompts/system.txt",
-      "bytes": 558,
-      "sha256": "f0cc16ac335138ce248d24a83d495d736360c348894626634898f1ebafe62d61"
+      "bytes": 755,
+      "sha256": "47180938ae53456e13ed9014a11f6c9f7ae5047c2d65be9b21c777598fe243e8"
     }
   ]
 }

@@ -41,6 +41,7 @@ typedef enum {
     TOKEN_FALSE,
     TOKEN_BREAK,
     TOKEN_CONTINUE,
+    TOKEN_CLASS,
     TOKEN_TYPE_INT,
     TOKEN_TYPE_FLOAT,
     TOKEN_TYPE_DOUBLE,
@@ -102,8 +103,9 @@ typedef enum {
     TY_AUTO      /* only valid in "array<auto>" declarations */
 } RedbType;
 
-/* Array types are interned ids >= REDB_ARRAY_BASE (see util.c). */
+/* Array and class types are interned ids (see util.c). */
 #define REDB_ARRAY_BASE 1000
+#define REDB_CLASS_BASE 2000
 
 typedef enum {
     AST_PROGRAM = 0,
@@ -133,7 +135,11 @@ typedef enum {
     AST_ARRAY_LITERAL,
     AST_INDEX,
     AST_INDEX_ASSIGN,
-    AST_METHOD
+    AST_METHOD,
+    AST_CLASS_DECL,
+    AST_FIELD_DECL,
+    AST_FIELD,
+    AST_FIELD_ASSIGN
 } ASTNodeType;
 
 typedef struct ASTNode {
@@ -152,6 +158,8 @@ typedef struct ASTNode {
     RedbType param_types[REDB_MAX_PARAMS];
 
     int is_main;
+    int is_method;
+    char class_name[128];
     int descending;
     int has_init;
     int has_size;
@@ -171,6 +179,9 @@ RedbType redb_parse_type_name(const char *name);
 RedbType redb_array_of(RedbType elem);
 int redb_is_array(RedbType type);
 RedbType redb_elem_type(RedbType type);
+RedbType redb_class_of(const char *name);
+int redb_is_class(RedbType type);
+const char *redb_class_name(RedbType type);
 char *redb_read_file(const char *path);
 int redb_write_file(const char *path, const char *data);
 

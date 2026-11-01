@@ -71,6 +71,17 @@ void *redb_alloc(size_t size)
     return p;
 }
 
+void *redb_alloc_zero(size_t size)
+{
+    void *p = calloc(1, size ? size : 1);
+
+    if (!p) {
+        fputs("redb: out of memory\n", stderr);
+        exit(1);
+    }
+    return p;
+}
+
 void redb_writeformat(const char *fmt, ...)
 {
     va_list args;

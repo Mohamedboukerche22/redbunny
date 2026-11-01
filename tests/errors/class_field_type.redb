@@ -1,0 +1,8 @@
+class Box {
+    int value
+}
+
+main() {
+    b = Box()
+    b.value = "text"
+}

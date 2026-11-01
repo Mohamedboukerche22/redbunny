@@ -64,9 +64,43 @@ RedbType redb_array_of(RedbType elem)
     return (RedbType)(REDB_ARRAY_BASE + array_count - 1);
 }
 
+#define REDB_MAX_CLASS_TYPES 128
+static char *class_names[REDB_MAX_CLASS_TYPES];
+static int class_count;
+
+/* Returns the (interned) type for a user-defined class name. */
+RedbType redb_class_of(const char *name)
+{
+    int i;
+
+    for (i = 0; i < class_count; i++) {
+        if (!strcmp(class_names[i], name))
+            return (RedbType)(REDB_CLASS_BASE + i);
+    }
+    if (class_count >= REDB_MAX_CLASS_TYPES) {
+        fprintf(stderr, "redb: error: too many distinct class types\n");
+        exit(1);
+    }
+    class_names[class_count] = redb_xstrdup(name);
+    class_count++;
+    return (RedbType)(REDB_CLASS_BASE + class_count - 1);
+}
+
 int redb_is_array(RedbType type)
 {
-    return (int)type >= REDB_ARRAY_BASE;
+    return (int)type >= REDB_ARRAY_BASE && (int)type < REDB_CLASS_BASE;
+}
+
+int redb_is_class(RedbType type)
+{
+    return (int)type >= REDB_CLASS_BASE;
+}
+
+const char *redb_class_name(RedbType type)
+{
+    if (!redb_is_class(type))
+        return "unknown";
+    return class_names[(int)type - REDB_CLASS_BASE];
 }
 
 RedbType redb_elem_type(RedbType type)
@@ -89,6 +123,8 @@ const char *redb_type_name(RedbType type)
                  redb_type_name(redb_elem_type(type)));
         return out;
     }
+    if (redb_is_class(type))
+        return redb_class_name(type);
     switch (type) {
     case TY_VOID:   return "void";
     case TY_INT:    return "int";
