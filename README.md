@@ -320,7 +320,10 @@ main() {
 ## AI Training Data
 
 `TRAIN_IA_MODEL/` converts the manual, examples, standard library and tests into
-instruction-tuning data for local models. Generate it with:
+instruction-tuning data for local models. The generated dataset is hosted on
+Hugging Face: [mohamedboukerche55/redbunny-training-data](https://huggingface.co/datasets/mohamedboukerche55/redbunny-training-data).
+
+Generate it with:
 
 ```bash
 python3 TRAIN_IA_MODEL/build.py

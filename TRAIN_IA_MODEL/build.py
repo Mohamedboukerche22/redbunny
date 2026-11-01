@@ -436,6 +436,8 @@ def make_dataset_card(records: list[dict], train: list[dict], evals: list[dict])
 
 Generated from the RedBunny repository by `TRAIN_IA_MODEL/build.py`.
 
+Hugging Face dataset: https://huggingface.co/datasets/mohamedboukerche55/redbunny-training-data
+
 ## Counts
 
 | Split | Examples |

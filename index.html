@@ -452,6 +452,7 @@ Algerian computer science student
                     <li><a href="#repo-layout" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Repository Layout</a></li>
                     <li><a href="#runtime-abi" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Runtime C ABI</a></li>
                     <li><a href="#limitations" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Current Limitations</a></li>
+                    <li><a href="#ai-training" class="sidebar-link block px-3 py-2 rounded-md hover:bg-dark-card text-gray-400 hover:text-gray-200 transition-colors">Train Your AI Model</a></li>
                 </ul>
             </div>
 
@@ -1178,6 +1179,41 @@ main() {
                 </div>
             </section>
 
+            <!-- SECTION 17: AI TRAINING -->
+            <section id="ai-training" class="mb-20">
+                <h2>16. Train Your AI Model on RedBunny</h2>
+                <p>
+                    The repository ships a generated instruction-tuning dataset so a local model can learn RedBunny syntax,
+                    the standard library, compiler errors and expected program output. The concise set has
+                    <strong class="text-white">143 examples</strong> focused on short syntax answers, not long prose.
+                </p>
+
+                <div class="p-4 rounded-xl bg-dark-card border border-dark-border my-4">
+                    <p class="text-white font-bold mb-2">Dataset and source</p>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <a href="https://huggingface.co/datasets/mohamedboukerche55/redbunny-training-data" target="_blank" rel="noopener" class="inline-flex items-center justify-center space-x-2 bg-bunny-500 hover:bg-bunny-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors">
+                            <i class="fa-solid fa-database"></i>
+                            <span>Hugging Face Dataset</span>
+                        </a>
+                        <a href="https://github.com/Mohamedboukerche22/redbunny/tree/main/TRAIN_IA_MODEL" target="_blank" rel="noopener" class="inline-flex items-center justify-center space-x-2 bg-dark-bg hover:bg-dark-border text-gray-200 font-semibold px-4 py-2 rounded-lg border border-dark-border transition-colors">
+                            <i class="fa-brands fa-github"></i>
+                            <span>GitHub Training Folder</span>
+                        </a>
+                    </div>
+                </div>
+
+                <p>Regenerate the dataset from the current manual, examples, library and tests:</p>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <pre class="p-4 text-gray-200"><code>python3 TRAIN_IA_MODEL/build.py
+python3 TRAIN_IA_MODEL/watch.py   <span class="text-gray-500"># rebuild on source changes</span></code></pre>
+                </div>
+
+                <p>
+                    Use <code>TRAIN_IA_MODEL/data/moh_gpt.jsonl</code> with the local <code>moh-gpt</code> trainer,
+                    or load the <code>concise</code> / <code>full</code> configs directly from Hugging Face.
+                </p>
+            </section>
+
         </main>
 
         <!-- RIGHT SIDEBAR: ON THIS PAGE -->
@@ -1196,6 +1232,7 @@ main() {
                 <li><a href="#functions" class="hover:text-bunny-accent block transition-colors">9. Functions</a></li>
                 <li><a href="#playground" class="hover:text-bunny-accent block transition-colors">11. Interactive Sandbox</a></li>
                 <li><a href="#repo-layout" class="hover:text-bunny-accent block transition-colors">13. Repo Layout</a></li>
+                <li><a href="#ai-training" class="hover:text-bunny-accent block transition-colors">16. Train Your AI Model</a></li>
             </ul>
         </aside>
 

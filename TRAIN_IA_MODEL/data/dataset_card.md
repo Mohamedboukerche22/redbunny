@@ -2,6 +2,8 @@
 
 Generated from the RedBunny repository by `TRAIN_IA_MODEL/build.py`.
 
+Hugging Face dataset: https://huggingface.co/datasets/mohamedboukerche55/redbunny-training-data
+
 ## Counts
 
 | Split | Examples |

@@ -4,6 +4,8 @@ This directory turns the RedBunny repository into an instruction-tuning dataset
 that a local model can learn from. It is dependency-free to generate and ships
 with several common training formats.
 
+**Hugging Face dataset:** https://huggingface.co/datasets/mohamedboukerche55/redbunny-training-data
+
 ## Quick start
 
 From the repository root:
