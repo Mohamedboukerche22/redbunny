@@ -49,6 +49,10 @@ main() {
     writeln(double_lit[0] + double_lit[1])
     array<str> str_lit = {"a", "b"}
     writeln(str_lit[0] + str_lit[1])
+    array<bool> flags = {true, false, true}
+    writeln(flags[0])
+    writeln(flags[1])
+    writeln(flags.size())
     array<int> empty_lit = {}
     writeln(empty_lit.size())
     writeln({10, 20}[1])

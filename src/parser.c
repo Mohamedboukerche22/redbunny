@@ -114,7 +114,7 @@ static Token *expect(TokenType type, const char *what)
     return advance();
 }
 
-/* array<T>: T is int, float, double, str, auto (declarations only) or another array. */
+/* array<T>: T is int, float, double, bool, str, auto (declarations only) or another array. */
 static RedbType parse_array_type(int allow_auto)
 {
     RedbType elem;
@@ -134,11 +134,13 @@ static RedbType parse_array_type(int allow_auto)
         elem = TY_FLOAT;
     } else if (match(TOKEN_TYPE_DOUBLE)) {
         elem = TY_DOUBLE;
+    } else if (match(TOKEN_TYPE_BOOL)) {
+        elem = TY_BOOL;
     } else if (match(TOKEN_TYPE_STR)) {
         elem = TY_STR;
     } else {
         parse_fail(current()->line,
-                   "expected an element type (int, float, double, str, auto or array<...>)");
+                   "expected an element type (int, float, double, bool, str, auto or array<...>)");
         elem = TY_UNKNOWN;
     }
     expect(TOKEN_GT, "'>' to close the array type");
@@ -155,6 +157,8 @@ static RedbType parse_type(void)
         return TY_FLOAT;
     if (match(TOKEN_TYPE_DOUBLE))
         return TY_DOUBLE;
+    if (match(TOKEN_TYPE_BOOL))
+        return TY_BOOL;
     if (match(TOKEN_TYPE_STR))
         return TY_STR;
     if (match(TOKEN_TYPE_VOID))
@@ -164,7 +168,8 @@ static RedbType parse_type(void)
         advance();
         return TY_VOID;
     }
-    parse_fail(current()->line, "expected a type (int, float, double, str, void or {})");
+    parse_fail(current()->line,
+               "expected a type (int, float, double, bool, str, void or {})");
     return TY_UNKNOWN;
 }
 

@@ -107,6 +107,7 @@ RedbType redb_parse_type_name(const char *name)
     if (!strcmp(name, "int"))    return TY_INT;
     if (!strcmp(name, "float"))  return TY_FLOAT;
     if (!strcmp(name, "double")) return TY_DOUBLE;
+    if (!strcmp(name, "bool"))   return TY_BOOL;
     if (!strcmp(name, "str"))    return TY_STR;
     if (!strcmp(name, "void"))   return TY_VOID;
     return TY_UNKNOWN;

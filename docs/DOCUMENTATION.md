@@ -191,7 +191,8 @@ main() {
 ### Arrays
 
 An array holds many values of one element type. Declare one with `array<T>`,
-where `T` is `int`, `float`, `double`, `str`, `auto`, or another array type.
+where `T` is `int`, `float`, `double`, `bool`, `str`, `auto`, or another array
+type.
 
 ```redb
 main() {

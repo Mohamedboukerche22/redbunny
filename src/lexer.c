@@ -36,6 +36,7 @@ static const Keyword keywords[] = {
     { "int",         TOKEN_TYPE_INT },
     { "float",       TOKEN_TYPE_FLOAT },
     { "double",      TOKEN_TYPE_DOUBLE },
+    { "bool",        TOKEN_TYPE_BOOL },
     { "str",         TOKEN_TYPE_STR },
     { "void",        TOKEN_TYPE_VOID },
     { "array",       TOKEN_ARRAY },

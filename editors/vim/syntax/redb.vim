@@ -8,7 +8,7 @@ endif
 
 " Language keywords and declarations.
 syn keyword redbKeyword main for in to downTo do doto return if else while break continue include
-syn keyword redbType int float double str void array auto
+syn keyword redbType int float double bool str void array auto
 syn keyword redbBoolean true false
 syn keyword redbFunction write writeln writeformat size resize
 syn match redbInclude "@include\>"

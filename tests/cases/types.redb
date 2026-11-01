@@ -1,3 +1,7 @@
+flip = do(bool -> bool) {
+    return !arg1
+}
+
 main() {
     i = 7
     f = 2.5
@@ -7,6 +11,7 @@ main() {
     writeln(i + f)
     writeln(b)
     writeln(i > 3 && b)
+    writeln(flip(false))
     i = 9
     writeln(i)
 }
