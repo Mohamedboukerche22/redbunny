@@ -213,6 +213,19 @@ main() {
     row[2] = 9
     matrix[1] = row
     writeln(matrix[1][2])       -- 9
+
+    array<int> literal = {2, 4, 6}
+    writeln(literal[0] + literal[2]) -- 8
+    writeln(literal.size())          -- 3
+
+    array<auto> inferred = {1, 2, 3}
+    writeln(inferred.size())         -- 3
+
+    array<auto> sized(2) = {2, 5}
+    writeln(sized[0] + sized[1])     -- 7
+
+    array<array<int>> grid = {{1, 2}, {3, 4}}
+    writeln(grid[0][1] + grid[1][0]) -- 5
 }
 ```
 
@@ -223,6 +236,9 @@ main() {
 | `array<int> a = b`          | `a` refers to the same array as `b`                        |
 | `array<auto> a = b`         | `a` takes the element type of `b`                          |
 | `array<auto> a(5)`          | no initializer, so the element type defaults to `int`      |
+| `array<int> a = {1, 2, 3}`  | literal initializer; length is inferred                    |
+| `array<auto> a = {1, 2}`    | element type inferred from the literal                     |
+| `array<auto> a(2) = {1, 2}` | explicit size must match the literal length                |
 | `a[i]`, `a[i] = x`          | read or write element `i` (indexes start at 0)             |
 | `a.size()`                  | number of elements                                         |
 | `a.resize(n)`               | change the size; new elements are zero or empty            |
@@ -238,6 +254,8 @@ total = do(array<int> -> int) {
 
 Notes:
 
+- Array literals use braces: `{1, 2, 3}`. Elements must share one type; numeric
+  literals are promoted (`{1, 2.5}` becomes `array<double>`).
 - An index outside `0` to `size() - 1` stops the program with a runtime error.
 - Assigning one array to another does not copy it; both names share the elements.
 - Inner arrays created by `array<array<T>> m(n)` start empty. Call `resize()` on
@@ -538,6 +556,9 @@ main() {
 | `min(a, b)`         | `int, int -> int`      | Smaller of two integers                    |
 | `maxf(a, b)`        | `double, double -> double` | Larger of two doubles                  |
 | `minf(a, b)`        | `double, double -> double` | Smaller of two doubles                 |
+| `abs(x)`            | `int -> int`           | Absolute value                             |
+| `gcd(a, b)`         | `int, int -> int`      | Greatest common divisor                    |
+| `lcm(a, b)`         | `int, int -> int`      | Least common multiple                      |
 | `PI()`              | `{} -> double`         | 3.141592653589793                          |
 | `euler()`           | `{} -> double`         | 2.718281828459045                          |
 | `tau()`             | `{} -> double`         | 6.283185307179586                          |
@@ -608,6 +629,11 @@ char *redb_str_concat(const char *left, const char *right);
 int   redb_str_eq(const char *left, const char *right);
 void *redb_alloc(size_t size);
 void  redb_writeformat(const char *fmt, ...);
+
+void *redb_array_new(long long len, long long nest, long long leaf_size);
+void *redb_array_at(void *array, long long index);
+long long redb_array_size(void *array);
+void  redb_array_resize(void *array, long long size);
 ```
 
 String concatenation allocates a new buffer with `malloc`. RedBunny currently
@@ -637,6 +663,7 @@ The `examples/` directory contains:
 - `hello.redb` — minimal program
 - `tour.redb` — variables, formatting, loops, conditionals, functions
 - `factorial.redb` — recursion
+- `arrays.redb` — arrays, literals, resizing and nested arrays
 - `math_demo.redb` — standard math library
 - `imports/app.redb` — local and standard library includes
 - `imports/greeting.redb` — local module used by `app.redb`
@@ -647,6 +674,7 @@ Build them all:
 redb examples/hello.redb -o /tmp/hello && /tmp/hello
 redb examples/tour.redb -o /tmp/tour && /tmp/tour
 redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
+redb examples/arrays.redb -o /tmp/arrays && /tmp/arrays
 redb examples/math_demo.redb -o /tmp/math_demo && /tmp/math_demo
 redb examples/imports/app.redb -o /tmp/app && /tmp/app
 ```

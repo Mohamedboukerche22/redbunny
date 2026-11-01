@@ -259,6 +259,21 @@ static ASTNode *parse_primary(void)
         return node;
     }
 
+    if (match(TOKEN_LBRACE)) {
+        ASTNode *node = create_node(AST_ARRAY_LITERAL, tok->line);
+
+        if (!check(TOKEN_RBRACE)) {
+            add_child(node, parse_expression());
+            while (match(TOKEN_COMMA)) {
+                if (check(TOKEN_RBRACE))
+                    break;
+                add_child(node, parse_expression());
+            }
+        }
+        expect(TOKEN_RBRACE, "'}' after array literal");
+        return node;
+    }
+
     parse_fail(tok->line, "expected an expression, got '%s'",
                tok->lexeme[0] ? tok->lexeme : "end of file");
     return NULL;
@@ -441,6 +456,8 @@ static ASTNode *parse_if_statement(void)
 /*
  * array<T> name(size)        -- size elements, all default values
  * array<T> name              -- empty array
+ * array<T> name = {a, b}     -- literal initializer; length is inferred
+ * array<T> name(n) = {a, b}  -- literal initializer; n must match the length
  * array<T> name = expr       -- initialized (shares the array of expr)
  */
 static ASTNode *parse_array_decl(void)
@@ -454,10 +471,9 @@ static ASTNode *parse_array_decl(void)
     set_name(node, name->lexeme);
 
     if (match(TOKEN_LPAREN)) {
+        node->has_size = 1;
         add_child(node, parse_expression());
         expect(TOKEN_RPAREN, "')' after array size");
-        if (check(TOKEN_ASSIGN))
-            parse_fail(current()->line, "use either an array size or an initializer, not both");
     } else {
         add_child(node, create_node(AST_INT_LIT, tok->line)); /* size 0 */
     }

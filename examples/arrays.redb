@@ -1,0 +1,23 @@
+@include "std"
+
+main() {
+    array<int> nums(4)
+    nums[0] = 10
+    nums[3] = 40
+    writeln(nums[0] + nums[3])
+    writeln(nums.size())
+
+    nums.resize(6)
+    writeln(nums.size())
+    writeln(nums[5])
+
+    array<int> literal = {2, 4, 6}
+    writeln(literal[1])
+
+    array<auto> inferred = {1, 2, 3}
+    array<auto> sized(2) = {2, 5}
+    writeln(inferred.size() + sized.size())
+
+    array<array<int>> grid = {{1, 2}, {3, 4}}
+    writeln(grid[0][1] + grid[1][0])
+}

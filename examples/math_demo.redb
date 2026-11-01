@@ -14,4 +14,7 @@ main() {
     writeln(min(3, 7))
     writeln(maxf(3.5, 7.25))
     writeln(minf(3.5, 7.25))
+    writeln(abs(-42))
+    writeln(gcd(48, 18))
+    writeln(lcm(4, 6))
 }

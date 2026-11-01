@@ -2,6 +2,10 @@ total = do(array<int> -> int) {
     return arg1[0] + arg1[1]
 }
 
+pair = do(-> array<int>) {
+    return {7, 8}
+}
+
 main() {
     array<int> nums(5)
     nums[0] = 10
@@ -28,4 +32,27 @@ main() {
     ds[0] = 1.5
     writeln(ds[0])
     writeln(total(nums))
+
+    array<int> lit = {2, 4, 6}
+    writeln(lit[0] + lit[2])
+    writeln(lit.size())
+    array<auto> auto_lit = {1, 2, 3}
+    writeln(auto_lit.size())
+    array<auto> sized_lit(2) = {2, 5}
+    writeln(sized_lit[0] + sized_lit[1])
+    array<array<int>> nested_lit = {{1, 2}, {3, 4}}
+    writeln(nested_lit[0][1] + nested_lit[1][0])
+    writeln(nested_lit.size())
+    nested_lit[0] = {5, 6}
+    writeln(nested_lit[0][0] + nested_lit[0][1])
+    array<double> double_lit = {1, 2.5}
+    writeln(double_lit[0] + double_lit[1])
+    array<str> str_lit = {"a", "b"}
+    writeln(str_lit[0] + str_lit[1])
+    array<int> empty_lit = {}
+    writeln(empty_lit.size())
+    writeln({10, 20}[1])
+    writeln(total({5, 6}))
+    p = pair()
+    writeln(p[0] + p[1])
 }

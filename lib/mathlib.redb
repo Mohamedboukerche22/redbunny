@@ -162,3 +162,30 @@ minf = do(double, double -> double) {
     }
     return arg2
 }
+-- Absolute value.
+abs = do(int -> int) {
+    if (arg1 >= 0) {
+        return arg1
+    }
+    return -arg1
+}
+
+-- Greatest common divisor (always non-negative).
+gcd = do(int, int -> int) {
+    a = abs(arg1)
+    b = abs(arg2)
+    while (b != 0) {
+        tmp = b
+        b = a % b
+        a = tmp
+    }
+    return a
+}
+
+-- Least common multiple (always non-negative).
+lcm = do(int, int -> int) {
+    if (arg1 == 0 || arg2 == 0) {
+        return 0
+    }
+    return abs(arg1 / gcd(arg1, arg2) * arg2)
+}

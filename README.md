@@ -33,7 +33,9 @@ dependencies beyond LLVM and Clang.
   semicolons, and string templates built into the language.
 - **Easy to embed.** The runtime is a single static archive, `libredb_runtime.a`.
 - **Bundled math module.** `@include "mathlib"` provides powers, roots, trig,
-  exponentials, logarithms, integer/double min/max and constants.
+  exponentials, logarithms, abs/gcd/lcm, integer/double min/max and constants.
+- **Dynamic arrays.** `array<T>` values support indexing, `size()`, `resize()`,
+  literal initializers and nested arrays.
 - **Hackable.** Roughly 7 source files and a test suite that runs in seconds.
 
 ## Quick Start
@@ -186,6 +188,33 @@ main() {
 }
 ```
 
+### Arrays
+
+```redb
+@include "std"
+
+main() {
+    array<int> nums(3)
+    nums[0] = 10
+    nums[2] = 30
+    writeln(nums[0] + nums[2])   -- 40
+    writeln(nums.size())         -- 3
+
+    nums.resize(5)
+    writeln(nums.size())         -- 5
+
+    array<int> literal = {2, 4, 6}
+    writeln(literal[1])          -- 4
+
+    array<auto> inferred = {1, 2, 3}
+    array<auto> sized(2) = {2, 5}
+    writeln(inferred.size() + sized.size()) -- 5
+
+    array<array<int>> grid = {{1, 2}, {3, 4}}
+    writeln(grid[0][1] + grid[1][0]) -- 5
+}
+```
+
 ### Functions
 
 ```redb
@@ -226,6 +255,9 @@ source file first, then the standard library directory (`lib/` in a checkout or
 | `min(a, b)`   | `int, int -> int` | Smaller of two integers                    |
 | `maxf(a, b)`  | `double, double -> double` | Larger of two doubles              |
 | `minf(a, b)`  | `double, double -> double` | Smaller of two doubles             |
+| `abs(x)`      | `int -> int`      | Absolute value                             |
+| `gcd(a, b)`   | `int, int -> int` | Greatest common divisor                    |
+| `lcm(a, b)`   | `int, int -> int` | Least common multiple                      |
 | `PI()`        | `{} -> double`    | 3.141592653589793                          |
 | `euler()`     | `{} -> double`    | 2.718281828459045                          |
 | `tau()`       | `{} -> double`    | 6.283185307179586                          |
@@ -363,13 +395,13 @@ Version **0.1.0** — usable for small programs and language experiments.
 
 Current limitations:
 
-- No arrays, structs, classes or closures
-- No garbage collector; strings are heap-allocated and never freed
+- No structs, classes or closures
+- No garbage collector; strings and arrays are heap-allocated and never freed
 - No module system beyond textual `@include`
 - Windows support is provided but tested less than Linux/macOS
 
 Implemented types: `int` (64-bit), `float` (32-bit), `double` (64-bit),
-`bool`, and `str`.
+`bool`, `str`, and `array<T>`.
 
 ## Contributing
 

@@ -448,6 +448,52 @@ static LLVMValueRef gen_binary(ASTNode *node, RedbType *out_type)
     return NULL;
 }
 
+static LLVMValueRef gen_array_new(RedbType arr_type, LLVMValueRef size)
+{
+    RedbType leaf;
+    int depth = array_depth(arr_type, &leaf);
+    LLVMValueRef args[3];
+
+    args[0] = size;
+    args[1] = LLVMConstInt(LLVMInt64TypeInContext(ctx),
+                           (unsigned long long)depth, 0);
+    args[2] = LLVMConstInt(LLVMInt64TypeInContext(ctx),
+                           (unsigned long long)leaf_bytes(leaf), 0);
+    return call_fn(rt_array_new(), args, 3);
+}
+
+static void gen_array_fill(LLVMValueRef arr, ASTNode *literal, RedbType arr_type)
+{
+    RedbType elem = redb_elem_type(arr_type);
+    size_t i;
+
+    for (i = 0; i < literal->child_count; i++) {
+        RedbType value_type;
+        LLVMValueRef value = gen_expr(literal->children[i], &value_type);
+        LLVMValueRef args[2];
+        LLVMValueRef slot;
+
+        value = convert(value, value_type, elem);
+        args[0] = arr;
+        args[1] = LLVMConstInt(LLVMInt64TypeInContext(ctx),
+                               (unsigned long long)i, 0);
+        slot = call_fn(rt_array_at(), args, 2);
+        LLVMBuildStore(builder, value, slot);
+    }
+}
+
+static LLVMValueRef gen_array_literal(ASTNode *node, RedbType *out_type)
+{
+    RedbType arr_type = node->inferred;
+    LLVMValueRef size = LLVMConstInt(LLVMInt64TypeInContext(ctx),
+                                     (unsigned long long)node->child_count, 0);
+    LLVMValueRef arr = gen_array_new(arr_type, size);
+
+    gen_array_fill(arr, node, arr_type);
+    *out_type = arr_type;
+    return arr;
+}
+
 static LLVMValueRef gen_expr(ASTNode *node, RedbType *out_type)
 {
     if (!node) {
@@ -553,6 +599,9 @@ static LLVMValueRef gen_expr(ASTNode *node, RedbType *out_type)
         *out_type = TY_VOID;
         return NULL;
     }
+
+    case AST_ARRAY_LITERAL:
+        return gen_array_literal(node, out_type);
 
     case AST_INDEX: {
         RedbType base_type, index_type;
@@ -773,21 +822,32 @@ static void gen_stmt(ASTNode *node)
         LLVMValueRef slot;
 
         if (node->has_init) {
-            RedbType init_type;
+            ASTNode *init_node = node->children[1];
 
-            arr = gen_expr(node->children[1], &init_type);
+            if (init_node->type == AST_ARRAY_LITERAL) {
+                LLVMValueRef size;
+
+                if (node->has_size) {
+                    RedbType size_type;
+                    LLVMValueRef raw = gen_expr(node->children[0], &size_type);
+
+                    size = convert(raw, size_type, TY_INT);
+                } else {
+                    size = LLVMConstInt(LLVMInt64TypeInContext(ctx),
+                                        (unsigned long long)init_node->child_count, 0);
+                }
+                arr = gen_array_new(arr_type, size);
+                gen_array_fill(arr, init_node, arr_type);
+            } else {
+                RedbType init_type;
+
+                arr = gen_expr(init_node, &init_type);
+            }
         } else {
-            LLVMValueRef args[3];
-            RedbType size_type, leaf;
-            int depth;
+            RedbType size_type;
             LLVMValueRef size = gen_expr(node->children[0], &size_type);
 
-            depth = array_depth(arr_type, &leaf);
-            args[0] = convert(size, size_type, TY_INT);
-            args[1] = LLVMConstInt(LLVMInt64TypeInContext(ctx), (unsigned long long)depth, 0);
-            args[2] = LLVMConstInt(LLVMInt64TypeInContext(ctx),
-                                   (unsigned long long)leaf_bytes(leaf), 0);
-            arr = call_fn(rt_array_new(), args, 3);
+            arr = gen_array_new(arr_type, convert(size, size_type, TY_INT));
         }
         slot = entry_alloca(llvm_type(arr_type), node->name);
         c_declare(node->name, arr_type, slot, node->line);

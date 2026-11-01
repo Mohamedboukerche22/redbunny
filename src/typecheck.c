@@ -27,6 +27,7 @@ static int loop_depth;
 
 static void typecheck_stmt(ASTNode *node);
 static RedbType infer_expr(ASTNode *node);
+static RedbType infer_expr_expected(ASTNode *node, RedbType expected);
 
 static void tc_fail(int line, const char *fmt, ...)
 {
@@ -210,6 +211,66 @@ static void expand_format(ASTNode *node)
     node->inferred = TY_VOID;
 }
 
+/*
+ * Type an array literal. When an expected array type is available (from a
+ * declaration, argument, return or element assignment), its element type is
+ * pushed down so empty and nested literals get a concrete type.
+ */
+static RedbType infer_array_literal(ASTNode *node, RedbType expected)
+{
+    RedbType expected_elem = TY_UNKNOWN;
+    RedbType elem = TY_UNKNOWN;
+    size_t i;
+
+    if (redb_is_array(expected)) {
+        expected_elem = redb_elem_type(expected);
+        if (expected_elem == TY_AUTO)
+            expected_elem = TY_UNKNOWN;
+    }
+
+    for (i = 0; i < node->child_count; i++) {
+        RedbType child = infer_expr_expected(node->children[i], expected_elem);
+
+        if (child == TY_VOID)
+            tc_fail(node->line, "array literal element cannot be void");
+        if (expected_elem != TY_UNKNOWN) {
+            if (!assignable(child, expected_elem))
+                tc_fail(node->line, "array literal element %zu expects %s, got %s",
+                        i + 1, redb_type_name(expected_elem), redb_type_name(child));
+            continue;
+        }
+        if (i == 0) {
+            elem = child;
+        } else if (elem == child) {
+            /* same type */
+        } else if (is_numeric(elem) && is_numeric(child)) {
+            elem = promote(elem, child);
+        } else {
+            tc_fail(node->line,
+                    "array literal elements must have one type, got %s and %s",
+                    redb_type_name(elem), redb_type_name(child));
+        }
+    }
+
+    if (expected_elem != TY_UNKNOWN) {
+        node->inferred = expected;
+        return expected;
+    }
+
+    if (node->child_count == 0)
+        elem = TY_INT;
+
+    node->inferred = redb_array_of(elem);
+    return node->inferred;
+}
+
+static RedbType infer_expr_expected(ASTNode *node, RedbType expected)
+{
+    if (node && node->type == AST_ARRAY_LITERAL)
+        return infer_array_literal(node, expected);
+    return infer_expr(node);
+}
+
 static RedbType infer_expr(ASTNode *node)
 {
     RedbType type = TY_UNKNOWN;
@@ -312,7 +373,7 @@ static RedbType infer_expr(ASTNode *node)
                     node->name, sym->param_count, node->child_count);
 
         for (i = 0; i < node->child_count; i++) {
-            RedbType arg = infer_expr(node->children[i]);
+            RedbType arg = infer_expr_expected(node->children[i], sym->params[i]);
 
             if (!assignable(arg, sym->params[i]))
                 tc_fail(node->line, "argument %zu of '%s' expects %s, got %s",
@@ -334,6 +395,10 @@ static RedbType infer_expr(ASTNode *node)
         type = TY_VOID;
         break;
     }
+
+    case AST_ARRAY_LITERAL:
+        type = infer_array_literal(node, TY_UNKNOWN);
+        break;
 
     case AST_INDEX: {
         RedbType base = infer_expr(node->children[0]);
@@ -434,8 +499,10 @@ static void typecheck_stmt(ASTNode *node)
         break;
 
     case AST_VAR_DECL: {
-        RedbType value = infer_expr(node->children[0]);
         TSym *sym = lookup(node->name);
+        RedbType value = sym
+            ? infer_expr_expected(node->children[0], sym->type)
+            : infer_expr(node->children[0]);
 
         if (value == TY_VOID)
             tc_fail(node->line, "cannot assign a void value to '%s'", node->name);
@@ -503,7 +570,7 @@ static void typecheck_stmt(ASTNode *node)
 
     case AST_RETURN:
         if (node->child_count > 0) {
-            RedbType value = infer_expr(node->children[0]);
+            RedbType value = infer_expr_expected(node->children[0], current_ret);
 
             if (current_ret == TY_VOID)
                 tc_fail(node->line, "cannot return a value from a void function");
@@ -532,16 +599,32 @@ static void typecheck_stmt(ASTNode *node)
         if (size != TY_INT)
             tc_fail(node->line, "array size must be int, got %s", redb_type_name(size));
         if (node->has_init) {
-            RedbType init = infer_expr(node->children[1]);
+            ASTNode *init_node = node->children[1];
+            RedbType init = infer_expr_expected(init_node, declared);
+
+            if (node->has_size && init_node->type != AST_ARRAY_LITERAL)
+                tc_fail(node->line,
+                        "array size cannot be combined with a non-literal initializer");
 
             if (redb_elem_type(declared) == TY_AUTO) {
                 if (!redb_is_array(init))
                     tc_fail(node->line, "array<auto> '%s' must be initialized with an array",
                             node->name);
                 declared = init;          /* element type comes from the initializer */
-            } else if (init != declared) {
+            } else if (!assignable(init, declared)) {
                 tc_fail(node->line, "cannot initialize '%s' of type %s with %s",
                         node->name, redb_type_name(declared), redb_type_name(init));
+            }
+
+            if (node->has_size && init_node->type == AST_ARRAY_LITERAL &&
+                init_node->child_count > 0 && node->children[0]->type == AST_INT_LIT) {
+                long long want = (long long)node->children[0]->int_val;
+                long long got = (long long)init_node->child_count;
+
+                if (want != got)
+                    tc_fail(node->line,
+                            "array size %lld does not match initializer length %lld",
+                            want, got);
             }
         } else if (redb_elem_type(declared) == TY_AUTO) {
             declared = redb_array_of(TY_INT);  /* no initializer: default to int */
@@ -553,7 +636,7 @@ static void typecheck_stmt(ASTNode *node)
 
     case AST_INDEX_ASSIGN: {
         RedbType target = infer_expr(node->children[0]);
-        RedbType value = infer_expr(node->children[1]);
+        RedbType value = infer_expr_expected(node->children[1], target);
 
         if (value == TY_VOID)
             tc_fail(node->line, "cannot assign a void value to an array element");

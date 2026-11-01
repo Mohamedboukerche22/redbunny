@@ -129,6 +129,7 @@ typedef enum {
     AST_BOOL_LIT,
     AST_IDENT,
     AST_ARRAY_DECL,
+    AST_ARRAY_LITERAL,
     AST_INDEX,
     AST_INDEX_ASSIGN,
     AST_METHOD
@@ -152,6 +153,7 @@ typedef struct ASTNode {
     int is_main;
     int descending;
     int has_init;
+    int has_size;
 
     struct ASTNode **children;
     size_t child_count;

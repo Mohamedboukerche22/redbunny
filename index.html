@@ -727,6 +727,19 @@ sudo cmake --install build</code></pre>
     row[2] = 9
     matrix[1] = row
     writeln(matrix[1][2])       <span class="cmt">-- 9</span>
+
+    array&lt;int&gt; literal = {2, 4, 6}
+    writeln(literal[0] + literal[2]) <span class="cmt">-- 8</span>
+    writeln(literal.size())          <span class="cmt">-- 3</span>
+
+    array&lt;auto&gt; inferred = {1, 2, 3}
+    writeln(inferred.size())         <span class="cmt">-- 3</span>
+
+    array&lt;auto&gt; sized(2) = {2, 5}
+    writeln(sized[0] + sized[1])     <span class="cmt">-- 7</span>
+
+    array&lt;array&lt;int&gt;&gt; grid = {{1, 2}, {3, 4}}
+    writeln(grid[0][1] + grid[1][0]) <span class="cmt">-- 5</span>
 }</code></pre>
                 </div>
 
@@ -745,6 +758,9 @@ sudo cmake --install build</code></pre>
 <tr><td class="p-3"><code>array&lt;int&gt; a = b</code></td><td class="p-3"><code>a</code> refers to the same array as <code>b</code></td></tr>
 <tr><td class="p-3"><code>array&lt;auto&gt; a = b</code></td><td class="p-3"><code>a</code> takes the element type of <code>b</code></td></tr>
 <tr><td class="p-3"><code>array&lt;auto&gt; a(5)</code></td><td class="p-3">No initializer, so the element type defaults to <code>int</code></td></tr>
+<tr><td class="p-3"><code>array&lt;int&gt; a = {1, 2, 3}</code></td><td class="p-3">Literal initializer; length is inferred</td></tr>
+<tr><td class="p-3"><code>array&lt;auto&gt; a = {1, 2}</code></td><td class="p-3">Element type inferred from the literal</td></tr>
+<tr><td class="p-3"><code>array&lt;auto&gt; a(2) = {1, 2}</code></td><td class="p-3">Explicit size must match the literal length</td></tr>
 <tr><td class="p-3"><code>a[i]</code>, <code>a[i] = x</code></td><td class="p-3">Read or write element <code>i</code> (indexes start at 0)</td></tr>
 <tr><td class="p-3"><code>a.size()</code></td><td class="p-3">Number of elements</td></tr>
 <tr><td class="p-3"><code>a.resize(n)</code></td><td class="p-3">Change the size; new elements are zero or empty</td></tr>
@@ -761,6 +777,7 @@ sudo cmake --install build</code></pre>
                 </div>
 
                 <ul class="list-disc pl-6 space-y-1 text-gray-400 text-xs">
+                    <li>Array literals use braces: <code>{1, 2, 3}</code>. Elements must share one type; numeric literals are promoted (<code>{1, 2.5}</code> becomes <code>array&lt;double&gt;</code>).</li>
                     <li>An index outside <code>0</code> to <code>size() - 1</code> stops the program with a runtime error.</li>
                     <li>Assigning one array to another does not copy it; both names share the elements.</li>
                     <li>Inner arrays created by <code>array&lt;array&lt;T&gt;&gt; m(n)</code> start empty. Call <code>resize()</code> on them before indexing.</li>

@@ -36,4 +36,13 @@ main() {
     writeln(minf(9.5, 2.0))
     writeln(minf(-1.5, -5.5))
     writeln(minf(4.0, 4.0))
+    writeln(abs(-5))
+    writeln(abs(7))
+    writeln(abs(0))
+    writeln(gcd(48, 18))
+    writeln(gcd(17, 5))
+    writeln(gcd(-8, 12))
+    writeln(lcm(4, 6))
+    writeln(lcm(0, 5))
+    writeln(lcm(-4, 6))
 }
