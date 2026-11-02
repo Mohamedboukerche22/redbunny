@@ -129,7 +129,7 @@ Point its trainer at the file directly:
 
 ```bash
 cd /path/to/moh-gpt
-./train.sh --data /path/to/redbunny/TRAIN_IA_MODEL/data/moh_gpt.jsonl --max 153
+./train.sh --data /path/to/redbunny/TRAIN_IA_MODEL/data/moh_gpt.jsonl --max 160
 ```
 
 For the LoRA path, use the same file:

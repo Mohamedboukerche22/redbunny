@@ -1,20 +1,20 @@
 {
   "format_version": 1,
   "generator": "TRAIN_IA_MODEL/build.py",
-  "system_prompt": "You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no maps, no generics beyond array<T>, no closures, no exceptions, and no inheritance. Classes are declared with `class Name { fieldType field; method = do(...) { ... } }`; `init` is the constructor and `self` is the receiver inside methods. When asked for code, return a complete compilable program whenever possible. Use `@include \"std\"` for runtime output functions, `@include \"mathlib\"` for math helpers, and `@include \"algorithm\"` for array algorithms and the `Queue` class. Never use C, Python, Rust, or JavaScript syntax.",
+  "system_prompt": "You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no maps, no generics beyond array<T>, no closures, no exceptions, and no inheritance. Classes are declared with `class Name { fieldType field; method = do(...) { ... } }`; `init` is the constructor and `self` is the receiver inside methods. Integer bit shifts `<<` and `>>` are supported for `int` operands (right shift is arithmetic). When asked for code, return a complete compilable program whenever possible. Use `@include \"std\"` for runtime output functions, `@include \"mathlib\"` for math helpers, and `@include \"algorithm\"` for array algorithms and the `Queue` and `vector` classes. Never use C, Python, Rust, or JavaScript syntax.",
   "counts": {
-    "total": 153,
-    "train": 134,
+    "total": 160,
+    "train": 141,
     "eval": 19,
     "categories": {
       "arrays": 8,
       "basics": 1,
       "classes": 2,
       "cli": 1,
-      "code-output": 9,
-      "compile-error": 11,
+      "code-output": 11,
+      "compile-error": 12,
       "control-flow": 5,
-      "core": 1,
+      "core": 2,
       "errors": 8,
       "example": 10,
       "functions": 4,
@@ -24,10 +24,10 @@
       "operators": 2,
       "output": 3,
       "programs": 14,
-      "stdlib": 35,
+      "stdlib": 36,
       "strings": 1,
       "syntax": 2,
-      "test-output": 9,
+      "test-output": 11,
       "types": 4
     }
   },
@@ -43,13 +43,13 @@
   "sources": [
     {
       "path": "README.md",
-      "bytes": 16983,
-      "sha256": "c15a9d2c9604b6bfce2eb5aabfee3b33c5e5d2e9a038d89c0132abe01ccaf4d5"
+      "bytes": 17583,
+      "sha256": "64a1ea4e4eaacc474a57e515601b7962bae9f69858d07be04b78ffff6c9bf1c0"
     },
     {
       "path": "docs/DOCUMENTATION.md",
-      "bytes": 22524,
-      "sha256": "5d30ceb39d24e5e5938a78faba136cbbec87b6593e80545680cefa8239f50a69"
+      "bytes": 24130,
+      "sha256": "2012375264a2d0f8a32fd452e623c1880d046f1724c094f53f9e16ef1968fbc1"
     },
     {
       "path": "examples/algorithm_demo.redb",
@@ -103,8 +103,8 @@
     },
     {
       "path": "lib/algorithm.redb",
-      "bytes": 3816,
-      "sha256": "fe3066c5f34da889c31492d796fb26d1676f3bae8a3d81aa24c0c9b611927b65"
+      "bytes": 5001,
+      "sha256": "2c4d630dde823dc0fcbb342d7206d7e88ec63ec1190b7ad6c7a0c923a6390dbf"
     },
     {
       "path": "lib/mathlib.redb",
@@ -147,6 +147,11 @@
       "sha256": "e4d369a911041af5c11fc2e07c1097f005f419cf09438524d41d39e5ea290696"
     },
     {
+      "path": "tests/cases/shifts.redb",
+      "bytes": 360,
+      "sha256": "38abec3fee4659791bc052f46314c12c08cd2c466145038e54453bd861c13ad2"
+    },
+    {
       "path": "tests/cases/strings.redb",
       "bytes": 173,
       "sha256": "d2e79f7189c0308c7cee5b815c8325526da0d0b9cf8aa47d125ee0b94c0a480e"
@@ -155,6 +160,11 @@
       "path": "tests/cases/types.redb",
       "bytes": 230,
       "sha256": "6da67948a3c9e7078885367a67b1f1437adb8212891c8402bfd608962234f953"
+    },
+    {
+      "path": "tests/cases/vector.redb",
+      "bytes": 490,
+      "sha256": "d16c88711afb6b098f4490e91f4f1bca0eac93a5272bc4b27602f973e3ae7742"
     },
     {
       "path": "tests/cases/algorithm_stdlib.expected",
@@ -192,6 +202,11 @@
       "sha256": "15d2cba37c0a7b581539f1da405b9d46f2f35621ba45cea9fababceecb3dd5a8"
     },
     {
+      "path": "tests/cases/shifts.expected",
+      "bytes": 25,
+      "sha256": "09d81dadab150da19b282f54df7d98465bc8b3f03c1e726b8ca3db1bf7e6000a"
+    },
+    {
       "path": "tests/cases/strings.expected",
       "bytes": 35,
       "sha256": "57ff6cdf4e23f25986a4f142fd5475f677f5e17c6e6c3f0c1d753db33fa9c815"
@@ -200,6 +215,11 @@
       "path": "tests/cases/types.expected",
       "bytes": 27,
       "sha256": "60d13c8cdc04151d5deb950848486409fb02f08660297e487dc6f06cfd4adf41"
+    },
+    {
+      "path": "tests/cases/vector.expected",
+      "bytes": 22,
+      "sha256": "047e9f507952c3e4fde9e4f46f1f2ad3b6ae2b86be601fac5a00cec4af88d3b9"
     },
     {
       "path": "tests/errors/array_literal_type_mismatch.redb",
@@ -242,6 +262,11 @@
       "sha256": "d75c1160ea874ef946dd39ca89cfa0c3fba1c2e73e8345d82c3bf2556327a7eb"
     },
     {
+      "path": "tests/errors/shift_float.redb",
+      "bytes": 33,
+      "sha256": "b7e577612762db959b6c0fa089de345ab66f53a324dec0f52a881b79fd45da20"
+    },
+    {
       "path": "tests/errors/type_mismatch.redb",
       "bytes": 35,
       "sha256": "e0fed9db920babd29281cddbc893e9f913af9dc4fafbe91bb7c2ab90a4fc67e7"
@@ -263,13 +288,13 @@
     },
     {
       "path": "TRAIN_IA_MODEL/seed.jsonl",
-      "bytes": 24642,
-      "sha256": "8836affd64c52aa6bfd1a1f262ea85f4ed1d2d2f0d657a0ddc6015c501555fc6"
+      "bytes": 25526,
+      "sha256": "545820feeede12e6d2acfdd251c1172fd19824b388988514b6f177fde592231c"
     },
     {
       "path": "TRAIN_IA_MODEL/prompts/system.txt",
-      "bytes": 755,
-      "sha256": "47180938ae53456e13ed9014a11f6c9f7ae5047c2d65be9b21c777598fe243e8"
+      "bytes": 865,
+      "sha256": "16b60b1abda8b38ba32847c3c1976489cf68de77593a35f4359a463bd2a30a2a"
     }
   ]
 }

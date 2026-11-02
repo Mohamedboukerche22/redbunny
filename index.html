@@ -813,7 +813,10 @@ full = <span class="str">"Red"</span> + <span class="str">"Bunny"</span>
 x = (<span class="num">10</span> + <span class="num">2</span> * <span class="num">5</span>) / <span class="num">4</span>
 
 <span class="cmt">-- Comparison & Logical operators</span>
-is_valid = (x >= <span class="num">3</span>) &amp;&amp; !<span class="kw">false</span></code></pre>
+is_valid = (x >= <span class="num">3</span>) &amp;&amp; !<span class="kw">false</span>
+
+<span class="cmt">-- Bit shifts (int only)</span>
+shifted = (<span class="num">1</span> &lt;&lt; <span class="num">4</span>) &gt;&gt; <span class="num">2</span></code></pre>
                 </div>
             </section>
 
@@ -1042,6 +1045,24 @@ fact = <span class="kw">do</span>(<span class="type">int</span> -> <span class="
     <span class="fn">writeln</span>(q.size())       <span class="cmt">-- 1</span>
 }</code></pre>
                 </div>
+
+                <h4 class="text-gray-300 font-semibold mt-6 mb-2">vector class</h4>
+                <p><code>vector(capacity)</code> is a growable int vector. Capacity is clamped to at least 1. <code>push_back</code> is amortized O(1); <code>push_front</code> is O(n); out-of-range <code>get</code> returns <code>-1</code>.</p>
+                <div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden font-mono text-xs my-4">
+                    <pre class="p-4 text-gray-200"><code><span class="kw">@include</span> <span class="str">"std"</span>
+<span class="kw">@include</span> <span class="str">"algorithm"</span>
+
+<span class="kw">main</span>() {
+    v = vector(<span class="num">2</span>)
+    v.push_back(<span class="num">10</span>)
+    v.push_back(<span class="num">20</span>)
+    v.push_front(<span class="num">5</span>)
+
+    <span class="fn">writeln</span>(v.get_size())      <span class="cmt">-- 3</span>
+    <span class="fn">writeln</span>(v.get(<span class="num">0</span>))          <span class="cmt">-- 5</span>
+    <span class="fn">writeln</span>(v.get_capacity())  <span class="cmt">-- 4</span>
+}</code></pre>
+                </div>
             </section>
 
             <!-- SECTION 13: INTERACTIVE PLAYGROUND / SANDBOX -->
@@ -1188,7 +1209,7 @@ main() {
                             </tr>
                             <tr>
                                 <td class="p-3 text-bunny-llvm font-bold">lib/algorithm.redb</td>
-                                <td class="p-3">Array algorithms plus the fixed-capacity <code>Queue</code> class: binary search, reverse, min/max element, heap sort and int64 limits.</td>
+                                <td class="p-3">Array algorithms plus the <code>Queue</code> and growable <code>vector</code> classes: binary search, reverse, min/max element, heap sort and int64 limits.</td>
                             </tr>
                             <tr>
                                 <td class="p-3 text-bunny-llvm font-bold">src/main.c</td>
@@ -1256,7 +1277,7 @@ main() {
                 <p>
                     The repository ships a generated instruction-tuning dataset so a local model can learn RedBunny syntax,
                     the standard library, compiler errors and expected program output. The concise set has
-                    <strong class="text-white">153 examples</strong> focused on short syntax answers, not long prose.
+                    <strong class="text-white">160 examples</strong> focused on short syntax answers, not long prose.
                 </p>
 
                 <div class="p-4 rounded-xl bg-dark-card border border-dark-border my-4">

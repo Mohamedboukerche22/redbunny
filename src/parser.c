@@ -374,13 +374,37 @@ static ASTNode *parse_additive(void)
     return left;
 }
 
-static ASTNode *parse_comparison(void)
+static ASTNode *parse_shift(void)
 {
     ASTNode *left = parse_additive();
 
+    for (;;) {
+        Token *op;
+
+        if (check(TOKEN_SHL)) {
+            op = advance();
+            left = make_binary(op->lexeme, left, parse_additive(), op->line);
+            continue;
+        }
+        /* ">>" stays two '>' tokens so nested array types keep working. */
+        if (check(TOKEN_GT) && peek(1)->type == TOKEN_GT) {
+            op = advance();
+            advance();
+            left = make_binary(">>", left, parse_additive(), op->line);
+            continue;
+        }
+        break;
+    }
+    return left;
+}
+
+static ASTNode *parse_comparison(void)
+{
+    ASTNode *left = parse_shift();
+
     while (check(TOKEN_LT) || check(TOKEN_LE) || check(TOKEN_GT) || check(TOKEN_GE)) {
         Token *op = advance();
-        left = make_binary(op->lexeme, left, parse_additive(), op->line);
+        left = make_binary(op->lexeme, left, parse_shift(), op->line);
     }
     return left;
 }

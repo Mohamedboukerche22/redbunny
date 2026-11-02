@@ -198,3 +198,62 @@ class Queue {
         return count == capacity
     }
 }
+
+-- Growable int vector with amortized O(1) push_back.
+-- Create one with vector(initial_capacity); capacity is at least 1.
+class vector {
+    array<int> data
+    int count
+    int capacity
+
+    init = do(int -> {}) {
+        capacity = arg1
+        if (capacity < 1) {
+            capacity = 1
+        }
+        data = new_int_array(capacity)
+        count = 0
+    }
+
+    reserve = do(int -> {}) {
+        if (arg1 <= capacity) {
+            return
+        }
+        while (capacity < arg1) {
+            capacity = capacity * 2
+        }
+        data.resize(capacity)
+    }
+
+    push_back = do(int -> {}) {
+        self.reserve(count + 1)
+        data[count] = arg1
+        count = count + 1
+    }
+
+    push_front = do(int -> {}) {
+        self.reserve(count + 1)
+        i = count
+        while (i > 0) {
+            data[i] = data[i - 1]
+            i = i - 1
+        }
+        data[0] = arg1
+        count = count + 1
+    }
+
+    get = do(int -> int) {
+        if (arg1 < 0 || arg1 >= count) {
+            return -1
+        }
+        return data[arg1]
+    }
+
+    get_size = do(-> int) {
+        return count
+    }
+
+    get_capacity = do(-> int) {
+        return capacity
+    }
+}

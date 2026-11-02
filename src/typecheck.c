@@ -435,6 +435,13 @@ static RedbType infer_expr(ASTNode *node)
             type = TY_BOOL;
             break;
         }
+        if (!strcmp(op, "<<") || !strcmp(op, ">>")) {
+            if (left != TY_INT || right != TY_INT)
+                tc_fail(node->line, "operator '%s' requires int operands, got %s and %s",
+                        op, redb_type_name(left), redb_type_name(right));
+            type = TY_INT;
+            break;
+        }
         if (!is_numeric(left) || !is_numeric(right))
             tc_fail(node->line, "operator '%s' requires numeric operands, got %s and %s",
                     op, redb_type_name(left), redb_type_name(right));

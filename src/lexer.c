@@ -257,6 +257,11 @@ int redb_lex(const char *source, const char *filename)
             i += 2;
             continue;
         }
+        if (c == '<' && source[i + 1] == '<') {
+            push_token(TOKEN_SHL, "<<", lex_line);
+            i += 2;
+            continue;
+        }
         if (c == '<' && source[i + 1] == '=') {
             push_token(TOKEN_LE, "<=", lex_line);
             i += 2;

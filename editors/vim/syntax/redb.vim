@@ -14,7 +14,7 @@ syn keyword redbFunction write writeln writeformat size resize
 syn match redbInclude "@include\>"
 
 " Operators and punctuation.
-syn match redbOperator /->\|=>\|==\|!=\|<=\|>=\|&&\|||\|[=+*%<>!\/-]/
+syn match redbOperator /->\|=>\|==\|!=\|<<\|>>\|<=\|>=\|&&\|||\|[=+*%<>!\/-]/
 syn match redbDelimiter /[(){}\[\],;.]/
 
 " Numeric literals. Floats are defined after integers so the longer match wins.

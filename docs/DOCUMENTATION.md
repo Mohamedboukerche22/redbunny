@@ -293,6 +293,17 @@ writeln(true || false)
 writeln(!false)
 ```
 
+Bit shifts work on `int` operands and compile to a single LLVM shift:
+
+```redb
+writeln(1 << 4)     -- 16
+writeln(256 >> 4)   -- 16
+writeln(-8 >> 1)    -- -4, right shift keeps the sign
+```
+
+Shift counts must be in the range `0` to `63`. Shifts do not check the count
+at runtime; out-of-range counts follow LLVM behavior.
+
 String concatenation uses `+`:
 
 ```redb
@@ -309,10 +320,11 @@ Precedence, highest to lowest:
 1. unary `-`, `!`
 2. `*`, `/`, `%`
 3. `+`, `-`
-4. `<`, `<=`, `>`, `>=`
-5. `==`, `!=`
-6. `&&`
-7. `||`
+4. `<<`, `>>`
+5. `<`, `<=`, `>`, `>=`
+6. `==`, `!=`
+7. `&&`
+8. `||`
 
 ---
 
@@ -678,6 +690,37 @@ main() {
 ```
 
 See `examples/queue_demo.redb` for a longer ring-buffer example.
+
+The module also defines `vector(capacity)`, a growable `int` vector. The
+constructor clamps capacity to at least 1. `push_back` is amortized O(1);
+`push_front` is O(n).
+
+| Member                | Signature        | Notes                                      |
+|-----------------------|------------------|--------------------------------------------|
+| `vector(capacity)`    | `int -> vector`  | Constructor; capacity is at least 1        |
+| `v.push_back(value)`  | `int -> {}`      | Appends a value, growing if needed         |
+| `v.push_front(value)` | `int -> {}`      | Inserts at index 0, shifting existing values |
+| `v.get(index)`        | `int -> int`     | Returns the value, or `-1` when out of range |
+| `v.get_size()`        | `{} -> int`      | Number of stored values                    |
+| `v.get_capacity()`    | `{} -> int`      | Allocated slot count                       |
+| `v.reserve(n)`        | `int -> {}`      | Grows capacity to at least `n`             |
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    v = vector(2)
+    v.push_back(10)
+    v.push_back(20)
+    v.push_front(5)
+
+    writeln(v.get_size())      -- 3
+    writeln(v.get(0))          -- 5
+    writeln(v.get(1))          -- 10
+    writeln(v.get_capacity())  -- 4
+}
+```
 
 ```redb
 @include "std"

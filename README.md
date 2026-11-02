@@ -35,12 +35,14 @@ dependencies beyond LLVM and Clang.
 - **Bundled math module.** `@include "mathlib"` provides powers, roots, trig,
   exponentials, logarithms, abs/gcd/lcm, integer/double min/max and constants.
 - **Bundled algorithm module.** `@include "algorithm"` provides binary search,
-  in-place reverse and heap sort, min/max element, 64-bit integer limits and a
-  class-based FIFO `Queue`.
+  in-place reverse and heap sort, min/max element, 64-bit integer limits, a
+  class-based FIFO `Queue` and a growable `vector`.
 - **Dynamic arrays.** `array<T>` values support indexing, `size()`, `resize()`,
   literal initializers and nested arrays.
 - **Classes and methods.** Declare fields and methods with `class`, construct
   objects with `init`, and call methods with `obj.method()`.
+- **Bit shifts.** `<<` and `>>` work on `int` values and lower to one LLVM
+  instruction each.
 - **Hackable.** Roughly 7 source files and a test suite that runs in seconds.
 
 ## Quick Start
@@ -355,6 +357,27 @@ main() {
 ```
 
 See `examples/queue_demo.redb` for a longer example.
+
+The module also defines `vector(capacity)`, a growable `int` vector with
+`push_back`, `push_front`, `get`, `get_size`, `get_capacity` and `reserve`.
+`push_back` is amortized O(1); `push_front` is O(n). Out-of-range `get` returns
+`-1`.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    v = vector(2)
+    v.push_back(10)
+    v.push_back(20)
+    v.push_front(5)
+
+    writeln(v.get_size())      -- 3
+    writeln(v.get(0))          -- 5
+    writeln(v.get_capacity())  -- 4
+}
+```
 
 ```redb
 @include "std"

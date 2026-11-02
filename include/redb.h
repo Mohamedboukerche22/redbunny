@@ -63,6 +63,7 @@ typedef enum {
     TOKEN_STAR,
     TOKEN_SLASH,
     TOKEN_PERCENT,
+    TOKEN_SHL,
     TOKEN_EQ,
     TOKEN_NE,
     TOKEN_LT,

@@ -547,6 +547,19 @@ static LLVMValueRef gen_binary(ASTNode *node, RedbType *out_type)
                                  : LLVMBuildOr(builder, l, r, "or");
     }
 
+    if (!strcmp(op, "<<") || !strcmp(op, ">>")) {
+        LLVMValueRef lv = convert(left, lt, TY_INT);
+        LLVMValueRef rv = convert(right, rt, TY_INT);
+        LLVMValueRef sh;
+
+        if (!strcmp(op, "<<"))
+            sh = LLVMBuildShl(builder, lv, rv, "shl");
+        else
+            sh = LLVMBuildAShr(builder, lv, rv, "ashr");
+        *out_type = TY_INT;
+        return sh;
+    }
+
     result = (lt == TY_DOUBLE || rt == TY_DOUBLE) ? TY_DOUBLE
            : (lt == TY_FLOAT || rt == TY_FLOAT) ? TY_FLOAT
            : TY_INT;

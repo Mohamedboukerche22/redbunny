@@ -1,0 +1,12 @@
+main() {
+    writeln(1 << 4)          -- 16
+    writeln(256 >> 4)        -- 16
+    writeln(-8 >> 1)         -- -4, arithmetic shift
+    writeln(1 << 2 + 1)      -- 8, addition binds tighter
+    writeln(8 >> 1 + 1)      -- 2
+    writeln((1 << 3) > 7)    -- true
+    writeln(3 << 2 == 12)    -- true
+
+    array<array<int>> matrix(2)
+    writeln(matrix.size())
+}
