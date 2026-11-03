@@ -189,6 +189,12 @@ static int is_truthy(RedbType type)
     return type == TY_BOOL || is_numeric(type);
 }
 
+static int is_lvalue(ASTNode *node)
+{
+    return node && (node->type == AST_IDENT || node->type == AST_INDEX ||
+                    node->type == AST_FIELD);
+}
+
 static RedbType promote(RedbType a, RedbType b)
 {
     if (a == TY_DOUBLE || b == TY_DOUBLE)
@@ -511,6 +517,29 @@ static RedbType infer_expr(ASTNode *node)
             tc_fail(node->line, "cannot print an array; print one element with arr[i]");
         if (redb_is_class(arg))
             tc_fail(node->line, "cannot print a class object; print one of its fields");
+        type = TY_VOID;
+        break;
+    }
+
+    case AST_CALL_READ:
+    case AST_CALL_READLN: {
+        ASTNode *target = node->children[0];
+        RedbType target_type;
+
+        if (!is_lvalue(target))
+            tc_fail(node->line,
+                    "input target must be a variable, array element, or field");
+        target_type = infer_expr(target);
+
+        if (node->type == AST_CALL_READ) {
+            if (target_type != TY_INT && target_type != TY_STR)
+                tc_fail(node->line,
+                        "read() requires an int or str target, got %s",
+                        redb_type_name(target_type));
+        } else if (target_type != TY_STR) {
+            tc_fail(node->line, "readln() requires a str target, got %s",
+                    redb_type_name(target_type));
+        }
         type = TY_VOID;
         break;
     }

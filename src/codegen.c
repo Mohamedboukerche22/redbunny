@@ -210,6 +210,21 @@ static LLVMValueRef rt_newline(void)
     return get_runtime("redb_newline", llvm_type(TY_VOID), NULL, 0);
 }
 
+static LLVMValueRef rt_read_int(void)
+{
+    return get_runtime("redb_read_int", llvm_type(TY_INT), NULL, 0);
+}
+
+static LLVMValueRef rt_read_str(void)
+{
+    return get_runtime("redb_read_str", llvm_type(TY_STR), NULL, 0);
+}
+
+static LLVMValueRef rt_readln_str(void)
+{
+    return get_runtime("redb_readln_str", llvm_type(TY_STR), NULL, 0);
+}
+
 static LLVMValueRef rt_str_concat(void)
 {
     LLVMTypeRef params[] = { llvm_type(TY_STR), llvm_type(TY_STR) };
@@ -658,6 +673,96 @@ static LLVMValueRef gen_array_literal(ASTNode *node, RedbType *out_type)
     return arr;
 }
 
+static void store_lvalue(ASTNode *target, LLVMValueRef value, RedbType value_type)
+{
+    if (!target)
+        cg_fail(0, "missing input target");
+
+    switch (target->type) {
+    case AST_IDENT: {
+        CSym *sym = c_lookup(target->name);
+
+        if (!sym)
+            cg_fail(target->line, "unknown identifier '%s'", target->name);
+        value = convert(value, value_type, sym->type);
+
+        if (sym->is_field) {
+            CSym *self = c_lookup("self");
+            LLVMValueRef object;
+
+            if (!self)
+                cg_fail(target->line, "field '%s' used outside of a method",
+                        target->name);
+            object = LLVMBuildLoad2(builder, llvm_type(self->type), self->alloca,
+                                    "self");
+            field_store(object, sym->field_index, value, sym->type);
+        } else {
+            if (!sym->alloca)
+                cg_fail(target->line, "cannot assign to '%s'", target->name);
+            LLVMBuildStore(builder, value, sym->alloca);
+        }
+        break;
+    }
+
+    case AST_INDEX: {
+        RedbType base_type, index_type, elem;
+        LLVMValueRef base = gen_expr(target->children[0], &base_type);
+        LLVMValueRef index = gen_expr(target->children[1], &index_type);
+        LLVMValueRef args[2];
+        LLVMValueRef slot;
+
+        elem = redb_elem_type(base_type);
+        args[0] = base;
+        args[1] = convert(index, index_type, TY_INT);
+        slot = call_fn(rt_array_at(), args, 2);
+        value = convert(value, value_type, elem);
+        LLVMBuildStore(builder, value, slot);
+        break;
+    }
+
+    case AST_FIELD: {
+        RedbType base_type, field_type;
+        LLVMValueRef base = gen_expr(target->children[0], &base_type);
+        CgClass *ci = find_class_by_type(base_type);
+        int index;
+
+        if (!ci)
+            cg_fail(target->line, "cannot assign field '%s' on a value of type %s",
+                    target->name, redb_type_name(base_type));
+        index = find_field_index(ci, target->name);
+        if (index < 0)
+            cg_fail(target->line, "class '%s' has no field '%s'",
+                    redb_type_name(base_type), target->name);
+        field_type = ci->fields[index]->ret_type;
+        value = convert(value, value_type, field_type);
+        field_store(base, index, value, field_type);
+        break;
+    }
+
+    default:
+        cg_fail(target->line, "invalid input target");
+        break;
+    }
+}
+
+static void gen_read(ASTNode *node)
+{
+    ASTNode *target = node->children[0];
+    RedbType target_type = target->inferred;
+    LLVMValueRef value;
+
+    if (node->type == AST_CALL_READ) {
+        if (target_type == TY_INT)
+            value = call_fn(rt_read_int(), NULL, 0);
+        else
+            value = call_fn(rt_read_str(), NULL, 0);
+    } else {
+        value = call_fn(rt_readln_str(), NULL, 0);
+    }
+
+    store_lvalue(target, value, target_type);
+}
+
 static LLVMValueRef gen_expr(ASTNode *node, RedbType *out_type)
 {
     if (!node) {
@@ -816,6 +921,12 @@ static LLVMValueRef gen_expr(ASTNode *node, RedbType *out_type)
         *out_type = TY_VOID;
         return NULL;
     }
+
+    case AST_CALL_READ:
+    case AST_CALL_READLN:
+        gen_read(node);
+        *out_type = TY_VOID;
+        return NULL;
 
     case AST_ARRAY_LITERAL:
         return gen_array_literal(node, out_type);

@@ -1,0 +1,30 @@
+class Person {
+    str name
+}
+
+main() {
+    line = ""
+    readln(line)
+    writeln(line)
+
+    number = 0
+    read(number)
+    writeln(number)
+
+    word = ""
+    read(word)
+    writeln(word)
+
+    rest = ""
+    readln(rest)
+    writeln(rest)
+
+    array<str> tokens(2)
+    read(tokens[0])
+    read(tokens[1])
+    writeln(tokens[0] + ":" + tokens[1])
+
+    p = Person()
+    read(p.name)
+    writeln(p.name)
+}

@@ -43,6 +43,8 @@ dependencies beyond LLVM and Clang.
   objects with `init`, and call methods with `obj.method()`.
 - **Bit shifts.** `<<` and `>>` work on `int` values and lower to one LLVM
   instruction each.
+- **Console input.** `read(x)` reads one whitespace-delimited token; `readln(x)`
+  reads the rest of a line.
 - **Hackable.** Roughly 7 source files and a test suite that runs in seconds.
 
 ## Quick Start
@@ -194,6 +196,29 @@ main() {
     writeln("")
 }
 ```
+
+### Console input
+
+```redb
+@include "std"
+
+main() {
+    name = ""
+    age = 0
+
+    read(name)          -- one whitespace-delimited token
+    read(age)           -- parsed as int
+    writeln(name)
+    writeln(age)
+
+    line = ""
+    readln(line)        -- rest of the current line as str
+    writeln(line)
+}
+```
+
+`read` accepts `int` or `str` targets; `readln` accepts `str` targets. Both can
+write into variables, array elements, or object fields.
 
 ### Arrays
 
@@ -480,6 +505,7 @@ redb main.redb -S -o main.ll
 │   ├── hello.redb
 │   ├── tour.redb
 │   ├── factorial.redb
+│   ├── input_demo.redb
 │   ├── queue_demo.redb
 │   ├── math_demo.redb
 │   └── imports/

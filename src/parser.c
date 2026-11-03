@@ -248,6 +248,16 @@ static ASTNode *parse_primary(void)
         return node;
     }
 
+    if (match(TOKEN_READ) || match(TOKEN_READLN)) {
+        ASTNodeType type = tok->type == TOKEN_READ ? AST_CALL_READ : AST_CALL_READLN;
+        ASTNode *node = create_node(type, tok->line);
+
+        expect(TOKEN_LPAREN, "'(' after input function");
+        add_child(node, parse_expression());
+        expect(TOKEN_RPAREN, "')' after input argument");
+        return node;
+    }
+
     if (match(TOKEN_IDENTIFIER)) {
         ASTNode *node;
 

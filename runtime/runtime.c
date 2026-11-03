@@ -40,6 +40,88 @@ void redb_newline(void)
     putchar('\n');
 }
 
+static void read_oom(void)
+{
+    fputs("redb: out of memory\n", stderr);
+    exit(1);
+}
+
+static int read_is_space(int c)
+{
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' ||
+           c == '\f' || c == '\v';
+}
+
+static char *read_grow(char *buf, size_t *cap, size_t need)
+{
+    char *next;
+
+    while (*cap <= need)
+        *cap *= 2;
+    next = realloc(buf, *cap);
+    if (!next)
+        read_oom();
+    return next;
+}
+
+long long redb_read_int(void)
+{
+    long long value = 0;
+
+    if (scanf("%lld", &value) != 1)
+        return 0;
+    return value;
+}
+
+char *redb_read_str(void)
+{
+    size_t cap = 32;
+    size_t len = 0;
+    char *out = malloc(cap);
+    int c;
+
+    if (!out)
+        read_oom();
+
+    do {
+        c = fgetc(stdin);
+    } while (c != EOF && read_is_space(c));
+
+    while (c != EOF && !read_is_space(c)) {
+        if (len + 1 >= cap)
+            out = read_grow(out, &cap, len + 1);
+        out[len++] = (char)c;
+        c = fgetc(stdin);
+    }
+
+    if (c != EOF)
+        ungetc(c, stdin);
+    out[len] = '\0';
+    return out;
+}
+
+char *redb_readln_str(void)
+{
+    size_t cap = 64;
+    size_t len = 0;
+    char *out = malloc(cap);
+    int c;
+
+    if (!out)
+        read_oom();
+
+    while ((c = fgetc(stdin)) != EOF && c != '\n') {
+        if (len + 1 >= cap)
+            out = read_grow(out, &cap, len + 1);
+        out[len++] = (char)c;
+    }
+
+    if (len > 0 && out[len - 1] == '\r')
+        len--;
+    out[len] = '\0';
+    return out;
+}
+
 char *redb_str_concat(const char *left, const char *right)
 {
     size_t llen = strlen(left);

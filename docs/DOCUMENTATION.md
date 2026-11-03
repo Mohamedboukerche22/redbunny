@@ -328,7 +328,47 @@ Precedence, highest to lowest:
 
 ---
 
-## 7. Output
+## 7. Input and Output
+
+### `read`
+
+Reads one whitespace-delimited token from standard input and stores it in an
+existing `int` or `str` variable:
+
+```redb
+main() {
+    age = 0
+    name = ""
+
+    read(age)
+    read(name)
+
+    writeln(age)
+    writeln(name)
+}
+```
+
+`read` skips leading whitespace and leaves the whitespace after the token in the
+input stream. If an integer cannot be parsed, the target becomes `0`. The target
+may also be an array element or an object field, for example `read(nums[0])` or
+`read(person.age)`.
+
+### `readln`
+
+Reads the rest of the current input line as a `str`. The trailing newline is
+removed; a trailing `\r` from CRLF input is also removed.
+
+```redb
+main() {
+    line = ""
+    readln(line)
+    writeln("[" + line + "]")
+}
+```
+
+`readln` does not skip leading whitespace. After a `read`, it reads the
+remainder of that same line, which may be empty when the token ended at a
+newline.
 
 ### `write`
 
@@ -784,6 +824,10 @@ Environment variables:
 The generated IR calls these C functions:
 
 ```c
+long long redb_read_int(void);
+char *redb_read_str(void);
+char *redb_readln_str(void);
+
 void  redb_write(const char *str);
 void  redb_writeln(const char *str);
 void  redb_write_int(long long value);
@@ -820,6 +864,7 @@ loops will grow memory.
 - No package registry; includes resolve relative to the source file, then the
   standard library directory.
 - Floating point `%` uses `frem` and is not the same as C `fmod` for all inputs.
+- `read` accepts only `int` and `str` targets; `readln` accepts only `str`.
 
 These are deliberate v0.1 boundaries, not parser accidents.
 
@@ -831,6 +876,7 @@ The `examples/` directory contains:
 
 - `hello.redb` — minimal program
 - `tour.redb` — variables, formatting, loops, conditionals, functions
+- `input_demo.redb` — reading a name and an integer from stdin
 - `factorial.redb` — recursion
 - `arrays.redb` — arrays, literals, resizing and nested arrays
 - `algorithm_demo.redb` — sorting, searching and array algorithms
@@ -844,6 +890,7 @@ Build them all:
 ```bash
 redb examples/hello.redb -o /tmp/hello && /tmp/hello
 redb examples/tour.redb -o /tmp/tour && /tmp/tour
+redb examples/input_demo.redb -o /tmp/input_demo && /tmp/input_demo
 redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
 redb examples/arrays.redb -o /tmp/arrays && /tmp/arrays
 redb examples/algorithm_demo.redb -o /tmp/algorithm_demo && /tmp/algorithm_demo

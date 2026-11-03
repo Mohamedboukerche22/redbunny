@@ -22,6 +22,8 @@ static const Keyword keywords[] = {
     { "write",       TOKEN_WRITE },
     { "writeln",     TOKEN_WRITELN },
     { "writeformat", TOKEN_WRITEFORMAT },
+    { "read",        TOKEN_READ },
+    { "readln",      TOKEN_READLN },
     { "include",     TOKEN_INCLUDE },
     { "do",          TOKEN_DO },
     { "doto",        TOKEN_DOTO },

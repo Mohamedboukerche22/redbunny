@@ -1,0 +1,14 @@
+@include "std"
+
+main() {
+    name = ""
+    age = 0
+
+    write("Name: ")
+    read(name)
+
+    write("Age: ")
+    read(age)
+
+    writeformat("Hello, {name}. You are {age}.\n")
+}

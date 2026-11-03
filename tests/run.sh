@@ -25,7 +25,12 @@ for src in "$ROOT"/tests/cases/*.redb; do
         continue
     fi
 
-    "$TMP/$name" >"$TMP/$name.out" 2>&1
+    input="${src%.redb}.in"
+    if [ -f "$input" ]; then
+        "$TMP/$name" <"$input" >"$TMP/$name.out" 2>&1
+    else
+        "$TMP/$name" >"$TMP/$name.out" 2>&1
+    fi
     if diff -u "$expected" "$TMP/$name.out" >"$TMP/$name.diff"; then
         echo "PASS $name"
         pass=$((pass + 1))
