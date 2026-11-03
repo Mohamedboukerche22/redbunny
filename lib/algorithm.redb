@@ -3,12 +3,14 @@
 
 -- 64-bit signed integer limits. RedBunny has no const keyword, so these are
 -- zero-argument constant helpers: call them as MAX_INT64() and MIN_INT64().
-MAX_INT64 = do(-> int) {
-    return 9223372036854775807
+MAX_INT64 = do({} -> int) {
+    -- return 9223372036854775807 this is for noobs let do it like pros
+    return (1 << 63) - 1
 }
 
-MIN_INT64 = do(-> int) {
-    return -9223372036854775807 - 1
+MIN_INT64 = do({} -> int) {
+    -- return -9223372036854775807 - 1 same here
+    return (1 << 63)
 }
 
 -- Binary search. The array must be sorted in ascending order.
