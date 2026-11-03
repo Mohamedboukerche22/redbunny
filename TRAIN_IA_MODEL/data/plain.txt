@@ -4178,7 +4178,7 @@ main() {
 
 A function call must pass exactly the number of arguments in its declared signature. `f` is declared with one parameter, but this call passes two.
 
-## stdlib:algorithm:db088edfb5
+## stdlib:algorithm:7dc8058dae
 
 ### User
 
@@ -4189,15 +4189,16 @@ Show the RedBunny standard library function `MAX_INT64` and explain its signatur
 -- 64-bit signed integer limits. RedBunny has no const keyword, so these are
 -- zero-argument constant helpers: call them as MAX_INT64() and MIN_INT64().
 
-Signature: `(-> int)`
+Signature: `({} -> int)`
 
 ```redb
-MAX_INT64 = do(-> int) {
-    return 9223372036854775807
+MAX_INT64 = do({} -> int) {
+    -- return 9223372036854775807 this is for noobs let do it like pros
+    return (1 << 63) - 1
 }
 ```
 
-## stdlib:algorithm:686fba190e
+## stdlib:algorithm:2982ebd63f
 
 ### User
 
@@ -4205,11 +4206,12 @@ Show the RedBunny standard library function `MIN_INT64` and explain its signatur
 
 ### Assistant
 
-Signature: `(-> int)`
+Signature: `({} -> int)`
 
 ```redb
-MIN_INT64 = do(-> int) {
-    return -9223372036854775807 - 1
+MIN_INT64 = do({} -> int) {
+    -- return -9223372036854775807 - 1 same here
+    return (1 << 63)
 }
 ```
 

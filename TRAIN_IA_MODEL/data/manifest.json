@@ -108,8 +108,8 @@
     },
     {
       "path": "lib/algorithm.redb",
-      "bytes": 4999,
-      "sha256": "9bcf2f30ffc1d49b8e99d2658f7825ee7692f55ff40e96cc4fde01b5db49e1e9"
+      "bytes": 5105,
+      "sha256": "af63d870756e103553d24b75f6400300234ada1b8992e5e2400a2f56e92da833"
     },
     {
       "path": "lib/mathlib.redb",
