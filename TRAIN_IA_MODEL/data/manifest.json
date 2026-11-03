@@ -3,31 +3,31 @@
   "generator": "TRAIN_IA_MODEL/build.py",
   "system_prompt": "You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no maps, no generics beyond array<T>, no closures, no exceptions, and no inheritance. Classes are declared with `class Name { fieldType field; method = do(...) { ... } }`; `init` is the constructor and `self` is the receiver inside methods. Integer bit shifts `<<` and `>>` are supported for `int` operands (right shift is arithmetic). When asked for code, return a complete compilable program whenever possible. Use `@include \"std\"` for runtime output functions, `@include \"mathlib\"` for math helpers, and `@include \"algorithm\"` for array algorithms and the `Queue` and `vector` classes. Never use C, Python, Rust, or JavaScript syntax.",
   "counts": {
-    "total": 160,
-    "train": 141,
-    "eval": 19,
+    "total": 163,
+    "train": 145,
+    "eval": 18,
     "categories": {
       "arrays": 8,
       "basics": 1,
       "classes": 2,
       "cli": 1,
-      "code-output": 11,
-      "compile-error": 12,
+      "code-output": 12,
+      "compile-error": 15,
       "control-flow": 5,
       "core": 2,
       "errors": 8,
-      "example": 10,
+      "example": 11,
       "functions": 4,
       "includes": 3,
       "limitations": 1,
-      "manual": 19,
+      "manual": 16,
       "operators": 2,
       "output": 3,
       "programs": 14,
       "stdlib": 36,
       "strings": 1,
       "syntax": 2,
-      "test-output": 11,
+      "test-output": 12,
       "types": 4
     }
   },
@@ -43,13 +43,13 @@
   "sources": [
     {
       "path": "README.md",
-      "bytes": 17583,
-      "sha256": "64a1ea4e4eaacc474a57e515601b7962bae9f69858d07be04b78ffff6c9bf1c0"
+      "bytes": 18173,
+      "sha256": "a5a7bb0a74889479ac011fed562d4547e9d3190e6e7bf0c39018ac2542eb14b7"
     },
     {
       "path": "docs/DOCUMENTATION.md",
-      "bytes": 24130,
-      "sha256": "2012375264a2d0f8a32fd452e623c1880d046f1724c094f53f9e16ef1968fbc1"
+      "bytes": 25331,
+      "sha256": "dffb52fb7749a7a10b0f922a3da58a6766002a9b4e71369905771222fca7c117"
     },
     {
       "path": "examples/algorithm_demo.redb",
@@ -80,6 +80,11 @@
       "path": "examples/imports/greeting.redb",
       "bytes": 62,
       "sha256": "b1c84b65ccc840a9b4a66dea14bd575440d85accce922629cc8e1c8c75ce00e8"
+    },
+    {
+      "path": "examples/input_demo.redb",
+      "bytes": 175,
+      "sha256": "2b35de3fbd0ff0941c2afdfdf715725ea65e566dbe43a4a4677d81de301f6cd8"
     },
     {
       "path": "examples/main.redb",
@@ -147,6 +152,11 @@
       "sha256": "e4d369a911041af5c11fc2e07c1097f005f419cf09438524d41d39e5ea290696"
     },
     {
+      "path": "tests/cases/read.redb",
+      "bytes": 404,
+      "sha256": "13caf6172960b929ab178d35132e334cccb22343ca4c9ad726ae334136ee0e42"
+    },
+    {
       "path": "tests/cases/shifts.redb",
       "bytes": 360,
       "sha256": "38abec3fee4659791bc052f46314c12c08cd2c466145038e54453bd861c13ad2"
@@ -200,6 +210,11 @@
       "path": "tests/cases/mathlib_stdlib.expected",
       "bytes": 158,
       "sha256": "15d2cba37c0a7b581539f1da405b9d46f2f35621ba45cea9fababceecb3dd5a8"
+    },
+    {
+      "path": "tests/cases/read.expected",
+      "bytes": 53,
+      "sha256": "d63f912c69743c4b566977ee60a1641eef819f2756d9b97f70593b73f0edc41e"
     },
     {
       "path": "tests/cases/shifts.expected",
@@ -260,6 +275,21 @@
       "path": "tests/errors/class_unknown_field.redb",
       "bytes": 72,
       "sha256": "d75c1160ea874ef946dd39ca89cfa0c3fba1c2e73e8345d82c3bf2556327a7eb"
+    },
+    {
+      "path": "tests/errors/read_float.redb",
+      "bytes": 35,
+      "sha256": "2f995de4610f70fada8cde66fa8917db4ff6558cc0231b84c225c95576ca38d0"
+    },
+    {
+      "path": "tests/errors/read_non_lvalue.redb",
+      "bytes": 37,
+      "sha256": "f3783cdeaf828bfa4565c24d1d99df76c21eeba611cd0ca76be295ce57a106ad"
+    },
+    {
+      "path": "tests/errors/readln_int.redb",
+      "bytes": 35,
+      "sha256": "34f27059a450c09bb51fa191d2da03172639bc3c83586da68e1919bab46054c6"
     },
     {
       "path": "tests/errors/shift_float.redb",

@@ -1802,68 +1802,6 @@ Precedence, highest to lowest:
 7. `&&`
 8. `||`
 
-## manual:DOCUMENTATION:932505f171
-
-### User
-
-Explain RedBunny's Output - `write` with syntax and examples.
-
-### Assistant
-
-Prints without a trailing newline. Accepts `str`, `int`, `float`, `double` or
-`bool`.
-
-```redb
-write("loading")
-write("...")
-writeln("")
-```
-
-## manual:DOCUMENTATION:279afc5482
-
-### User
-
-Explain RedBunny's Output - `writeln` with syntax and examples.
-
-### Assistant
-
-Prints a value followed by a newline.
-
-```redb
-writeln("done")
-writeln(42)
-writeln(3.5)
-writeln(true)
-```
-
-## manual:DOCUMENTATION:f9feb2f257
-
-### User
-
-Explain RedBunny's Output - `writeformat` with syntax and examples.
-
-### Assistant
-
-Interpolates variables into a template:
-
-```redb
-main() {
-    name = "Mohamed"
-    age = 20
-
-    writeformat("my name is {name} and my age is {age}\n")
-}
-```
-
-Use doubled braces for literal braces:
-
-```redb
-writeformat("{{name}} prints a literal brace block\n")
-```
-
-Only variable names may appear inside `{...}`. Unknown names and function names
-are rejected at compile time.
-
 ## manual:DOCUMENTATION:3634659954
 
 ### User
@@ -2220,7 +2158,7 @@ main() {
 }
 ```
 
-## manual:DOCUMENTATION:61cd931932
+## manual:DOCUMENTATION:728d38fe71
 
 ### User
 
@@ -2237,10 +2175,11 @@ Explain RedBunny's Current Limitations with syntax and examples.
 - No package registry; includes resolve relative to the source file, then the
   standard library directory.
 - Floating point `%` uses `frem` and is not the same as C `fmod` for all inputs.
+- `read` accepts only `int` and `str` targets; `readln` accepts only `str`.
 
 These are deliberate v0.1 boundaries, not parser accidents.
 
-## manual:DOCUMENTATION:7a3f2d8c19
+## manual:DOCUMENTATION:c87e29faad
 
 ### User
 
@@ -2252,6 +2191,7 @@ The `examples/` directory contains:
 
 - `hello.redb` — minimal program
 - `tour.redb` — variables, formatting, loops, conditionals, functions
+- `input_demo.redb` — reading a name and an integer from stdin
 - `factorial.redb` — recursion
 - `arrays.redb` — arrays, literals, resizing and nested arrays
 - `algorithm_demo.redb` — sorting, searching and array algorithms
@@ -2265,6 +2205,7 @@ Build them all:
 ```bash
 redb examples/hello.redb -o /tmp/hello && /tmp/hello
 redb examples/tour.redb -o /tmp/tour && /tmp/tour
+redb examples/input_demo.redb -o /tmp/input_demo && /tmp/input_demo
 redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
 redb examples/arrays.redb -o /tmp/arrays && /tmp/arrays
 redb examples/algorithm_demo.redb -o /tmp/algorithm_demo && /tmp/algorithm_demo
@@ -2415,6 +2356,31 @@ Write a complete RedBunny program that demonstrates greeting.
 ```redb
 greet = do(str -> {}) {
     writeln("Hello, " + arg1 + "!")
+}
+```
+
+## example:input_demo:965fcd2db8
+
+### User
+
+Write a complete RedBunny program that demonstrates input demo.
+
+### Assistant
+
+```redb
+@include "std"
+
+main() {
+    name = ""
+    age = 0
+
+    write("Name: ")
+    read(name)
+
+    write("Age: ")
+    read(age)
+
+    writeformat("Hello, {name}. You are {age}.\n")
 }
 ```
 
@@ -3583,6 +3549,104 @@ main() {
 12
 ```
 
+## test-output:read:4e86039e95
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+hello world
+42
+RedBunny
+ tail
+left:right
+field-value
+```
+
+### Assistant
+
+```redb
+class Person {
+    str name
+}
+
+main() {
+    line = ""
+    readln(line)
+    writeln(line)
+
+    number = 0
+    read(number)
+    writeln(number)
+
+    word = ""
+    read(word)
+    writeln(word)
+
+    rest = ""
+    readln(rest)
+    writeln(rest)
+
+    array<str> tokens(2)
+    read(tokens[0])
+    read(tokens[1])
+    writeln(tokens[0] + ":" + tokens[1])
+
+    p = Person()
+    read(p.name)
+    writeln(p.name)
+}
+```
+
+## code-output:read:d5d7065825
+
+### User
+
+What does this RedBunny program print?
+```redb
+class Person {
+    str name
+}
+
+main() {
+    line = ""
+    readln(line)
+    writeln(line)
+
+    number = 0
+    read(number)
+    writeln(number)
+
+    word = ""
+    read(word)
+    writeln(word)
+
+    rest = ""
+    readln(rest)
+    writeln(rest)
+
+    array<str> tokens(2)
+    read(tokens[0])
+    read(tokens[1])
+    writeln(tokens[0] + ":" + tokens[1])
+
+    p = Person()
+    read(p.name)
+    writeln(p.name)
+}
+```
+
+### Assistant
+
+```text
+hello world
+42
+RedBunny
+ tail
+left:right
+field-value
+```
+
 ## test-output:shifts:4031bfddd5
 
 ### User
@@ -3995,6 +4059,54 @@ class Box {
 main() {
     b = Box()
     b.missing = 1
+}
+```
+
+### Assistant
+
+This program is rejected by the RedBunny compiler because it violates the language's static rules.
+
+## compile-error:read_float:c894ec8074
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    x = 1.5
+    read(x)
+}
+```
+
+### Assistant
+
+This program is rejected by the RedBunny compiler because it violates the language's static rules.
+
+## compile-error:read_non_lvalue:4f7815cc92
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    x = 0
+    read(x + 1)
+}
+```
+
+### Assistant
+
+This program is rejected by the RedBunny compiler because it violates the language's static rules.
+
+## compile-error:readln_int:77d1b45ed6
+
+### User
+
+Why does this RedBunny program fail to compile?
+```redb
+main() {
+    x = 0
+    readln(x)
 }
 ```
 

@@ -8,9 +8,9 @@ Hugging Face dataset: https://huggingface.co/datasets/mohamedboukerche55/redbunn
 
 | Split | Examples |
 |---|---:|
-| Total | 160 |
-| Train | 141 |
-| Eval | 19 |
+| Total | 163 |
+| Train | 145 |
+| Eval | 18 |
 
 ## Categories
 
@@ -20,23 +20,23 @@ Hugging Face dataset: https://huggingface.co/datasets/mohamedboukerche55/redbunn
 | `basics` | 1 |
 | `classes` | 2 |
 | `cli` | 1 |
-| `code-output` | 11 |
-| `compile-error` | 12 |
+| `code-output` | 12 |
+| `compile-error` | 15 |
 | `control-flow` | 5 |
 | `core` | 2 |
 | `errors` | 8 |
-| `example` | 10 |
+| `example` | 11 |
 | `functions` | 4 |
 | `includes` | 3 |
 | `limitations` | 1 |
-| `manual` | 19 |
+| `manual` | 16 |
 | `operators` | 2 |
 | `output` | 3 |
 | `programs` | 14 |
 | `stdlib` | 36 |
 | `strings` | 1 |
 | `syntax` | 2 |
-| `test-output` | 11 |
+| `test-output` | 12 |
 | `types` | 4 |
 
 ## Formats
