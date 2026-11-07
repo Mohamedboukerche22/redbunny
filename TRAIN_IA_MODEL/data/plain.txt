@@ -2,7 +2,7 @@
 
 ## System prompt
 
-You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no maps, no generics beyond array<T>, no closures, no exceptions, and no inheritance. Classes are declared with `class Name { fieldType field; method = do(...) { ... } }`; `init` is the constructor and `self` is the receiver inside methods. Integer bit shifts `<<` and `>>` are supported for `int` operands (right shift is arithmetic). When asked for code, return a complete compilable program whenever possible. Use `@include "std"` for runtime output functions, `@include "mathlib"` for math helpers, and `@include "algorithm"` for array algorithms and the `Queue` and `vector` classes. Never use C, Python, Rust, or JavaScript syntax.
+You are RedBunny, an expert coding assistant for the RedBunny (.redb) programming language. Write valid RedBunny source using its exact syntax. RedBunny is a small compiled language lowered to LLVM IR. It has no const keyword, no built-in map type (the algorithm library provides an integer `HashMap` class), no generics beyond array<T>, no closures, no exceptions, and no inheritance. Classes are declared with `class Name { fieldType field; method = do(...) { ... } }`; `init` is the constructor and `self` is the receiver inside methods. Integer bit shifts `<<` and `>>` are supported for `int` operands (right shift is arithmetic). When asked for code, return a complete compilable program whenever possible. Use `@include "std"` for runtime output functions, `@include "mathlib"` for math helpers, and `@include "algorithm"` for array algorithms and the `Queue`, `vector` and `HashMap` classes. Never use C, Python, Rust, or JavaScript syntax.
 
 ## core:seed:c2421939ba
 
@@ -1515,6 +1515,35 @@ main() {
 
 `vector(capacity)` is a growable `int` vector. `push_back` is amortized O(1); `push_front` is O(n); `get` returns `-1` when the index is out of range.
 
+## stdlib:seed:c912e8385c
+
+### User
+
+How do I use the HashMap class from the algorithm library?
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    m = HashMap(8)
+    m.put(1, 100)
+    m.put(2, 200)
+    m.put(1, 111)       -- update
+
+    writeln(m.get(1))   -- 111
+    writeln(m.has(2))   -- true
+    writeln(m.size())   -- 2
+
+    m.remove(2)
+    writeln(m.has(2))   -- false
+}
+```
+
+`HashMap(capacity)` stores `int` keys and `int` values using open addressing with linear probing. It grows automatically. `get` returns `-1` when a key is missing, so use `has` to distinguish a stored `-1` from a missing key. Other methods are `put`, `remove`, `clear`, `size`, `is_empty` and `get_capacity`.
+
 ## manual:DOCUMENTATION:4d2286a553
 
 ### User
@@ -2055,7 +2084,7 @@ main() {
 }
 ```
 
-## manual:DOCUMENTATION:f2f68d0e20
+## manual:DOCUMENTATION:a25c1a3cef
 
 ### User
 
@@ -2138,6 +2167,46 @@ main() {
 }
 ```
 
+The module also defines `HashMap(capacity)` for `int` keys and `int` values.
+It uses open addressing with linear probing, grows automatically, and reuses
+deleted slots. Average `put`, `get`, `has` and `remove` are `O(1)`.
+
+| Member                | Signature          | Notes                                      |
+|-----------------------|--------------------|--------------------------------------------|
+| `HashMap(capacity)`   | `int -> HashMap`   | Constructor; capacity is at least 4        |
+| `m.put(key, value)`   | `int, int -> {}`   | Inserts or updates a key                   |
+| `m.get(key)`          | `int -> int`       | Returns the value, or `-1` when missing    |
+| `m.has(key)`          | `int -> bool`      | True when the key exists                   |
+| `m.remove(key)`       | `int -> bool`      | Removes the key; true when it existed      |
+| `m.clear()`           | `{} -> {}`         | Removes all entries                        |
+| `m.size()`            | `{} -> int`        | Number of stored entries                   |
+| `m.get_size()`        | `{} -> int`        | Alias for `size()`                         |
+| `m.is_empty()`        | `{} -> bool`       | True when `size() == 0`                    |
+| `m.get_capacity()`    | `{} -> int`        | Current slot count                         |
+
+`get()` returns `-1` for a missing key, so use `has()` when `-1` is a valid
+stored value.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    m = HashMap(8)
+    m.put(1, 100)
+    m.put(2, 200)
+    m.put(1, 111)       -- update
+
+    writeln(m.get(1))   -- 111
+    writeln(m.has(2))   -- true
+    writeln(m.size())   -- 2
+
+    m.remove(2)
+    writeln(m.has(2))   -- false
+    writeln(m.size())   -- 1
+}
+```
+
 ```redb
 @include "std"
 @include "algorithm"
@@ -2179,7 +2248,7 @@ Explain RedBunny's Current Limitations with syntax and examples.
 
 These are deliberate v0.1 boundaries, not parser accidents.
 
-## manual:DOCUMENTATION:c87e29faad
+## manual:DOCUMENTATION:0f050c2b26
 
 ### User
 
@@ -2196,6 +2265,7 @@ The `examples/` directory contains:
 - `arrays.redb` — arrays, literals, resizing and nested arrays
 - `algorithm_demo.redb` — sorting, searching and array algorithms
 - `queue_demo.redb` — a class-based FIFO queue
+- `hashmap_demo.redb` — an integer hash map with open addressing
 - `math_demo.redb` — standard math library
 - `imports/app.redb` — local and standard library includes
 - `imports/greeting.redb` — local module used by `app.redb`
@@ -2210,6 +2280,7 @@ redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
 redb examples/arrays.redb -o /tmp/arrays && /tmp/arrays
 redb examples/algorithm_demo.redb -o /tmp/algorithm_demo && /tmp/algorithm_demo
 redb examples/queue_demo.redb -o /tmp/queue_demo && /tmp/queue_demo
+redb examples/hashmap_demo.redb -o /tmp/hashmap_demo && /tmp/hashmap_demo
 redb examples/math_demo.redb -o /tmp/math_demo && /tmp/math_demo
 redb examples/imports/app.redb -o /tmp/app && /tmp/app
 ```
@@ -2302,6 +2373,36 @@ main() {
         writeln(fact(n))
         n = n + 1
     }
+}
+```
+
+## example:hashmap_demo:a1b43e8132
+
+### User
+
+Write a complete RedBunny program that demonstrates hashmap demo.
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    ages = HashMap(8)
+
+    ages.put(1, 20)
+    ages.put(2, 25)
+    ages.put(1, 21)     -- updates the existing key
+
+    writeln(ages.get(1))       -- 21
+    writeln(ages.get(2))       -- 25
+    writeln(ages.has(3))       -- false
+    writeln(ages.size())       -- 2
+
+    ages.remove(2)
+    writeln(ages.has(2))       -- false
+    writeln(ages.size())       -- 1
 }
 ```
 
@@ -3339,6 +3440,258 @@ main() {
 41
 hi
 42
+```
+
+## test-output:hashmap:9e9af75b48
+
+### User
+
+Write a RedBunny program that prints exactly this output:
+```text
+4
+true
+true
+false
+-1
+10
+90
+20
+3
+8
+true
+false
+22
+3
+8
+true
+false
+-1
+2
+false
+11
+90
+3
+55
+-1
+true
+0
+true
+false
+100
+0
+1764
+9801
+false
+-1
+0
+-1
+500
+true
+false
+```
+
+### Assistant
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    z = HashMap(0)
+    writeln(z.get_capacity())
+    writeln(z.is_empty())
+
+    m = HashMap(4)
+    writeln(m.is_empty())
+    writeln(m.has(1))
+    writeln(m.get(1))
+
+    m.put(1, 10)
+    m.put(2, 20)
+    m.put(9, 90)
+    writeln(m.get(1))
+    writeln(m.get(9))
+    writeln(m.get(2))
+    writeln(m.size())
+    writeln(m.get_capacity())
+    writeln(m.has(2))
+    writeln(m.has(3))
+
+    m.put(2, 22)
+    writeln(m.get(2))
+    writeln(m.size())
+    writeln(m.get_capacity())
+
+    writeln(m.remove(1))
+    writeln(m.has(1))
+    writeln(m.get(1))
+    writeln(m.size())
+    writeln(m.remove(1))
+
+    m.put(1, 11)
+    writeln(m.get(1))
+    writeln(m.get(9))
+    writeln(m.size())
+
+    m.put(-5, 55)
+    writeln(m.get(-5))
+    m.put(7, -1)
+    writeln(m.get(7))
+    writeln(m.has(7))
+
+    m.clear()
+    writeln(m.size())
+    writeln(m.is_empty())
+    writeln(m.has(9))
+
+    for (i in 0 to 99) {
+        m.put(i, i * i)
+    }
+    writeln(m.size())
+    writeln(m.get(0))
+    writeln(m.get(42))
+    writeln(m.get(99))
+    writeln(m.has(100))
+    writeln(m.get(100))
+
+    m.clear()
+    for (i in 0 to 199) {
+        m.put(i, i)
+        m.remove(i)
+    }
+    writeln(m.size())
+    writeln(m.get(500))
+    m.put(500, 500)
+    writeln(m.get(500))
+    writeln(m.remove(500))
+    writeln(m.has(500))
+}
+```
+
+## code-output:hashmap:2442dd54bb
+
+### User
+
+What does this RedBunny program print?
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    z = HashMap(0)
+    writeln(z.get_capacity())
+    writeln(z.is_empty())
+
+    m = HashMap(4)
+    writeln(m.is_empty())
+    writeln(m.has(1))
+    writeln(m.get(1))
+
+    m.put(1, 10)
+    m.put(2, 20)
+    m.put(9, 90)
+    writeln(m.get(1))
+    writeln(m.get(9))
+    writeln(m.get(2))
+    writeln(m.size())
+    writeln(m.get_capacity())
+    writeln(m.has(2))
+    writeln(m.has(3))
+
+    m.put(2, 22)
+    writeln(m.get(2))
+    writeln(m.size())
+    writeln(m.get_capacity())
+
+    writeln(m.remove(1))
+    writeln(m.has(1))
+    writeln(m.get(1))
+    writeln(m.size())
+    writeln(m.remove(1))
+
+    m.put(1, 11)
+    writeln(m.get(1))
+    writeln(m.get(9))
+    writeln(m.size())
+
+    m.put(-5, 55)
+    writeln(m.get(-5))
+    m.put(7, -1)
+    writeln(m.get(7))
+    writeln(m.has(7))
+
+    m.clear()
+    writeln(m.size())
+    writeln(m.is_empty())
+    writeln(m.has(9))
+
+    for (i in 0 to 99) {
+        m.put(i, i * i)
+    }
+    writeln(m.size())
+    writeln(m.get(0))
+    writeln(m.get(42))
+    writeln(m.get(99))
+    writeln(m.has(100))
+    writeln(m.get(100))
+
+    m.clear()
+    for (i in 0 to 199) {
+        m.put(i, i)
+        m.remove(i)
+    }
+    writeln(m.size())
+    writeln(m.get(500))
+    m.put(500, 500)
+    writeln(m.get(500))
+    writeln(m.remove(500))
+    writeln(m.has(500))
+}
+```
+
+### Assistant
+
+```text
+4
+true
+true
+false
+-1
+10
+90
+20
+3
+8
+true
+false
+22
+3
+8
+true
+false
+-1
+2
+false
+11
+90
+3
+55
+-1
+true
+0
+true
+false
+100
+0
+1764
+9801
+false
+-1
+0
+-1
+500
+true
+false
 ```
 
 ## test-output:mathlib_stdlib:0dc1098623
