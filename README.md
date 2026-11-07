@@ -36,7 +36,7 @@ dependencies beyond LLVM and Clang.
   exponentials, logarithms, abs/gcd/lcm, integer/double min/max and constants.
 - **Bundled algorithm module.** `@include "algorithm"` provides binary search,
   in-place reverse and heap sort, min/max element, 64-bit integer limits, a
-  class-based FIFO `Queue` and a growable `vector`.
+  class-based FIFO `Queue`, a growable `vector` and an integer `HashMap`.
 - **Dynamic arrays.** `array<T>` values support indexing, `size()`, `resize()`,
   literal initializers and nested arrays.
 - **Classes and methods.** Declare fields and methods with `class`, construct
@@ -404,6 +404,29 @@ main() {
 }
 ```
 
+The module also defines `HashMap(capacity)` for integer keys and values. It uses
+open addressing with linear probing and grows automatically. `get` returns `-1`
+for a missing key; `has` distinguishes a stored `-1` from a missing key.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    m = HashMap(8)
+    m.put(1, 100)
+    m.put(2, 200)
+    m.put(1, 111)       -- update
+
+    writeln(m.get(1))   -- 111
+    writeln(m.has(2))   -- true
+    writeln(m.size())   -- 2
+
+    m.remove(2)
+    writeln(m.has(2))   -- false
+}
+```
+
 ```redb
 @include "std"
 @include "algorithm"
@@ -491,7 +514,7 @@ redb main.redb -S -o main.ll
 │   └── runtime.c           native runtime linked into every program
 ├── lib/
 │   ├── mathlib.redb        standard math module
-│   └── algorithm.redb      array algorithms and Queue
+│   └── algorithm.redb      array algorithms plus Queue, vector and HashMap
 ├── docs/
 │   └── DOCUMENTATION.md    complete language manual
 ├── editors/
@@ -507,6 +530,7 @@ redb main.redb -S -o main.ll
 │   ├── factorial.redb
 │   ├── input_demo.redb
 │   ├── queue_demo.redb
+│   ├── hashmap_demo.redb
 │   ├── math_demo.redb
 │   └── imports/
 │       ├── app.redb

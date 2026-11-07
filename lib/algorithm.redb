@@ -259,3 +259,157 @@ class vector {
         return capacity
     }
 }
+
+-- Integer hash map with open addressing and linear probing.
+-- Keys and values are int. Create one with HashMap(initial_capacity).
+-- get() returns -1 when the key is missing, so use has() to distinguish a
+-- stored -1 from a missing key.
+class HashMap {
+    array<int> keys
+    array<int> values
+    array<int> states
+    int count
+    int capacity
+    int used
+
+    init = do(int -> {}) {
+        capacity = arg1
+        if (capacity < 4) {
+            capacity = 4
+        }
+        keys = new_int_array(capacity)
+        values = new_int_array(capacity)
+        states = new_int_array(capacity)
+        count = 0
+        used = 0
+    }
+
+    hash = do(int -> int) {
+        slot = arg1 % capacity
+        if (slot < 0) {
+            slot = slot + capacity
+        }
+        return slot
+    }
+
+    rehash = do(int -> {}) {
+        old_keys = keys
+        old_values = values
+        old_states = states
+        old_capacity = capacity
+
+        capacity = arg1
+        keys = new_int_array(capacity)
+        values = new_int_array(capacity)
+        states = new_int_array(capacity)
+        count = 0
+        used = 0
+
+        i = 0
+        while (i < old_capacity) {
+            if (old_states[i] == 1) {
+                self.put(old_keys[i], old_values[i])
+            }
+            i = i + 1
+        }
+    }
+
+    put = do(int, int -> {}) {
+        slot = self.hash(arg1)
+        deleted = -1
+        while (states[slot] != 0) {
+            if (states[slot] == 1 && keys[slot] == arg1) {
+                values[slot] = arg2
+                return
+            }
+            if (states[slot] == 2 && deleted < 0) {
+                deleted = slot
+            }
+            slot = (slot + 1) % capacity
+        }
+
+        if (deleted < 0 && (used + 1) * 10 > capacity * 7) {
+            self.rehash(capacity * 2)
+            self.put(arg1, arg2)
+            return
+        }
+
+        if (deleted >= 0) {
+            slot = deleted
+        } else {
+            used = used + 1
+        }
+
+        keys[slot] = arg1
+        values[slot] = arg2
+        states[slot] = 1
+        count = count + 1
+    }
+
+    get = do(int -> int) {
+        slot = self.hash(arg1)
+        while (true) {
+            if (states[slot] == 0) {
+                return -1
+            }
+            if (states[slot] == 1 && keys[slot] == arg1) {
+                return values[slot]
+            }
+            slot = (slot + 1) % capacity
+        }
+    }
+
+    has = do(int -> bool) {
+        slot = self.hash(arg1)
+        while (true) {
+            if (states[slot] == 0) {
+                return false
+            }
+            if (states[slot] == 1 && keys[slot] == arg1) {
+                return true
+            }
+            slot = (slot + 1) % capacity
+        }
+    }
+
+    remove = do(int -> bool) {
+        slot = self.hash(arg1)
+        while (true) {
+            if (states[slot] == 0) {
+                return false
+            }
+            if (states[slot] == 1 && keys[slot] == arg1) {
+                states[slot] = 2
+                count = count - 1
+                return true
+            }
+            slot = (slot + 1) % capacity
+        }
+    }
+
+    clear = do(-> {}) {
+        i = 0
+        while (i < capacity) {
+            states[i] = 0
+            i = i + 1
+        }
+        count = 0
+        used = 0
+    }
+
+    size = do(-> int) {
+        return count
+    }
+
+    get_size = do(-> int) {
+        return count
+    }
+
+    is_empty = do(-> bool) {
+        return count == 0
+    }
+
+    get_capacity = do(-> int) {
+        return capacity
+    }
+}

@@ -1,0 +1,73 @@
+@include "std"
+@include "algorithm"
+
+main() {
+    z = HashMap(0)
+    writeln(z.get_capacity())
+    writeln(z.is_empty())
+
+    m = HashMap(4)
+    writeln(m.is_empty())
+    writeln(m.has(1))
+    writeln(m.get(1))
+
+    m.put(1, 10)
+    m.put(2, 20)
+    m.put(9, 90)
+    writeln(m.get(1))
+    writeln(m.get(9))
+    writeln(m.get(2))
+    writeln(m.size())
+    writeln(m.get_capacity())
+    writeln(m.has(2))
+    writeln(m.has(3))
+
+    m.put(2, 22)
+    writeln(m.get(2))
+    writeln(m.size())
+    writeln(m.get_capacity())
+
+    writeln(m.remove(1))
+    writeln(m.has(1))
+    writeln(m.get(1))
+    writeln(m.size())
+    writeln(m.remove(1))
+
+    m.put(1, 11)
+    writeln(m.get(1))
+    writeln(m.get(9))
+    writeln(m.size())
+
+    m.put(-5, 55)
+    writeln(m.get(-5))
+    m.put(7, -1)
+    writeln(m.get(7))
+    writeln(m.has(7))
+
+    m.clear()
+    writeln(m.size())
+    writeln(m.is_empty())
+    writeln(m.has(9))
+
+    for (i in 0 to 99) {
+        m.put(i, i * i)
+    }
+    writeln(m.size())
+    writeln(m.get(0))
+    writeln(m.get(42))
+    writeln(m.get(99))
+    writeln(m.has(100))
+    writeln(m.get(100))
+
+    m.clear()
+    for (i in 0 to 199) {
+        m.put(i, i)
+        m.remove(i)
+    }
+    writeln(m.size())
+    writeln(m.get(500))
+    m.put(500, 500)
+    writeln(m.get(500))
+    writeln(m.remove(500))
+    writeln(m.has(500))
+}

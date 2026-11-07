@@ -762,6 +762,46 @@ main() {
 }
 ```
 
+The module also defines `HashMap(capacity)` for `int` keys and `int` values.
+It uses open addressing with linear probing, grows automatically, and reuses
+deleted slots. Average `put`, `get`, `has` and `remove` are `O(1)`.
+
+| Member                | Signature          | Notes                                      |
+|-----------------------|--------------------|--------------------------------------------|
+| `HashMap(capacity)`   | `int -> HashMap`   | Constructor; capacity is at least 4        |
+| `m.put(key, value)`   | `int, int -> {}`   | Inserts or updates a key                   |
+| `m.get(key)`          | `int -> int`       | Returns the value, or `-1` when missing    |
+| `m.has(key)`          | `int -> bool`      | True when the key exists                   |
+| `m.remove(key)`       | `int -> bool`      | Removes the key; true when it existed      |
+| `m.clear()`           | `{} -> {}`         | Removes all entries                        |
+| `m.size()`            | `{} -> int`        | Number of stored entries                   |
+| `m.get_size()`        | `{} -> int`        | Alias for `size()`                         |
+| `m.is_empty()`        | `{} -> bool`       | True when `size() == 0`                    |
+| `m.get_capacity()`    | `{} -> int`        | Current slot count                         |
+
+`get()` returns `-1` for a missing key, so use `has()` when `-1` is a valid
+stored value.
+
+```redb
+@include "std"
+@include "algorithm"
+
+main() {
+    m = HashMap(8)
+    m.put(1, 100)
+    m.put(2, 200)
+    m.put(1, 111)       -- update
+
+    writeln(m.get(1))   -- 111
+    writeln(m.has(2))   -- true
+    writeln(m.size())   -- 2
+
+    m.remove(2)
+    writeln(m.has(2))   -- false
+    writeln(m.size())   -- 1
+}
+```
+
 ```redb
 @include "std"
 @include "algorithm"
@@ -881,6 +921,7 @@ The `examples/` directory contains:
 - `arrays.redb` — arrays, literals, resizing and nested arrays
 - `algorithm_demo.redb` — sorting, searching and array algorithms
 - `queue_demo.redb` — a class-based FIFO queue
+- `hashmap_demo.redb` — an integer hash map with open addressing
 - `math_demo.redb` — standard math library
 - `imports/app.redb` — local and standard library includes
 - `imports/greeting.redb` — local module used by `app.redb`
@@ -895,6 +936,7 @@ redb examples/factorial.redb -o /tmp/factorial && /tmp/factorial
 redb examples/arrays.redb -o /tmp/arrays && /tmp/arrays
 redb examples/algorithm_demo.redb -o /tmp/algorithm_demo && /tmp/algorithm_demo
 redb examples/queue_demo.redb -o /tmp/queue_demo && /tmp/queue_demo
+redb examples/hashmap_demo.redb -o /tmp/hashmap_demo && /tmp/hashmap_demo
 redb examples/math_demo.redb -o /tmp/math_demo && /tmp/math_demo
 redb examples/imports/app.redb -o /tmp/app && /tmp/app
 ```

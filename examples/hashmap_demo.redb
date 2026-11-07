@@ -1,0 +1,19 @@
+@include "std"
+@include "algorithm"
+
+main() {
+    ages = HashMap(8)
+
+    ages.put(1, 20)
+    ages.put(2, 25)
+    ages.put(1, 21)     -- updates the existing key
+
+    writeln(ages.get(1))       -- 21
+    writeln(ages.get(2))       -- 25
+    writeln(ages.has(3))       -- false
+    writeln(ages.size())       -- 2
+
+    ages.remove(2)
+    writeln(ages.has(2))       -- false
+    writeln(ages.size())       -- 1
+}
